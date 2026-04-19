@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "style_prompt": "A photorealistic, high-resolution studio product photograph of {label}, isolated against a SOLID PURE WHITE BACKGROUND (RGB 255,255,255) — the entire area not occupied by the subject must be flat, uniform, pure white, edge to edge. Do NOT use any other color or gradient for the background, no checkerboard, no gray, no vignette, no surface or table. Single subject centered with generous padding. Sharp focus, true-to-life colors, realistic surface textures, gentle soft-box lighting from upper-left, subtle ambient occlusion directly under the subject only if natural (no large drop shadow on the ground), no text, no labels, no plate, no cutting board, no other props unless explicitly named. The image should look like a premium grocery or cookbook ingredient photograph on a clean white seamless backdrop. Maintain consistency across the set: same lighting direction, same neutral white-balance, similar camera distance, similar visual weight, so the sprites feel like a coherent series.",
+  "sprites": [
+    { "slug": "olive-oil",         "label": "a bottle of olive oil",                   "aliases": ["olive oil", "extra virgin olive oil", "evoo"] },
+    { "slug": "ground-beef",       "label": "a portion of raw ground beef",            "aliases": ["ground beef", "beef mince", "minced beef"] },
+    { "slug": "ground-pork",       "label": "a portion of raw ground pork",            "aliases": ["ground pork", "pork mince", "minced pork"] },
+    { "slug": "kosher-salt",       "label": "a pinch of kosher salt flakes",           "aliases": ["kosher salt", "salt", "sea salt", "flaky salt"] },
+    { "slug": "black-pepper",      "label": "freshly ground black peppercorns",        "aliases": ["black pepper", "pepper", "freshly ground black pepper", "ground pepper"] },
+    { "slug": "garlic",            "label": "a head of garlic with a few loose cloves", "aliases": ["garlic", "garlic clove", "garlic cloves", "cloves garlic"] },
+    { "slug": "yellow-onion",      "label": "a whole yellow onion",                    "aliases": ["yellow onion", "yellow onions", "onion", "onions"] },
+    { "slug": "fennel-bulb",       "label": "a fresh fennel bulb with green fronds",   "aliases": ["fennel bulb", "fennel", "fennel bulbs"] },
+    { "slug": "fennel-seed",       "label": "a small pile of fennel seeds",            "aliases": ["fennel seed", "fennel seeds"] },
+    { "slug": "red-pepper-flakes", "label": "a small pile of crushed red pepper flakes", "aliases": ["crushed red pepper flakes", "red pepper flakes", "chili flakes", "crushed red pepper"] },
+    { "slug": "white-wine",        "label": "a bottle of dry white wine",              "aliases": ["dry white wine", "white wine", "wine"] },
+    { "slug": "crushed-tomatoes",  "label": "an open can of crushed tomatoes",         "aliases": ["crushed tomatoes", "canned tomatoes", "whole peeled tomatoes", "tomatoes"] },
+    { "slug": "broth",             "label": "a glass measuring cup full of golden broth", "aliases": ["chicken broth", "vegetable broth", "beef broth", "broth", "stock"] },
+    { "slug": "whole-milk",        "label": "a small pitcher of whole milk",           "aliases": ["whole milk", "milk"] },
+    { "slug": "butter",            "label": "a stick of unsalted butter",              "aliases": ["unsalted butter", "butter"] },
+    { "slug": "parmesan",          "label": "a wedge of aged parmesan cheese",         "aliases": ["parmesan", "parmigiano", "parmigiano reggiano", "parmesan cheese"] },
+    { "slug": "pasta",             "label": "a small bundle of dry pappardelle pasta", "aliases": ["pappardelle", "pasta", "tagliatelle", "fettuccine", "spaghetti"] },
+    { "slug": "water",             "label": "a clear glass of water",                  "aliases": ["water"] }
+  ]
+}
