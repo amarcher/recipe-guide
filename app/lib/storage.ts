@@ -62,7 +62,20 @@ function writeLocal(next: Record<string, SavedRecipe>) {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
   }
   localCachedList = null;
+  localVersion++;
   localListeners.forEach((fn) => fn());
+}
+
+let localVersion = 0;
+const localByUrlCache = new Map<string, { v: number; arr: SavedRecipe[] }>();
+function localSavesByUrl(url: string): SavedRecipe[] {
+  const c = localByUrlCache.get(url);
+  if (c && c.v === localVersion) return c.arr;
+  const arr = Object.values(getLocalMirror()).filter(
+    (r) => r.card.source_url === url
+  );
+  localByUrlCache.set(url, { v: localVersion, arr });
+  return arr;
 }
 
 function getLocalMirror(): Record<string, SavedRecipe> {
@@ -95,7 +108,20 @@ let remoteFetchInflight: Promise<void> | null = null;
 
 function notifyRemote() {
   remoteCachedList = null;
+  remoteVersion++;
   remoteListeners.forEach((fn) => fn());
+}
+
+let remoteVersion = 0;
+const remoteByUrlCache = new Map<string, { v: number; arr: SavedRecipe[] }>();
+function remoteSavesByUrl(url: string): SavedRecipe[] {
+  const c = remoteByUrlCache.get(url);
+  if (c && c.v === remoteVersion) return c.arr;
+  const arr = Object.values(getRemoteMirror()).filter(
+    (r) => r.card.source_url === url
+  );
+  remoteByUrlCache.set(url, { v: remoteVersion, arr });
+  return arr;
 }
 
 function subscribeRemote(cb: () => void) {
@@ -229,6 +255,37 @@ export function useSavedRecipe(id: string | null): {
     recipe: mode === "remote" ? remoteValue : localValue,
     loaded,
   };
+}
+
+// Look up every save matching this card's sourceUrl across all scopes the
+// current viewer has access to. Bridges the local-hash / server-cuid id
+// mismatch — pass the raw card and we figure out where it lives.
+export function useSavesForCard(card: { source_url: string }): SavedRecipe[] {
+  const mode = useMode();
+  useEffect(() => {
+    if (mode === "remote" && !remoteMirror) void fetchRemoteList();
+  }, [mode]);
+
+  const localSnapshot = useCallback(
+    () => localSavesByUrl(card.source_url),
+    [card.source_url]
+  );
+  const remoteSnapshot = useCallback(
+    () => remoteSavesByUrl(card.source_url),
+    [card.source_url]
+  );
+
+  const localValue = useSyncExternalStore(
+    subscribeLocal,
+    localSnapshot,
+    () => EMPTY_LIST
+  );
+  const remoteValue = useSyncExternalStore(
+    subscribeRemote,
+    remoteSnapshot,
+    () => EMPTY_LIST
+  );
+  return mode === "remote" ? remoteValue : localValue;
 }
 
 // ─── Imperative writes ──────────────────────────────────────────────────────
