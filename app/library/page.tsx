@@ -153,7 +153,7 @@ export default function LibraryPage() {
               active={filter === "all"}
               onClick={() => setFilter("all")}
               label="All"
-              count={allRecipes.length}
+              count={new Set(allRecipes.map((r) => r.card.source_url)).size}
             />
             <FilterTab
               active={filter === "personal"}
