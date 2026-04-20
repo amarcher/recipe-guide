@@ -1,9 +1,24 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Play, Pause, RotateCcw, BellRing, Check, Eye } from "lucide-react";
+import {
+  Play,
+  Pause,
+  RotateCcw,
+  BellRing,
+  BellOff,
+  Check,
+  Eye,
+} from "lucide-react";
 import { formatClock } from "@/app/lib/duration";
-import { beep, ensureNotificationPermission, notify } from "@/app/lib/alarm";
+import {
+  playBeep,
+  speakText,
+  cancelSpeech,
+  ensureNotificationPermission,
+  notify,
+} from "@/app/lib/alarm";
+import { getAlarmSettings } from "@/app/lib/settings";
 
 type Status = "idle" | "running" | "checking" | "paused" | "done";
 
@@ -26,8 +41,8 @@ export function StepTimer({
 }) {
   const isRange = highSec > lowSec + 1;
   const [status, setStatus] = useState<Status>("idle");
-  // Time remaining until the *current* target (low first, then high if range).
   const [remaining, setRemaining] = useState(lowSec);
+  const [alarm, setAlarm] = useState<{ kind: "check" | "done" } | null>(null);
   const endAt = useRef<number | null>(null);
   const tick = useRef<number | null>(null);
   const alertsFired = useRef<{ low: boolean; high: boolean }>({
@@ -40,31 +55,24 @@ export function StepTimer({
       if (endAt.current == null) return;
       const sec = (endAt.current - Date.now()) / 1000;
       if (sec <= 0) {
-        // Reached current target.
         if (
           isRange &&
           !alertsFired.current.low &&
-          // we were targeting low
           status === "running"
         ) {
           alertsFired.current.low = true;
-          beep();
-          notify(`Step ${stepNumber}: check it`, stepHeadline);
-          // Now run to the high end.
-          const extra = highSec - lowSec;
-          endAt.current = Date.now() + extra * 1000;
-          setRemaining(extra);
+          endAt.current = Date.now() + (highSec - lowSec) * 1000;
+          setRemaining(highSec - lowSec);
           setStatus("checking");
+          setAlarm({ kind: "check" });
           tick.current = window.setTimeout(loop, 200);
           return;
         }
-        // Either we reached high (range) or single duration.
         alertsFired.current.high = true;
         setRemaining(0);
         setStatus("done");
         endAt.current = null;
-        beep();
-        notify(`Step ${stepNumber} done`, stepHeadline);
+        setAlarm({ kind: "done" });
         onComplete();
         return;
       }
@@ -80,12 +88,41 @@ export function StepTimer({
         tick.current = null;
       }
     };
-  }, [status, stepNumber, stepHeadline, onComplete, isRange, lowSec, highSec]);
+  }, [status, onComplete, isRange, lowSec, highSec]);
+
+  // The looping alarm. Fires immediately, then repeats on `intervalSec` until
+  // the user silences it (any timer button) or `maxSec` elapses.
+  useEffect(() => {
+    if (!alarm) return;
+    const settings = getAlarmSettings();
+    if (!settings.enabled) return;
+    const verb = alarm.kind === "check" ? "Check now" : "Time’s up for";
+    const announcement = `${verb}: step ${stepNumber}, ${stepHeadline}`;
+    const pulse = () => {
+      playBeep(settings.volume);
+      if (settings.ttsEnabled) speakText(announcement);
+    };
+    pulse();
+    if (settings.notifyEnabled) notify(`Step ${stepNumber}: ${stepHeadline}`, verb);
+    const interval = window.setInterval(pulse, settings.intervalSec * 1000);
+    const cap = window.setTimeout(
+      () => setAlarm(null),
+      settings.maxSec * 1000
+    );
+    return () => {
+      window.clearInterval(interval);
+      window.clearTimeout(cap);
+      cancelSpeech();
+    };
+  }, [alarm, stepHeadline, stepNumber]);
+
+  function silenceAlarm() {
+    setAlarm(null);
+  }
 
   async function start() {
     await ensureNotificationPermission();
-    // If we're at idle, target the low end first.
-    // If paused, resume whatever we were doing.
+    silenceAlarm();
     if (status === "checking") {
       endAt.current = Date.now() + remaining * 1000;
       setStatus("checking");
@@ -95,18 +132,26 @@ export function StepTimer({
     }
   }
   function pause() {
+    silenceAlarm();
     setStatus("paused");
     endAt.current = null;
   }
   function reset() {
+    silenceAlarm();
     setStatus("idle");
     setRemaining(lowSec);
     endAt.current = null;
     alertsFired.current = { low: false, high: false };
   }
+  function toggleDone() {
+    silenceAlarm();
+    onToggleDone();
+  }
 
   const tone =
-    status === "done"
+    alarm
+      ? "bg-rose-50 ring-rose-300 text-rose-900 animate-pulse"
+      : status === "done"
       ? "bg-emerald-50 ring-emerald-300 text-emerald-900"
       : status === "checking"
       ? "bg-orange-50 ring-orange-400 text-orange-900"
@@ -127,23 +172,37 @@ export function StepTimer({
         <span className="font-mono text-lg font-semibold tabular-nums">
           {formatClock(remaining)}
         </span>
-        {status === "checking" && (
+        {alarm && (
+          <span className="text-xs font-bold uppercase tracking-wider">
+            {alarm.kind === "check" ? "check now" : "time’s up"}
+          </span>
+        )}
+        {!alarm && status === "checking" && (
           <span className="text-xs font-medium uppercase tracking-wider">
             check now · {formatClock(highSec - lowSec)} until max
           </span>
         )}
-        {status === "done" && (
+        {!alarm && status === "done" && (
           <span className="text-xs font-medium uppercase tracking-wider">
             time’s up
           </span>
         )}
-        {isRange && status === "idle" && (
+        {isRange && status === "idle" && !alarm && (
           <span className="text-[11px] text-stone-400">
             alerts at {formatClock(lowSec)} and {formatClock(highSec)}
           </span>
         )}
       </div>
       <div className="flex items-center gap-1">
+        {alarm && (
+          <button
+            type="button"
+            onClick={silenceAlarm}
+            className="inline-flex items-center gap-1 rounded-md bg-rose-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-rose-700"
+          >
+            <BellOff className="h-3.5 w-3.5" /> Silence
+          </button>
+        )}
         {status !== "running" && status !== "checking" && status !== "done" && (
           <button
             type="button"
@@ -173,7 +232,7 @@ export function StepTimer({
         )}
         <button
           type="button"
-          onClick={onToggleDone}
+          onClick={toggleDone}
           aria-pressed={done}
           className={`inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-xs font-medium ${
             done

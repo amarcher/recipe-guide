@@ -1,6 +1,6 @@
-// Browser-only alarm: short triple-beep using WebAudio. No asset needed.
-export function beep(durationMs = 1500) {
-  if (typeof window === "undefined") return;
+// Single short three-tone beep, respects the requested gain (0..1).
+export function playBeep(volume: number) {
+  if (typeof window === "undefined" || volume <= 0) return;
   try {
     const Ctx =
       window.AudioContext ||
@@ -8,21 +8,50 @@ export function beep(durationMs = 1500) {
         .webkitAudioContext;
     const ctx = new Ctx();
     const start = ctx.currentTime;
-    for (let i = 0; i < 3; i++) {
+    const FREQS = [880, 660, 880, 1100, 880];
+    const STEP = 0.16;
+    for (let i = 0; i < FREQS.length; i++) {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = "sine";
-      osc.frequency.value = 880;
-      gain.gain.setValueAtTime(0.0001, start + i * 0.5);
-      gain.gain.exponentialRampToValueAtTime(0.4, start + i * 0.5 + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.0001, start + i * 0.5 + 0.35);
+      osc.frequency.value = FREQS[i];
+      const t = start + i * STEP;
+      gain.gain.setValueAtTime(0.0001, t);
+      gain.gain.exponentialRampToValueAtTime(
+        Math.max(0.0001, Math.min(1, volume)),
+        t + 0.02
+      );
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + STEP - 0.02);
       osc.connect(gain).connect(ctx.destination);
-      osc.start(start + i * 0.5);
-      osc.stop(start + i * 0.5 + 0.4);
+      osc.start(t);
+      osc.stop(t + STEP);
     }
-    setTimeout(() => ctx.close().catch(() => {}), durationMs);
+    setTimeout(() => ctx.close().catch(() => {}), (FREQS.length + 1) * STEP * 1000);
   } catch {
     // ignore — WebAudio may be blocked
+  }
+}
+
+export function speakText(text: string) {
+  if (typeof window === "undefined" || !window.speechSynthesis) return;
+  try {
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.rate = 1.0;
+    u.pitch = 1.0;
+    window.speechSynthesis.speak(u);
+  } catch {
+    // ignore
+  }
+}
+
+export function cancelSpeech() {
+  if (typeof window !== "undefined" && window.speechSynthesis) {
+    try {
+      window.speechSynthesis.cancel();
+    } catch {
+      // ignore
+    }
   }
 }
 
