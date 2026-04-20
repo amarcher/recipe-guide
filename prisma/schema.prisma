@@ -1,0 +1,170 @@
+// Recipe Guide — persistence layer.
+// Auth.js (v5) + Prisma adapter required models, plus our domain models.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Auth.js (v5) required models ───────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  createdAt     DateTime  @default(now())
+
+  accounts      Account[]
+  sessions      Session[]
+  familyMemberships FamilyMember[]
+  savedRecipes  SavedRecipe[]
+  miseChecks    MiseCheck[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ─── Families (multi-user shared libraries) ─────────────────────────────────
+
+enum FamilyRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+model Family {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+
+  members FamilyMember[]
+  invites FamilyInvite[]
+  recipes SavedRecipe[]
+}
+
+model FamilyMember {
+  id       String     @id @default(cuid())
+  userId   String
+  familyId String
+  role     FamilyRole @default(MEMBER)
+  joinedAt DateTime   @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  family Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, familyId])
+  @@index([familyId])
+}
+
+model FamilyInvite {
+  id          String    @id @default(cuid())
+  familyId    String
+  code        String    @unique
+  createdById String
+  expiresAt   DateTime
+  usedAt      DateTime?
+  usedById    String?
+  createdAt   DateTime  @default(now())
+
+  family Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
+
+  @@index([familyId])
+}
+
+// ─── Recipe data ────────────────────────────────────────────────────────────
+
+// Cross-account cache: one entry per source URL, holds the parsed CookCard
+// JSON. Anyone who pastes the same URL gets the cached parse — no Claude call.
+// Append a query param to the URL to bust the cache (becomes a new entry).
+model ParsedRecipe {
+  id           String   @id @default(cuid())
+  sourceUrl    String   @unique
+  title        String
+  cardJson     Json
+  parsedAt     DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  modelUsed    String
+  modelVersion String?
+
+  saves SavedRecipe[]
+
+  @@index([sourceUrl])
+}
+
+// One per (user, parsedRecipe, scope). Scope = personal (familyId null) or
+// a specific family. The same recipe can live in your personal library AND
+// in multiple families simultaneously, each with its own cook count.
+model SavedRecipe {
+  id             String    @id @default(cuid())
+  parsedRecipeId String
+  userId         String
+  familyId       String?
+  savedAt        DateTime  @default(now())
+  lastCookedAt   DateTime?
+  cookCount      Int       @default(0)
+
+  parsedRecipe ParsedRecipe @relation(fields: [parsedRecipeId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  family       Family?      @relation(fields: [familyId], references: [id], onDelete: Cascade)
+
+  miseChecks MiseCheck[]
+
+  @@unique([userId, parsedRecipeId, familyId])
+  @@index([userId])
+  @@index([familyId])
+}
+
+// Per-user mise-en-place checks within a saved recipe. Even in a shared
+// family recipe, each member tracks their own "I have it on the counter".
+model MiseCheck {
+  id            String   @id @default(cuid())
+  savedRecipeId String
+  userId        String
+  entryKey      String
+  checkedAt     DateTime @default(now())
+
+  savedRecipe SavedRecipe @relation(fields: [savedRecipeId], references: [id], onDelete: Cascade)
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([savedRecipeId, userId, entryKey])
+  @@index([savedRecipeId, userId])
+}
