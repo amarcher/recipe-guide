@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Bookmark, BookmarkCheck, ChefHat, Trash2 } from "lucide-react";
+import { Bookmark, BookmarkCheck, ChefHat, Trash2, ChevronDown } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import type { CookCard } from "@/app/types";
 import {
   recipeIdFor,
@@ -11,6 +12,7 @@ import {
   markCooked,
   useSavedRecipe,
 } from "@/app/lib/storage";
+import { useMyFamilies } from "@/app/lib/families";
 
 function formatRelative(ts: number): string {
   const diff = Date.now() - ts;
@@ -33,14 +35,20 @@ export function SaveBar({
   const router = useRouter();
   const id = recipeIdFor(card);
   const { recipe } = useSavedRecipe(id);
+  const session = useSession();
+  const { families } = useMyFamilies();
   const [justSaved, setJustSaved] = useState(false);
+  const [scope, setScope] = useState<string | null>(null); // null = personal
+  const [showScope, setShowScope] = useState(false);
 
   const isSaved = recipe !== null;
+  const signedIn = session.status === "authenticated";
 
   async function onSave() {
-    const saved = await saveRecipe(card);
+    const saved = await saveRecipe(card, { familyId: scope });
     setJustSaved(true);
     setTimeout(() => setJustSaved(false), 1500);
+    setShowScope(false);
     if (variant === "parse") {
       router.push(`/recipe/${saved.id}`);
     }
@@ -48,7 +56,7 @@ export function SaveBar({
 
   async function onCooked() {
     let target = recipe;
-    if (!target) target = await saveRecipe(card);
+    if (!target) target = await saveRecipe(card, { familyId: scope });
     await markCooked(target.id);
   }
 
@@ -58,6 +66,9 @@ export function SaveBar({
     router.push("/library");
   }
 
+  const scopeLabel =
+    scope === null ? "Personal" : families.find((f) => f.id === scope)?.name ?? "Family";
+
   return (
     <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-stone-200 bg-white px-4 py-2.5 shadow-sm">
       <div className="text-xs text-stone-600">
@@ -66,6 +77,11 @@ export function SaveBar({
             <BookmarkCheck className="h-3.5 w-3.5 text-emerald-600" />
             <span>
               Saved {formatRelative(recipe.savedAt)}
+              {recipe.family && (
+                <span className="ml-1 rounded-full bg-stone-100 px-1.5 py-0.5 text-stone-600">
+                  {recipe.family.name}
+                </span>
+              )}
               {recipe.lastCookedAt && (
                 <>
                   {" · "}
@@ -79,6 +95,53 @@ export function SaveBar({
         )}
       </div>
       <div className="flex items-center gap-2">
+        {!isSaved && signedIn && families.length > 0 && (
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setShowScope((v) => !v)}
+              className="inline-flex items-center gap-1 rounded-md border border-stone-300 bg-white px-2.5 py-1.5 text-xs font-medium text-stone-700 hover:bg-stone-50"
+            >
+              {scopeLabel}
+              <ChevronDown className="h-3 w-3" />
+            </button>
+            {showScope && (
+              <div className="absolute right-0 top-full z-20 mt-1 w-44 rounded-md border border-stone-200 bg-white p-1 shadow-lg">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setScope(null);
+                    setShowScope(false);
+                  }}
+                  className={`block w-full rounded px-2 py-1.5 text-left text-xs ${
+                    scope === null
+                      ? "bg-stone-100 font-medium text-stone-900"
+                      : "text-stone-700 hover:bg-stone-50"
+                  }`}
+                >
+                  Personal
+                </button>
+                {families.map((f) => (
+                  <button
+                    key={f.id}
+                    type="button"
+                    onClick={() => {
+                      setScope(f.id);
+                      setShowScope(false);
+                    }}
+                    className={`block w-full rounded px-2 py-1.5 text-left text-xs ${
+                      scope === f.id
+                        ? "bg-stone-100 font-medium text-stone-900"
+                        : "text-stone-700 hover:bg-stone-50"
+                    }`}
+                  >
+                    {f.name}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
         {!isSaved && (
           <button
             type="button"

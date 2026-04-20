@@ -239,12 +239,15 @@ export function isSignedInClient(): boolean {
   return /(?:^|; )(?:__Secure-)?authjs\.session-token=/.test(document.cookie);
 }
 
-export async function saveRecipe(card: CookCard): Promise<SavedRecipe> {
+export async function saveRecipe(
+  card: CookCard,
+  options?: { familyId?: string | null }
+): Promise<SavedRecipe> {
   if (isSignedInClient()) {
     const res = await fetch("/api/recipes", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ card }),
+      body: JSON.stringify({ card, familyId: options?.familyId ?? null }),
     });
     if (!res.ok) throw new Error(`save failed: ${res.status}`);
     const { id } = (await res.json()) as { id: string };

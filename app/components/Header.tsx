@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChefHat, Library } from "lucide-react";
+import { ChefHat, Library, Users } from "lucide-react";
 import { SettingsButton } from "./SettingsButton";
 import { UserMenu } from "./UserMenu";
 
@@ -20,7 +20,14 @@ export function Header() {
             className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-stone-600 hover:bg-stone-100 hover:text-stone-900"
           >
             <Library className="h-4 w-4" />
-            Library
+            <span className="hidden sm:inline">Library</span>
+          </Link>
+          <Link
+            href="/settings"
+            className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-stone-600 hover:bg-stone-100 hover:text-stone-900"
+          >
+            <Users className="h-4 w-4" />
+            <span className="hidden sm:inline">Families</span>
           </Link>
           <SettingsButton />
           <UserMenu />

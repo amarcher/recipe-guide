@@ -1,19 +1,26 @@
 "use client";
 
 import { useState, FormEvent } from "react";
+import { History, Trash2 } from "lucide-react";
 import type { CookCard } from "./types";
 import { CookCardView } from "./components/CookCardView";
 import { SaveBar } from "./components/SaveBar";
+import {
+  useRecentParses,
+  pushRecent,
+  removeRecent,
+  clearRecent,
+} from "./lib/recent";
 
 export default function Home() {
   const [url, setUrl] = useState("");
   const [card, setCard] = useState<CookCard | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const recents = useRecentParses();
 
-  async function onSubmit(e: FormEvent) {
-    e.preventDefault();
-    if (!url.trim()) return;
+  async function parseUrl(target: string) {
+    if (!target.trim()) return;
     setLoading(true);
     setError(null);
     setCard(null);
@@ -21,19 +28,31 @@ export default function Home() {
       const res = await fetch("/api/parse", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: url.trim() }),
+        body: JSON.stringify({ url: target.trim() }),
       });
       const data = await res.json();
       if (!res.ok) {
         setError(data?.error ?? `Request failed (${res.status})`);
       } else {
-        setCard(data as CookCard);
+        const parsed = data as CookCard;
+        setCard(parsed);
+        pushRecent({ url: parsed.source_url, title: parsed.title });
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Network error");
     } finally {
       setLoading(false);
     }
+  }
+
+  function onSubmit(e: FormEvent) {
+    e.preventDefault();
+    void parseUrl(url);
+  }
+
+  function onClickRecent(u: string) {
+    setUrl(u);
+    void parseUrl(u);
   }
 
   return (
@@ -81,6 +100,62 @@ export default function Home() {
           <div className="mt-10 animate-pulse text-center text-sm text-stone-500">
             Reading the page and re-organizing the recipe…
           </div>
+        )}
+
+        {!card && !loading && recents.length > 0 && (
+          <section className="mt-10">
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-stone-500">
+                <History className="h-3.5 w-3.5" />
+                Recent
+              </h2>
+              <button
+                type="button"
+                onClick={clearRecent}
+                className="text-xs text-stone-500 hover:text-stone-900 hover:underline"
+              >
+                clear
+              </button>
+            </div>
+            <ul className="space-y-1">
+              {recents.map((r) => (
+                <li
+                  key={r.url}
+                  className="group flex items-center gap-2 rounded-md border border-stone-200 bg-white px-3 py-2 transition hover:border-stone-300"
+                >
+                  <button
+                    type="button"
+                    onClick={() => onClickRecent(r.url)}
+                    className="flex min-w-0 flex-1 flex-col text-left"
+                  >
+                    <span className="truncate text-sm font-medium text-stone-900">
+                      {r.title}
+                    </span>
+                    <span className="truncate text-[11px] text-stone-400">
+                      {(() => {
+                        try {
+                          return new URL(r.url).hostname.replace(/^www\./, "");
+                        } catch {
+                          return r.url;
+                        }
+                      })()}
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => removeRecent(r.url)}
+                    aria-label={`Remove ${r.title}`}
+                    className="text-stone-400 opacity-0 transition group-hover:opacity-100 hover:text-rose-600"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-2 text-[11px] text-stone-400">
+              Stored on this device. Click to re-open — instant from cache.
+            </p>
+          </section>
         )}
       </div>
 

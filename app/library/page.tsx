@@ -11,10 +11,13 @@ import {
   hasUnsyncedLocal,
   syncLocalToCloud,
 } from "@/app/lib/storage";
+import { useMyFamilies } from "@/app/lib/families";
 
 const noopSubscribe = () => () => {};
 const trueSnapshot = () => true;
 const falseSnapshot = () => false;
+
+type Filter = "all" | "personal" | { familyId: string };
 
 function formatRelative(ts: number): string {
   const diff = Date.now() - ts;
@@ -28,13 +31,21 @@ function formatRelative(ts: number): string {
 }
 
 export default function LibraryPage() {
-  const recipes = useSavedRecipes();
+  const allRecipes = useSavedRecipes();
   const session = useSession();
   const signedIn = session.status === "authenticated";
+  const { families } = useMyFamilies();
   const mounted = useSyncExternalStore(noopSubscribe, trueSnapshot, falseSnapshot);
   const [syncing, setSyncing] = useState(false);
   const [syncResult, setSyncResult] = useState<string | null>(null);
+  const [filter, setFilter] = useState<Filter>("all");
   const needsSync = mounted && signedIn && !syncResult && hasUnsyncedLocal();
+
+  const recipes = allRecipes.filter((r) => {
+    if (filter === "all") return true;
+    if (filter === "personal") return !r.family;
+    return r.family?.id === filter.familyId;
+  });
 
   async function onSync() {
     setSyncing(true);
@@ -90,6 +101,32 @@ export default function LibraryPage() {
         {syncResult && (
           <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
             {syncResult}
+          </div>
+        )}
+
+        {signedIn && families.length > 0 && (
+          <div className="mb-4 flex flex-wrap items-center gap-1 rounded-full border border-stone-200 bg-white p-1 shadow-sm w-fit">
+            <FilterTab
+              active={filter === "all"}
+              onClick={() => setFilter("all")}
+              label="All"
+              count={allRecipes.length}
+            />
+            <FilterTab
+              active={filter === "personal"}
+              onClick={() => setFilter("personal")}
+              label="Personal"
+              count={allRecipes.filter((r) => !r.family).length}
+            />
+            {families.map((f) => (
+              <FilterTab
+                key={f.id}
+                active={typeof filter === "object" && filter.familyId === f.id}
+                onClick={() => setFilter({ familyId: f.id })}
+                label={f.name}
+                count={allRecipes.filter((r) => r.family?.id === f.id).length}
+              />
+            ))}
           </div>
         )}
 
@@ -167,5 +204,38 @@ export default function LibraryPage() {
         )}
       </div>
     </main>
+  );
+}
+
+function FilterTab({
+  active,
+  onClick,
+  label,
+  count,
+}: {
+  active: boolean;
+  onClick: () => void;
+  label: string;
+  count: number;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition ${
+        active
+          ? "bg-stone-900 text-white"
+          : "text-stone-600 hover:bg-stone-100"
+      }`}
+    >
+      {label}
+      <span
+        className={`tabular-nums ${
+          active ? "text-stone-300" : "text-stone-400"
+        }`}
+      >
+        {count}
+      </span>
+    </button>
   );
 }
