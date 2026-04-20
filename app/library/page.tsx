@@ -41,11 +41,54 @@ export default function LibraryPage() {
   const [filter, setFilter] = useState<Filter>("all");
   const needsSync = mounted && signedIn && !syncResult && hasUnsyncedLocal();
 
-  const recipes = allRecipes.filter((r) => {
-    if (filter === "all") return true;
-    if (filter === "personal") return !r.family;
-    return r.family?.id === filter.familyId;
-  });
+  // For per-scope filters, just filter the saves directly. For All, dedupe
+  // by sourceUrl so a recipe saved in N libraries shows as one card with
+  // all N scope pills + summed cook count.
+  type GroupedRecipe = (typeof allRecipes)[number] & {
+    scopes: Array<{ id: string; name: string } | null>;
+    totalCookCount: number;
+    latestLastCookedAt: number | null;
+  };
+
+  let recipes: GroupedRecipe[];
+  if (filter === "all") {
+    const byUrl = new Map<string, GroupedRecipe>();
+    for (const r of allRecipes) {
+      const key = r.card.source_url;
+      const existing = byUrl.get(key);
+      if (!existing) {
+        byUrl.set(key, {
+          ...r,
+          scopes: [r.family ?? null],
+          totalCookCount: r.cookCount,
+          latestLastCookedAt: r.lastCookedAt,
+        });
+      } else {
+        existing.scopes.push(r.family ?? null);
+        existing.totalCookCount += r.cookCount;
+        existing.latestLastCookedAt = Math.max(
+          existing.latestLastCookedAt ?? 0,
+          r.lastCookedAt ?? 0
+        ) || null;
+      }
+    }
+    recipes = [...byUrl.values()].sort(
+      (a, b) =>
+        (b.latestLastCookedAt ?? b.savedAt) -
+        (a.latestLastCookedAt ?? a.savedAt)
+    );
+  } else {
+    recipes = allRecipes
+      .filter((r) =>
+        filter === "personal" ? !r.family : r.family?.id === filter.familyId
+      )
+      .map((r) => ({
+        ...r,
+        scopes: [r.family ?? null],
+        totalCookCount: r.cookCount,
+        latestLastCookedAt: r.lastCookedAt,
+      }));
+  }
 
   async function onSync() {
     setSyncing(true);
@@ -148,16 +191,25 @@ export default function LibraryPage() {
                 className="group relative flex flex-col rounded-xl border border-stone-200 bg-white p-4 shadow-sm transition hover:border-stone-300"
               >
                 <Link href={`/recipe/${r.id}`} className="flex-1">
-                  <div className="flex items-center justify-between text-[11px] uppercase tracking-wider text-stone-400">
-                    <span>
+                  <div className="flex items-center justify-between gap-2 text-[11px] uppercase tracking-wider text-stone-400">
+                    <span className="truncate">
                       {new URL(r.card.source_url).hostname.replace(/^www\./, "")}
                     </span>
-                    {r.family && (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-stone-100 px-2 py-0.5 text-stone-600">
-                        <Users className="h-3 w-3" />
-                        {r.family.name}
-                      </span>
-                    )}
+                    <div className="flex flex-wrap justify-end gap-1">
+                      {r.scopes.map((s, i) => (
+                        <span
+                          key={s?.id ?? `personal-${i}`}
+                          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 ${
+                            s
+                              ? "bg-stone-100 text-stone-600"
+                              : "bg-stone-50 text-stone-500"
+                          }`}
+                        >
+                          {s ? <Users className="h-3 w-3" /> : null}
+                          {s?.name ?? "Personal"}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                   <h2 className="mt-1 line-clamp-2 text-base font-semibold text-stone-900">
                     {r.card.title}
@@ -171,9 +223,9 @@ export default function LibraryPage() {
                     )}
                     <span className="inline-flex items-center gap-1">
                       <ChefHat className="h-3 w-3" />
-                      {r.cookCount === 0
+                      {r.totalCookCount === 0
                         ? "never cooked"
-                        : `cooked ${r.cookCount}× · last ${formatRelative(r.lastCookedAt!)}`}
+                        : `cooked ${r.totalCookCount}× · last ${formatRelative(r.latestLastCookedAt!)}`}
                     </span>
                   </div>
                 </Link>
