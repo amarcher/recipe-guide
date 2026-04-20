@@ -81,6 +81,7 @@ export function CookHistory({ recipeId }: { recipeId: string }) {
                 height={24}
                 className="rounded-full"
                 unoptimized
+                referrerPolicy="no-referrer"
               />
             ) : (
               <span className="flex h-6 w-6 items-center justify-center rounded-full bg-stone-200 text-[10px] font-semibold text-stone-700">

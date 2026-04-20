@@ -3,7 +3,8 @@
 import { useState } from "react";
 import {
   BookmarkCheck,
-  ChefHat,
+  Flame,
+  Square,
   Trash2,
   Plus,
   Check,
@@ -15,10 +16,16 @@ import type { CookCard } from "@/app/types";
 import {
   saveRecipe,
   deleteRecipe,
-  markCooked,
+  recipeIdFor,
   useSavesForCard,
 } from "@/app/lib/storage";
 import { useMyFamilies } from "@/app/lib/families";
+import {
+  cancelCookingSession,
+  finishCookingSession,
+  startCookingSession,
+  useCookSession,
+} from "@/app/lib/cook-session";
 
 function formatRelative(ts: number): string {
   const diff = Date.now() - ts;
@@ -46,6 +53,11 @@ export function SaveBar({
   const { families } = useMyFamilies();
   const saves = useSavesForCard(card);
   const [pendingScope, setPendingScope] = useState<string | null | "_none">("_none");
+  const localId = recipeIdFor(card);
+  const cookSession = useCookSession();
+  const isCookingThis = cookSession?.localId === localId;
+  const isAnotherCooking = !!cookSession && !isCookingThis;
+  const [cookingPending, setCookingPending] = useState(false);
 
   // For signed-out users, scopes is always just [Personal] (localStorage).
   const scopes: Scope[] = signedIn
@@ -88,15 +100,29 @@ export function SaveBar({
     }
   }
 
-  async function onCooked() {
-    // If saved somewhere, mark the personal-scope cook (or first save) as cooked.
-    let target =
-      saves.find((s) => !s.family) ?? saves[0];
-    if (!target) {
-      // Not saved yet — save to Personal first.
-      target = await saveRecipe(card, { scopes: [null] });
+  async function onStartCooking() {
+    setCookingPending(true);
+    try {
+      let target = saves.find((s) => !s.family) ?? saves[0];
+      if (!target) {
+        target = await saveRecipe(card, { scopes: [null] });
+      }
+      startCookingSession({
+        localId,
+        savedId: target.id,
+        startedAt: Date.now(),
+      });
+    } finally {
+      setCookingPending(false);
     }
-    await markCooked(target.id);
+  }
+  async function onFinishCooking() {
+    setCookingPending(true);
+    try {
+      await finishCookingSession();
+    } finally {
+      setCookingPending(false);
+    }
   }
 
   return (
@@ -109,14 +135,50 @@ export function SaveBar({
             <span className="text-stone-500">Tap a library to save</span>
           )}
         </div>
-        <button
-          type="button"
-          onClick={onCooked}
-          className="inline-flex items-center gap-1.5 rounded-md border border-stone-300 bg-white px-3 py-1.5 text-xs font-medium text-stone-700 hover:bg-stone-50"
-        >
-          <ChefHat className="h-3.5 w-3.5" />
-          I cooked this
-        </button>
+        {isCookingThis ? (
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={onFinishCooking}
+              disabled={cookingPending}
+              className="inline-flex items-center gap-1.5 rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-60"
+            >
+              {cookingPending ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Check className="h-3.5 w-3.5" />
+              )}
+              Finish cook
+            </button>
+            <button
+              type="button"
+              onClick={cancelCookingSession}
+              title="Cancel without recording a cook"
+              className="inline-flex items-center rounded-md border border-stone-300 bg-white px-2 py-1.5 text-xs text-stone-500 hover:text-stone-900"
+            >
+              <Square className="h-3 w-3" />
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={onStartCooking}
+            disabled={cookingPending || isAnotherCooking}
+            title={
+              isAnotherCooking
+                ? "Another cooking session is active — finish it first"
+                : "Start a cooking session (keeps the screen awake and persists timers across reloads)"
+            }
+            className="inline-flex items-center gap-1.5 rounded-md bg-amber-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-amber-700 disabled:opacity-60"
+          >
+            {cookingPending ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Flame className="h-3.5 w-3.5" />
+            )}
+            Start cooking
+          </button>
+        )}
       </div>
 
       {/* Scope chips — one per library, click to toggle */}

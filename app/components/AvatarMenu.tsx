@@ -72,6 +72,7 @@ export function AvatarMenu() {
             height={32}
             className="rounded-full"
             unoptimized
+            referrerPolicy="no-referrer"
           />
         ) : (
           <span className="flex h-8 w-8 items-center justify-center rounded-full bg-stone-200 text-xs font-semibold text-stone-700">
