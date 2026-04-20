@@ -59,7 +59,7 @@ export default function Home() {
             placeholder="https://alisoneroman.com/recipes/alisons-bolognese/"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
-            className="flex-1 rounded-lg border border-stone-300 bg-white px-4 py-2.5 text-sm text-stone-900 shadow-sm placeholder:text-stone-400 focus:border-stone-500 focus:outline-none focus:ring-2 focus:ring-stone-200"
+            className="flex-1 rounded-lg border border-stone-300 bg-white px-4 py-2.5 text-base text-stone-900 shadow-sm placeholder:text-stone-400 focus:border-stone-500 focus:outline-none focus:ring-2 focus:ring-stone-200 sm:text-sm"
             disabled={loading}
           />
           <button
