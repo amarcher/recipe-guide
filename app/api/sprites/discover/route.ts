@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { put, head } from "@vercel/blob";
+import sharp from "sharp";
 import manifest from "@/sprites/manifest.json";
 
 export const runtime = "nodejs";
@@ -10,6 +11,7 @@ const ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${MODE
 
 const MAX_PER_REQUEST = 20;
 const BLOB_PREFIX = "sprites/";
+const TARGET_PX = 512;
 
 type Manifest = {
   style_prompt: string;
@@ -139,13 +141,17 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      // 3) Generate via Gemini
+      // 3) Generate via Gemini, then resize to TARGET_PX before persisting.
       try {
-        const buf = await generateImage(name, apiKey);
-        if (!buf) {
+        const raw = await generateImage(name, apiKey);
+        if (!raw) {
           results[name] = { error: "no image returned" };
           return;
         }
+        const buf = await sharp(raw)
+          .resize(TARGET_PX, TARGET_PX, { fit: "inside" })
+          .png({ compressionLevel: 9 })
+          .toBuffer();
         if (blobToken) {
           const blob = await put(pathname, buf, {
             access: "public",
@@ -156,7 +162,6 @@ export async function POST(req: NextRequest) {
           });
           results[name] = { url: blob.url, slug };
         } else {
-          // No Blob configured — return as data URL so the session at least works.
           results[name] = {
             url: `data:image/png;base64,${buf.toString("base64")}`,
             slug,

@@ -13,6 +13,9 @@ import { readFile, writeFile, mkdir, access } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { argv, env, exit } from "node:process";
+import sharp from "sharp";
+
+const TARGET_PX = 512;
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, "..");
@@ -81,9 +84,13 @@ async function generate(slug, label) {
     );
   }
   const b64 = imgPart.inlineData?.data ?? imgPart.inline_data?.data;
-  const buf = Buffer.from(b64, "base64");
+  const raw = Buffer.from(b64, "base64");
+  const resized = await sharp(raw)
+    .resize(TARGET_PX, TARGET_PX, { fit: "inside" })
+    .png({ compressionLevel: 9 })
+    .toBuffer();
   const out = join(OUT_DIR, `${slug}.png`);
-  await writeFile(out, buf);
+  await writeFile(out, resized);
   return out;
 }
 
