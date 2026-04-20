@@ -1,15 +1,19 @@
 "use client";
 
 import type { Step } from "@/app/types";
-import { parseMinutes, formatMinutes } from "@/app/lib/duration";
+import { parseMinutesRange, formatMinutes } from "@/app/lib/duration";
 import { StepIcon } from "./StepIcon";
 
 const FALLBACK_MIN = 5;
 
+// For the timeline we want "active engagement time", not midpoint. A step like
+// "30 minutes to 24 hours" represents 30 minutes of actual work plus optional
+// resting; using the midpoint (~12h) makes that one step swallow the whole
+// strip. Use the low end of the range for sizing.
 export function Timeline({ steps }: { steps: Step[] }) {
   const segments = steps.map((s) => {
-    const m = parseMinutes(s.duration);
-    return { step: s, minutes: m ?? FALLBACK_MIN, known: m !== null };
+    const r = parseMinutesRange(s.duration);
+    return { step: s, minutes: r ? r.low : FALLBACK_MIN, known: r !== null };
   });
   const total = segments.reduce((acc, s) => acc + s.minutes, 0);
   if (total === 0) return null;

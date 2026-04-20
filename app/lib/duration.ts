@@ -69,12 +69,6 @@ export function parseMinutesRange(
   return { low, high };
 }
 
-// Midpoint helper for the timeline strip.
-export function parseMinutes(d: string | null): number | null {
-  const r = parseMinutesRange(d);
-  return r ? (r.low + r.high) / 2 : null;
-}
-
 export function formatClock(secondsRemaining: number): string {
   const s = Math.max(0, Math.ceil(secondsRemaining));
   const m = Math.floor(s / 60);
