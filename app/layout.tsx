@@ -53,11 +53,11 @@ export const metadata: Metadata = {
     },
   },
   alternates: {
-    canonical: "/",
+    canonical: `${SITE_URL}/`,
   },
   openGraph: {
     type: "website",
-    url: "/",
+    url: `${SITE_URL}/`,
     siteName: SITE_NAME,
     title: `${SITE_NAME} — recipes, standardized`,
     description: DESCRIPTION,
@@ -103,10 +103,9 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-stone-50 text-stone-900">
-        <Script
-          id="ld-json"
+        {/* SSR'd so crawlers see it in the initial HTML. */}
+        <script
           type="application/ld+json"
-          strategy="afterInteractive"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
         <Script
