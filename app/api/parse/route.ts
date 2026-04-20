@@ -1,9 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { neon } from "@neondatabase/serverless";
 import type { CookCard } from "@/app/types";
 import { prisma } from "@/app/lib/prisma";
 
 const MODEL = "claude-opus-4-7";
+
+function logUsage(tokensIn: number, tokensOut: number, sourceUrl: string) {
+  const dbUrl = process.env.DASHBOARD_DATABASE_URL;
+  if (!dbUrl) return;
+  const sql = neon(dbUrl);
+  sql`INSERT INTO api_usage (project, service, endpoint, tokens_in, tokens_out, model, metadata)
+    VALUES ('recipe-guide', 'anthropic', 'parse', ${tokensIn}, ${tokensOut}, ${MODEL}, ${JSON.stringify({ sourceUrl })})`.catch(
+    (e) => console.error("[parse] usage log failed:", e),
+  );
+}
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -190,6 +201,7 @@ Return only the JSON object.`;
       .filter((b): b is Anthropic.TextBlock => b.type === "text")
       .map((b) => b.text)
       .join("\n");
+    logUsage(resp.usage.input_tokens, resp.usage.output_tokens, url);
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Unknown model error";
     return NextResponse.json({ error: `Model error: ${msg}` }, { status: 502 });

@@ -1,7 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { put, head } from "@vercel/blob";
 import sharp from "sharp";
+import { neon } from "@neondatabase/serverless";
 import manifest from "@/sprites/manifest.json";
+
+function logSpriteUsage(count: number, slugs: string[]) {
+  const dbUrl = process.env.DASHBOARD_DATABASE_URL;
+  if (!dbUrl) return;
+  const sql = neon(dbUrl);
+  // Gemini Image bills by output tokens (~1290 per image). Approximate.
+  const tokensOut = count * 1290;
+  sql`INSERT INTO api_usage (project, service, endpoint, tokens_in, tokens_out, model, metadata)
+    VALUES ('recipe-guide', 'google', 'sprite', 0, ${tokensOut}, ${MODEL}, ${JSON.stringify({ count, slugs })})`.catch(
+    (e) => console.error("[sprites/discover] usage log failed:", e)
+  );
+}
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -122,6 +135,7 @@ export async function POST(req: NextRequest) {
 
   type Result = { url?: string; slug?: string; error?: string };
   const results: Record<string, Result> = {};
+  const generatedSlugs: string[] = [];
 
   await Promise.all(
     cleaned.map(async (name) => {
@@ -161,6 +175,7 @@ export async function POST(req: NextRequest) {
           results[name] = { error: "no image returned" };
           return;
         }
+        generatedSlugs.push(slug);
         const display = await sharp(raw)
           .resize(TARGET_PX, TARGET_PX, { fit: "inside" })
           .png({ compressionLevel: 9 })
@@ -196,6 +211,10 @@ export async function POST(req: NextRequest) {
       }
     })
   );
+
+  if (generatedSlugs.length > 0) {
+    logSpriteUsage(generatedSlugs.length, generatedSlugs);
+  }
 
   return NextResponse.json({ results });
 }
