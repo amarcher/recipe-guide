@@ -290,10 +290,15 @@ export function useSavesForCard(card: { source_url: string }): SavedRecipe[] {
 
 // ─── Imperative writes ──────────────────────────────────────────────────────
 
+// Tracks whether we should hit the server. Set explicitly via setSignedIn()
+// (called from a SessionGate client component) so we don't depend on cookie
+// sniffing that can silently mis-route saves to localStorage in production.
+let signedInHint = false;
+export function setSignedIn(v: boolean) {
+  signedInHint = v;
+}
 export function isSignedInClient(): boolean {
-  // Heuristic: check Auth.js cookie. Used by callers that aren't React hooks.
-  if (typeof document === "undefined") return false;
-  return /(?:^|; )(?:__Secure-)?authjs\.session-token=/.test(document.cookie);
+  return signedInHint;
 }
 
 // `scopes`: list of (familyId | null), where null = personal library.
