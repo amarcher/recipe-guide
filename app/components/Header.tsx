@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ChefHat, Library } from "lucide-react";
 import { SettingsButton } from "./SettingsButton";
+import { UserMenu } from "./UserMenu";
 
 export function Header() {
   return (
@@ -22,6 +23,7 @@ export function Header() {
             Library
           </Link>
           <SettingsButton />
+          <UserMenu />
         </nav>
       </div>
     </header>
