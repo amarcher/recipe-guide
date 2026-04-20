@@ -68,7 +68,7 @@ export function MisePlace({
                 <div className="relative">
                   <Sprite
                     name={e.item}
-                    size={44}
+                    size={60}
                     className={`mt-0.5 transition ${
                       isChecked ? "opacity-50" : ""
                     }`}

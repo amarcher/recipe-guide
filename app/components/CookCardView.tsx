@@ -24,7 +24,7 @@ function IngredientLine({ ing, factor }: { ing: Ingredient; factor: number }) {
   const qty = scaleQty(ing.quantity, factor);
   return (
     <li className="flex items-center gap-2 text-sm text-stone-800">
-      <Sprite name={ing.item} size={24} />
+      <Sprite name={ing.item} size={32} />
       <span className="leading-snug">
         {(qty || ing.unit) && (
           <span className="font-semibold tabular-nums text-stone-900">
