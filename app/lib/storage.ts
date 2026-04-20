@@ -239,21 +239,36 @@ export function isSignedInClient(): boolean {
   return /(?:^|; )(?:__Secure-)?authjs\.session-token=/.test(document.cookie);
 }
 
+// `scopes`: list of (familyId | null), where null = personal library.
+// If omitted or empty, defaults to a single null (personal) save. Each scope
+// is a separate SavedRecipe row; the server upsert dedupes idempotently.
+// Returns the FIRST saved row (used for navigation after save).
 export async function saveRecipe(
   card: CookCard,
-  options?: { familyId?: string | null }
+  options?: { scopes?: Array<string | null>; familyId?: string | null }
 ): Promise<SavedRecipe> {
+  const scopes =
+    options?.scopes && options.scopes.length > 0
+      ? options.scopes
+      : [options?.familyId ?? null];
+
   if (isSignedInClient()) {
-    const res = await fetch("/api/recipes", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ card, familyId: options?.familyId ?? null }),
-    });
-    if (!res.ok) throw new Error(`save failed: ${res.status}`);
-    const { id } = (await res.json()) as { id: string };
+    const ids = await Promise.all(
+      scopes.map(async (familyId) => {
+        const res = await fetch("/api/recipes", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ card, familyId }),
+        });
+        if (!res.ok) throw new Error(`save failed: ${res.status}`);
+        const { id } = (await res.json()) as { id: string };
+        return id;
+      })
+    );
     await fetchRemoteList();
-    return remoteMirror?.[id] ?? {
-      id,
+    const firstId = ids[0];
+    return remoteMirror?.[firstId] ?? {
+      id: firstId,
       card,
       savedAt: Date.now(),
       lastCookedAt: null,

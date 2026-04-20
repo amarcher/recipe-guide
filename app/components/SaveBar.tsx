@@ -1,7 +1,14 @@
 "use client";
 
-import { useState } from "react";
-import { Bookmark, BookmarkCheck, ChefHat, Trash2, ChevronDown } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import {
+  Bookmark,
+  BookmarkCheck,
+  ChefHat,
+  Trash2,
+  ChevronDown,
+  Check,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import type { CookCard } from "@/app/types";
@@ -38,14 +45,32 @@ export function SaveBar({
   const session = useSession();
   const { families } = useMyFamilies();
   const [justSaved, setJustSaved] = useState(false);
-  const [scope, setScope] = useState<string | null>(null); // null = personal
+  // Selected scopes: null = personal. Defaults to [null].
+  const [scopes, setScopes] = useState<Array<string | null>>([null]);
   const [showScope, setShowScope] = useState(false);
+  const scopeRef = useRef<HTMLDivElement>(null);
 
   const isSaved = recipe !== null;
   const signedIn = session.status === "authenticated";
 
+  useEffect(() => {
+    if (!showScope) return;
+    function onClick(e: MouseEvent) {
+      if (!scopeRef.current?.contains(e.target as Node)) setShowScope(false);
+    }
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, [showScope]);
+
+  function toggleScope(s: string | null) {
+    setScopes((prev) =>
+      prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]
+    );
+  }
+
   async function onSave() {
-    const saved = await saveRecipe(card, { familyId: scope });
+    const targets = scopes.length > 0 ? scopes : [null];
+    const saved = await saveRecipe(card, { scopes: targets });
     setJustSaved(true);
     setTimeout(() => setJustSaved(false), 1500);
     setShowScope(false);
@@ -56,7 +81,7 @@ export function SaveBar({
 
   async function onCooked() {
     let target = recipe;
-    if (!target) target = await saveRecipe(card, { familyId: scope });
+    if (!target) target = await saveRecipe(card, { scopes });
     await markCooked(target.id);
   }
 
@@ -66,8 +91,15 @@ export function SaveBar({
     router.push("/library");
   }
 
-  const scopeLabel =
-    scope === null ? "Personal" : families.find((f) => f.id === scope)?.name ?? "Family";
+  const scopeButtonLabel = (() => {
+    if (scopes.length === 0) return "Pick a library";
+    if (scopes.length === 1) {
+      return scopes[0] === null
+        ? "Personal"
+        : families.find((f) => f.id === scopes[0])?.name ?? "Family";
+    }
+    return `${scopes.length} libraries`;
+  })();
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-stone-200 bg-white px-4 py-2.5 shadow-sm">
@@ -96,48 +128,43 @@ export function SaveBar({
       </div>
       <div className="flex items-center gap-2">
         {!isSaved && signedIn && families.length > 0 && (
-          <div className="relative">
+          <div className="relative" ref={scopeRef}>
             <button
               type="button"
               onClick={() => setShowScope((v) => !v)}
               className="inline-flex items-center gap-1 rounded-md border border-stone-300 bg-white px-2.5 py-1.5 text-xs font-medium text-stone-700 hover:bg-stone-50"
             >
-              {scopeLabel}
+              {scopeButtonLabel}
               <ChevronDown className="h-3 w-3" />
             </button>
             {showScope && (
-              <div className="absolute right-0 top-full z-20 mt-1 w-44 rounded-md border border-stone-200 bg-white p-1 shadow-lg">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setScope(null);
-                    setShowScope(false);
-                  }}
-                  className={`block w-full rounded px-2 py-1.5 text-left text-xs ${
-                    scope === null
-                      ? "bg-stone-100 font-medium text-stone-900"
-                      : "text-stone-700 hover:bg-stone-50"
-                  }`}
-                >
-                  Personal
-                </button>
+              <div className="absolute right-0 top-full z-20 mt-1 w-52 rounded-md border border-stone-200 bg-white p-1 shadow-lg">
+                <ScopeRow
+                  label="Personal"
+                  checked={scopes.includes(null)}
+                  onToggle={() => toggleScope(null)}
+                />
+                <div className="my-1 border-t border-stone-100" />
                 {families.map((f) => (
-                  <button
+                  <ScopeRow
                     key={f.id}
-                    type="button"
-                    onClick={() => {
-                      setScope(f.id);
-                      setShowScope(false);
-                    }}
-                    className={`block w-full rounded px-2 py-1.5 text-left text-xs ${
-                      scope === f.id
-                        ? "bg-stone-100 font-medium text-stone-900"
-                        : "text-stone-700 hover:bg-stone-50"
-                    }`}
-                  >
-                    {f.name}
-                  </button>
+                    label={f.name}
+                    checked={scopes.includes(f.id)}
+                    onToggle={() => toggleScope(f.id)}
+                  />
                 ))}
+                {families.length > 1 && (
+                  <>
+                    <div className="my-1 border-t border-stone-100" />
+                    <button
+                      type="button"
+                      onClick={() => setScopes([null, ...families.map((f) => f.id)])}
+                      className="block w-full rounded px-2 py-1.5 text-left text-[11px] uppercase tracking-wider text-stone-500 hover:bg-stone-50"
+                    >
+                      Save to all
+                    </button>
+                  </>
+                )}
               </div>
             )}
           </div>
@@ -146,10 +173,15 @@ export function SaveBar({
           <button
             type="button"
             onClick={onSave}
-            className="inline-flex items-center gap-1.5 rounded-md bg-stone-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-stone-700"
+            disabled={signedIn && families.length > 0 && scopes.length === 0}
+            className="inline-flex items-center gap-1.5 rounded-md bg-stone-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-stone-700 disabled:opacity-60"
           >
             <Bookmark className="h-3.5 w-3.5" />
-            {justSaved ? "Saved!" : "Save to library"}
+            {justSaved
+              ? "Saved!"
+              : scopes.length > 1
+              ? `Save to ${scopes.length}`
+              : "Save"}
           </button>
         )}
         <button
@@ -172,5 +204,34 @@ export function SaveBar({
         )}
       </div>
     </div>
+  );
+}
+
+function ScopeRow({
+  label,
+  checked,
+  onToggle,
+}: {
+  label: string;
+  checked: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-xs text-stone-700 hover:bg-stone-50"
+    >
+      <span
+        className={`flex h-4 w-4 flex-none items-center justify-center rounded border ${
+          checked
+            ? "border-stone-900 bg-stone-900 text-white"
+            : "border-stone-300 bg-white"
+        }`}
+      >
+        {checked && <Check className="h-3 w-3" strokeWidth={3} />}
+      </span>
+      <span className="truncate">{label}</span>
+    </button>
   );
 }

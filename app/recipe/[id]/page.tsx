@@ -2,9 +2,11 @@
 
 import { use } from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { useSavedRecipe } from "@/app/lib/storage";
 import { CookCardView } from "@/app/components/CookCardView";
 import { SaveBar } from "@/app/components/SaveBar";
+import { CookHistory } from "@/app/components/CookHistory";
 
 export default function RecipePage({
   params,
@@ -13,6 +15,8 @@ export default function RecipePage({
 }) {
   const { id } = use(params);
   const { recipe, loaded } = useSavedRecipe(id);
+  const session = useSession();
+  const signedIn = session.status === "authenticated";
 
   return (
     <main className="flex flex-1 flex-col px-4 py-6 sm:py-10">
@@ -35,6 +39,7 @@ export default function RecipePage({
       ) : (
         <div className="mx-auto w-full max-w-3xl space-y-4">
           <SaveBar card={recipe.card} variant="detail" />
+          {signedIn && <CookHistory recipeId={recipe.id} />}
           <CookCardView card={recipe.card} />
         </div>
       )}
