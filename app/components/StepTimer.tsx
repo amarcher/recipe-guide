@@ -137,12 +137,17 @@ export function StepTimer({
     const verb = alarm.kind === "check" ? "Check now" : "Time’s up for";
     const announcement = `${verb}: step ${stepNumber}, ${stepHeadline}`;
     const pulse = () => {
-      const audible = playBeep(settings.volume);
       vibrate();
+      if (cast.status === "connected") {
+        // When casting, the Home is the speaker — don't duplicate audio on
+        // the computer. Vibration still fires so you feel it on your phone.
+        void speakOnCast(announcement);
+        return;
+      }
+      const audible = playBeep(settings.volume);
       if (settings.ttsEnabled) speakText(announcement);
-      if (cast.status === "connected") void speakOnCast(announcement);
       if (!audible) {
-        console.info("[alarm] audio muted — relying on vibration + cast");
+        console.info("[alarm] audio muted — relying on vibration");
       }
     };
     pulse();

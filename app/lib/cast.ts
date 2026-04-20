@@ -177,6 +177,10 @@ export async function initCast(): Promise<void> {
             deviceName: session?.getCastDevice().friendlyName ?? null,
             error: null,
           });
+          // Immediate audible handshake: if you don't hear this on the Home,
+          // the receiver couldn't fetch /api/tts (usually because the sender
+          // origin is localhost and the Home can't reach it).
+          void speakOnCast("Recipe Guide connected");
         } else if (e.sessionState === S.SESSION_ENDED) {
           setState({ status: "disconnected", deviceName: null });
         }
@@ -232,7 +236,20 @@ export async function speakOnCast(text: string): Promise<void> {
   const chromeCast = getChromeCast();
   if (!session || !chromeCast?.media) return;
   const origin = typeof window !== "undefined" ? window.location.origin : "";
+  if (
+    origin.startsWith("http://localhost") ||
+    origin.startsWith("http://127.") ||
+    origin.startsWith("http://0.0.0.0")
+  ) {
+    console.warn(
+      "[cast] /api/tts is at %s — the Home can't reach dev-server URLs. " +
+        "Deploy to Vercel or run a tunnel (e.g. `ngrok http 3000`) and open " +
+        "the tunnel URL instead of localhost.",
+      origin
+    );
+  }
   const url = `${origin}/api/tts?q=${encodeURIComponent(text)}`;
+  console.debug("[cast] loadMedia", url);
   const mediaInfo = new chromeCast.media.MediaInfo(url, "audio/mpeg");
   const metadata = new chromeCast.media.GenericMediaMetadata();
   metadata.metadataType = chromeCast.media.MetadataType.GENERIC;
@@ -241,6 +258,7 @@ export async function speakOnCast(text: string): Promise<void> {
   const req = new chromeCast.media.LoadRequest(mediaInfo);
   try {
     await session.loadMedia(req);
+    console.debug("[cast] loadMedia OK");
   } catch (err) {
     console.warn("[cast] loadMedia failed", err);
   }
