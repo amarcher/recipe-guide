@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import type { CookCard } from "@/app/types";
+import { prisma } from "@/app/lib/prisma";
+
+const MODEL = "claude-opus-4-7";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -130,6 +133,22 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // ─── Cross-account cache lookup ─────────────────────────────────────────
+  // The URL itself is the cache key. Append a query param to bust.
+  try {
+    const cached = await prisma.parsedRecipe.findUnique({
+      where: { sourceUrl: url },
+    });
+    if (cached) {
+      return NextResponse.json(cached.cardJson, {
+        headers: { "X-Cache": "HIT" },
+      });
+    }
+  } catch (e) {
+    // DB unreachable shouldn't block parsing — log and continue to live parse.
+    console.warn("ParsedRecipe cache lookup failed:", e);
+  }
+
   let pageText: string;
   try {
     pageText = await fetchPageText(url);
@@ -162,7 +181,7 @@ Return only the JSON object.`;
   let raw: string;
   try {
     const resp = await client.messages.create({
-      model: "claude-opus-4-7",
+      model: MODEL,
       max_tokens: 8000,
       system: SYSTEM_PROMPT,
       messages: [{ role: "user", content: userMessage }],
@@ -189,5 +208,25 @@ Return only the JSON object.`;
     );
   }
 
-  return NextResponse.json(parsed);
+  // Persist to the cross-account cache.
+  try {
+    await prisma.parsedRecipe.upsert({
+      where: { sourceUrl: url },
+      create: {
+        sourceUrl: url,
+        title: parsed.title,
+        cardJson: parsed as unknown as object,
+        modelUsed: MODEL,
+      },
+      update: {
+        title: parsed.title,
+        cardJson: parsed as unknown as object,
+        modelUsed: MODEL,
+      },
+    });
+  } catch (e) {
+    console.warn("ParsedRecipe upsert failed:", e);
+  }
+
+  return NextResponse.json(parsed, { headers: { "X-Cache": "MISS" } });
 }

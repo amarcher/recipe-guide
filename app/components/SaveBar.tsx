@@ -37,23 +37,24 @@ export function SaveBar({
 
   const isSaved = recipe !== null;
 
-  function onSave() {
-    saveRecipe(card);
+  async function onSave() {
+    const saved = await saveRecipe(card);
     setJustSaved(true);
     setTimeout(() => setJustSaved(false), 1500);
     if (variant === "parse") {
-      router.push(`/recipe/${id}`);
+      router.push(`/recipe/${saved.id}`);
     }
   }
 
-  function onCooked() {
-    if (!isSaved) saveRecipe(card);
-    markCooked(id);
+  async function onCooked() {
+    let target = recipe;
+    if (!target) target = await saveRecipe(card);
+    await markCooked(target.id);
   }
 
-  function onDelete() {
+  async function onDelete() {
     if (!confirm(`Remove "${card.title}" from your library?`)) return;
-    deleteRecipe(id);
+    if (recipe) await deleteRecipe(recipe.id);
     router.push("/library");
   }
 
