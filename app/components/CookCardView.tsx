@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   Eye,
   Wrench,
@@ -12,6 +12,7 @@ import {
 import type { CookCard, Ingredient } from "@/app/types";
 import { scaleQty, scaleServings } from "@/app/lib/scale";
 import { parseMinutesRange } from "@/app/lib/duration";
+import { discoverSprites } from "@/app/lib/sprites";
 import { Scaler } from "./Scaler";
 import { Timeline } from "./Timeline";
 import { StepIcon } from "./StepIcon";
@@ -85,6 +86,17 @@ export function CookCardView({ card }: { card: CookCard }) {
         ?.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 400);
   }, []);
+
+  // Fire-and-forget: ask the server for sprites we don't have locally. The
+  // recipe renders immediately with fallbacks; sprites swap in via the
+  // reactive cache as the response arrives.
+  useEffect(() => {
+    const names = [
+      ...card.pantry_ingredients.map((i) => i.item),
+      ...card.steps.flatMap((s) => s.ingredients.map((i) => i.item)),
+    ];
+    discoverSprites(names);
+  }, [card]);
 
   return (
     <article className="mx-auto w-full max-w-3xl space-y-4">

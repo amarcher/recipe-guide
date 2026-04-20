@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { findSprite, spriteUrl } from "@/app/lib/sprites";
+import { useSpriteUrl } from "@/app/lib/sprites";
 
 export function Sprite({
   name,
@@ -12,10 +12,11 @@ export function Sprite({
   size?: number;
   className?: string;
 }) {
-  const slug = findSprite(name);
-  const [broken, setBroken] = useState(false);
+  const url = useSpriteUrl(name);
+  // Track which URL failed so a future URL change can recover.
+  const [brokenUrl, setBrokenUrl] = useState<string | null>(null);
 
-  if (!slug || broken) {
+  if (!url || brokenUrl === url) {
     const initial = (name.match(/[A-Za-z]/)?.[0] ?? "?").toUpperCase();
     return (
       <span
@@ -30,11 +31,11 @@ export function Sprite({
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src={spriteUrl(slug)}
+      src={url}
       alt={name}
       width={size}
       height={size}
-      onError={() => setBroken(true)}
+      onError={() => setBrokenUrl(url)}
       className={`flex-none object-contain ${className}`}
       style={{ width: size, height: size }}
     />
