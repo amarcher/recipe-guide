@@ -101,6 +101,10 @@ export function useSavedRecipes(): SavedRecipe[] {
   return useSyncExternalStore(subscribe, listSnapshot, () => EMPTY_LIST);
 }
 
+const noopSubscribe = () => () => {};
+const trueSnapshot = () => true;
+const falseSnapshot = () => false;
+
 export function useSavedRecipe(id: string | null): {
   recipe: SavedRecipe | null;
   loaded: boolean;
@@ -110,7 +114,16 @@ export function useSavedRecipe(id: string | null): {
     [id]
   );
   const recipe = useSyncExternalStore(subscribe, snapshot, () => null);
-  return { recipe, loaded: typeof window !== "undefined" };
+  // `loaded` is false during SSR + initial hydration (so the HTML matches),
+  // then flips to true on the next client render. We need this 3-state UI
+  // (loading / not-found / found) because localStorage doesn't exist on the
+  // server — we shouldn't show "not found" until we've actually checked.
+  const loaded = useSyncExternalStore(
+    noopSubscribe,
+    trueSnapshot,
+    falseSnapshot
+  );
+  return { recipe, loaded };
 }
 
 // Imperative API
