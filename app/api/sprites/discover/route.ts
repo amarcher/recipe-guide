@@ -10,14 +10,21 @@ const MODEL = process.env.GEMINI_IMAGE_MODEL || "gemini-2.5-flash-image";
 const ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
 
 const MAX_PER_REQUEST = 20;
-const BLOB_PREFIX = "sprites/";
+const BLOB_DISPLAY_PREFIX = "sprites/";
+const BLOB_ORIGINAL_PREFIX = "sprites/originals/";
 const TARGET_PX = 512;
 
 type Manifest = {
   style_prompt: string;
-  sprites: Array<{ slug: string; label: string; aliases: string[] }>;
+  sprites: Array<{
+    slug: string;
+    label: string;
+    aliases: string[];
+    url?: string;
+  }>;
 };
 const M = manifest as Manifest;
+const BY_SLUG = new Map(M.sprites.map((s) => [s.slug, s]));
 
 function normalize(s: string): string {
   return s
@@ -118,11 +125,14 @@ export async function POST(req: NextRequest) {
 
   await Promise.all(
     cleaned.map(async (name) => {
-      // 1) Local manifest match → instant /sprites/{slug}.png
+      // 1) Local manifest match → return the URL the manifest already has.
       const manifestSlug = findExistingSlug(name);
       if (manifestSlug) {
-        results[name] = { url: `/sprites/${manifestSlug}.png`, slug: manifestSlug };
-        return;
+        const url = BY_SLUG.get(manifestSlug)?.url;
+        if (url) {
+          results[name] = { url, slug: manifestSlug };
+          return;
+        }
       }
 
       const slug = computeSlug(name);
@@ -130,40 +140,52 @@ export async function POST(req: NextRequest) {
         results[name] = { error: "could not derive slug" };
         return;
       }
-      const pathname = `${BLOB_PREFIX}${slug}.png`;
+      const displayPath = `${BLOB_DISPLAY_PREFIX}${slug}.png`;
+      const originalPath = `${BLOB_ORIGINAL_PREFIX}${slug}.png`;
 
       // 2) Already in Blob → return cached URL (no model call, no charge)
       if (blobToken) {
-        const existing = await existingBlobUrl(pathname, blobToken);
+        const existing = await existingBlobUrl(displayPath, blobToken);
         if (existing) {
           results[name] = { url: existing, slug };
           return;
         }
       }
 
-      // 3) Generate via Gemini, then resize to TARGET_PX before persisting.
+      // 3) Generate via Gemini. Persist BOTH the original (high-res) and a
+      //    512px display variant so we keep the high-quality asset around for
+      //    future use.
       try {
         const raw = await generateImage(name, apiKey);
         if (!raw) {
           results[name] = { error: "no image returned" };
           return;
         }
-        const buf = await sharp(raw)
+        const display = await sharp(raw)
           .resize(TARGET_PX, TARGET_PX, { fit: "inside" })
           .png({ compressionLevel: 9 })
           .toBuffer();
         if (blobToken) {
-          const blob = await put(pathname, buf, {
-            access: "public",
-            token: blobToken,
-            addRandomSuffix: false,
-            contentType: "image/png",
-            allowOverwrite: true,
-          });
-          results[name] = { url: blob.url, slug };
+          const [, displayBlob] = await Promise.all([
+            put(originalPath, raw, {
+              access: "public",
+              token: blobToken,
+              addRandomSuffix: false,
+              contentType: "image/png",
+              allowOverwrite: true,
+            }),
+            put(displayPath, display, {
+              access: "public",
+              token: blobToken,
+              addRandomSuffix: false,
+              contentType: "image/png",
+              allowOverwrite: true,
+            }),
+          ]);
+          results[name] = { url: displayBlob.url, slug };
         } else {
           results[name] = {
-            url: `data:image/png;base64,${buf.toString("base64")}`,
+            url: `data:image/png;base64,${display.toString("base64")}`,
             slug,
           };
         }

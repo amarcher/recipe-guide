@@ -30,18 +30,22 @@ Open http://localhost:3000.
 
 ## Generate sprites
 
-The first 18 sprites covering the bolognese ingredients ship in `public/sprites/`. To add more:
+Sprites are stored in **Vercel Blob** (single source of truth). The manifest at `sprites/manifest.json` lists every sprite with `slug`, `label`, `aliases`, and Blob URLs (`url` for the 512px display variant + `original_url` for the high-res 1024 from Gemini, kept for future use).
 
-1. Add an entry to `sprites/manifest.json` with `slug`, `label` (the prompt fragment), and `aliases` (lowercase wordings the parser might emit).
-2. Generate:
+To add more:
+
+1. Add an entry to `sprites/manifest.json` with `slug`, `label`, and `aliases`.
+2. Generate (requires `GEMINI_API_KEY` and `BLOB_READ_WRITE_TOKEN` in `.env.local`):
 
 ```bash
-npm run sprites              # only generates missing PNGs
-npm run sprites -- --force   # regenerate everything (e.g. after editing style_prompt)
-npm run sprites garlic       # one slug
+npm run sprites                # only generates missing slugs
+npm run sprites -- --force     # regenerate everything (e.g. after editing style_prompt)
+npm run sprites garlic         # one slug
 ```
 
-There's a `add-sprite` Claude Code skill at `.claude/skills/add-sprite/SKILL.md` that automates this — just ask Claude to "add a sprite for X".
+The script uploads both variants to Blob and writes the resulting URLs back into the manifest. Commit the manifest change.
+
+There's an `add-sprite` Claude Code skill at `.claude/skills/add-sprite/SKILL.md` that automates this — just ask Claude to "add a sprite for X".
 
 ## Deploy
 

@@ -28,13 +28,13 @@ The user will give you one or more ingredient names (e.g. "shallot", "san marzan
 
 6. **Generate the image(s)**:
    ```bash
-   GEMINI_API_KEY=... npm run sprites <slug> [<slug> ...]
+   npm run sprites <slug> [<slug> ...]
    ```
-   - The script is idempotent — only generates missing files. Pass `--force` to overwrite.
-   - If the user hasn't set `GEMINI_API_KEY`, ask them to set it (https://aistudio.google.com/apikey) and stop here. Do **not** invent or guess a key.
-   - The script writes to `public/sprites/{slug}.png`. Confirm the file exists after the run.
+   - The npm script reads `.env.local` for `GEMINI_API_KEY` and `BLOB_READ_WRITE_TOKEN`. If either is missing, the script will say so and exit — pull them with `vercel env pull .env.local` (Blob token) or get a Gemini key at https://aistudio.google.com/apikey. Do **not** invent or guess a key.
+   - The script is idempotent — only generates missing slugs. Pass `--force` to overwrite.
+   - It uploads BOTH the original 1024 PNG (`sprites/originals/<slug>.png`) and a 512px display variant (`sprites/<slug>.png`) to Vercel Blob, then writes the resulting URLs into `sprites/manifest.json` as `url` and `original_url`.
 
-7. **Report** what you added. Include slug, label, aliases, and whether the PNG was generated. If the generation failed (rate limit, content policy, etc.), say so and suggest a tweaked label.
+7. **Report** what you added. Include slug, label, aliases, and whether the upload succeeded (URLs from manifest). If generation failed (rate limit, content policy, etc.), say so and suggest a tweaked label. Remind the user to commit the manifest change.
 
 ## Style consistency
 

@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "sprites": "node --env-file=.env.local scripts/generate-sprites.mjs"
+    "sprites": "node --env-file=.env.local scripts/generate-sprites.mjs",
+    "sprites:promote": "node --env-file=.env.local scripts/promote-static-to-blob.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.90.0",

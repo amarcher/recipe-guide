@@ -7,9 +7,13 @@ type SpriteEntry = {
   slug: string;
   label: string;
   aliases: string[];
+  url?: string;
+  original_url?: string;
 };
 
 const ENTRIES = (manifest.sprites as SpriteEntry[]).slice();
+const BY_SLUG = new Map<string, SpriteEntry>();
+for (const e of ENTRIES) BY_SLUG.set(e.slug, e);
 const ALIAS_INDEX: Array<{ alias: string; slug: string }> = [];
 for (const e of ENTRIES) {
   for (const a of e.aliases) {
@@ -35,8 +39,14 @@ export function findSprite(name: string): string | null {
   return null;
 }
 
-export function spriteUrl(slug: string): string {
-  return `/sprites/${slug}.png`;
+// Returns the canonical (display) URL for a slug, sourced from the manifest.
+// Returns null if the slug is unknown or hasn't been generated/promoted yet.
+export function spriteUrl(slug: string): string | null {
+  return BY_SLUG.get(slug)?.url ?? null;
+}
+
+export function spriteOriginalUrl(slug: string): string | null {
+  return BY_SLUG.get(slug)?.original_url ?? null;
 }
 
 export function allSlugs(): string[] {
@@ -53,6 +63,11 @@ function getStaticUrl(name: string): string | null {
   const url = slug ? spriteUrl(slug) : null;
   staticUrlCache.set(norm, url);
   return url;
+}
+
+export function lookupSpriteOriginalUrl(name: string): string | null {
+  const slug = findSprite(name);
+  return slug ? spriteOriginalUrl(slug) : null;
 }
 
 // Dynamic cache — sprites generated at runtime via /api/sprites/discover.

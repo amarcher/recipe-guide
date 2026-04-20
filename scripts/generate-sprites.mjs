@@ -1,26 +1,35 @@
 #!/usr/bin/env node
-// Generates ingredient sprite PNGs from sprites/manifest.json using Gemini 2.5
+// Generate ingredient sprite PNGs from sprites/manifest.json using Gemini 2.5
 // Flash Image (codename "Nano Banana") via the Generative Language REST API.
 //
-// Usage:
-//   GEMINI_API_KEY=...  node scripts/generate-sprites.mjs           # only missing
-//   GEMINI_API_KEY=...  node scripts/generate-sprites.mjs --force   # regenerate all
-//   GEMINI_API_KEY=...  node scripts/generate-sprites.mjs olive-oil # one slug
+// Stores TWO variants in Vercel Blob per sprite:
+//   sprites/originals/<slug>.png  — original 1024-ish PNG straight from Gemini
+//                                   (preserved for future high-res use)
+//   sprites/<slug>.png            — 512px display variant served by the app
 //
-// Output: public/sprites/<slug>.png
+// After upload, the resolved Blob URLs are written back into
+// sprites/manifest.json (`url`, `original_url`). The app reads URLs from the
+// manifest — there is no /public/sprites/ folder anymore.
+//
+// Usage:
+//   GEMINI_API_KEY=... BLOB_READ_WRITE_TOKEN=... node scripts/generate-sprites.mjs           # only missing
+//   ...                                          node scripts/generate-sprites.mjs --force   # regenerate all
+//   ...                                          node scripts/generate-sprites.mjs olive-oil # one slug
 
-import { readFile, writeFile, mkdir, access } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { argv, env, exit } from "node:process";
 import sharp from "sharp";
+import { put, head } from "@vercel/blob";
 
 const TARGET_PX = 512;
+const BLOB_DISPLAY_PREFIX = "sprites/";
+const BLOB_ORIGINAL_PREFIX = "sprites/originals/";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, "..");
 const MANIFEST = join(ROOT, "sprites", "manifest.json");
-const OUT_DIR = join(ROOT, "public", "sprites");
 
 const MODEL = env.GEMINI_IMAGE_MODEL || "gemini-2.5-flash-image";
 const ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
@@ -32,32 +41,48 @@ if (!apiKey) {
   );
   exit(1);
 }
+const blobToken = env.BLOB_READ_WRITE_TOKEN;
+if (!blobToken) {
+  console.error(
+    "ERROR: set BLOB_READ_WRITE_TOKEN. Pull it via `vercel env pull .env.local`."
+  );
+  exit(1);
+}
 
 const args = argv.slice(2);
 const force = args.includes("--force");
 const onlySlugs = args.filter((a) => !a.startsWith("--"));
 
 const manifest = JSON.parse(await readFile(MANIFEST, "utf8"));
-await mkdir(OUT_DIR, { recursive: true });
-
 const targets = manifest.sprites.filter((s) =>
   onlySlugs.length === 0 ? true : onlySlugs.includes(s.slug)
 );
-
-async function exists(p) {
-  try {
-    await access(p);
-    return true;
-  } catch {
-    return false;
-  }
-}
 
 function buildPrompt(label) {
   return manifest.style_prompt.replace("{label}", label);
 }
 
-async function generate(slug, label) {
+async function blobExists(pathname) {
+  try {
+    const meta = await head(pathname, { token: blobToken });
+    return meta.url;
+  } catch {
+    return null;
+  }
+}
+
+async function uploadToBlob(pathname, buf) {
+  const blob = await put(pathname, buf, {
+    access: "public",
+    token: blobToken,
+    addRandomSuffix: false,
+    contentType: "image/png",
+    allowOverwrite: true,
+  });
+  return blob.url;
+}
+
+async function callGemini(label) {
   const prompt = buildPrompt(label);
   const res = await fetch(ENDPOINT, {
     method: "POST",
@@ -84,14 +109,41 @@ async function generate(slug, label) {
     );
   }
   const b64 = imgPart.inlineData?.data ?? imgPart.inline_data?.data;
-  const raw = Buffer.from(b64, "base64");
-  const resized = await sharp(raw)
+  return Buffer.from(b64, "base64");
+}
+
+async function processSlug(sprite) {
+  const displayPath = `${BLOB_DISPLAY_PREFIX}${sprite.slug}.png`;
+  const originalPath = `${BLOB_ORIGINAL_PREFIX}${sprite.slug}.png`;
+
+  if (!force) {
+    const existingDisplay = await blobExists(displayPath);
+    const existingOriginal = await blobExists(originalPath);
+    if (existingDisplay && existingOriginal) {
+      sprite.url = existingDisplay;
+      sprite.original_url = existingOriginal;
+      return { status: "skip" };
+    }
+  }
+
+  const original = await callGemini(sprite.label);
+  const display = await sharp(original)
     .resize(TARGET_PX, TARGET_PX, { fit: "inside" })
     .png({ compressionLevel: 9 })
     .toBuffer();
-  const out = join(OUT_DIR, `${slug}.png`);
-  await writeFile(out, resized);
-  return out;
+
+  const [originalUrl, displayUrl] = await Promise.all([
+    uploadToBlob(originalPath, original),
+    uploadToBlob(displayPath, display),
+  ]);
+
+  sprite.url = displayUrl;
+  sprite.original_url = originalUrl;
+  return { status: "made", originalBytes: original.length, displayBytes: display.length };
+}
+
+async function persistManifest() {
+  await writeFile(MANIFEST, JSON.stringify(manifest, null, 2) + "\n");
 }
 
 let made = 0;
@@ -99,19 +151,20 @@ let skipped = 0;
 let failed = 0;
 
 for (const sprite of targets) {
-  const out = join(OUT_DIR, `${sprite.slug}.png`);
-  if (!force && (await exists(out))) {
-    skipped++;
-    console.log(`· skip   ${sprite.slug} (exists)`);
-    continue;
-  }
-  process.stdout.write(`… make   ${sprite.slug.padEnd(22)} `);
+  process.stdout.write(`· ${sprite.slug.padEnd(22)} `);
   try {
-    await generate(sprite.slug, sprite.label);
-    made++;
-    console.log("ok");
-    // gentle rate limiting
-    await new Promise((r) => setTimeout(r, 600));
+    const r = await processSlug(sprite);
+    if (r.status === "skip") {
+      skipped++;
+      console.log("skip (exists)");
+    } else {
+      made++;
+      const sizeMsg = `${(r.originalBytes / 1024) | 0}K orig → ${(r.displayBytes / 1024) | 0}K display`;
+      console.log(`ok   ${sizeMsg}`);
+      await new Promise((r) => setTimeout(r, 600)); // gentle rate limit
+    }
+    // Persist after every entry so a crash doesn't lose progress.
+    await persistManifest();
   } catch (e) {
     failed++;
     console.log(`FAIL\n   ${e.message}`);

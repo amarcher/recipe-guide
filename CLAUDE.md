@@ -20,9 +20,13 @@ A Next.js 16 app that turns any recipe URL into a one-screen "recipe guide": a m
 
 ## Sprites
 
-- Manifest: `sprites/manifest.json`. Each entry has `slug`, `label` (prompt fragment), `aliases`. Shared `style_prompt` controls the visual style.
-- PNGs live in `public/sprites/{slug}.png` and ARE committed.
+- **Single source of truth: Vercel Blob.** `public/sprites/` no longer exists. Each manifest entry carries a `url` (512px display variant) and an `original_url` (high-res 1024 from Gemini, kept for future use).
+- Manifest: `sprites/manifest.json`. Each entry has `slug`, `label` (prompt fragment), `aliases`, `url`, optional `original_url`. Shared `style_prompt` controls the visual style.
+- Blob layout: `sprites/{slug}.png` (display), `sprites/originals/{slug}.png` (original). Deterministic keys, public access, served via Blob CDN with `next/image` optimization on top.
 - Generator: `scripts/generate-sprites.mjs` calls Gemini 2.5 Flash Image (`gemini-2.5-flash-image`) via REST. White-background photoreal style; we **don't** chroma-key — the magenta-key experiment didn't work because Gemini can't reliably paint a uniform pure magenta backdrop.
+- After generation, the script writes the Blob URLs back into `sprites/manifest.json`. Commit the manifest change.
+- Discover route (`/api/sprites/discover`) generates novel sprites on-demand at parse time, also saving original + display variants and returning the display URL.
+- One-time migration script (`scripts/promote-static-to-blob.mjs`) covered the original 18 sprites that pre-existed in `public/sprites/`. They have `url` set but no `original_url` (the high-res sources were lost in the earlier resize step). Re-run `npm run sprites <slug> -- --force` if you want a high-res original for those.
 - To add sprites, use the **`add-sprite` skill** at `.claude/skills/add-sprite/SKILL.md` — it covers dedup, label conventions, and the generation command.
 
 ## Conventions
