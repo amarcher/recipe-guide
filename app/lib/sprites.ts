@@ -3,12 +3,15 @@
 import { useCallback, useSyncExternalStore } from "react";
 import manifest from "@/sprites/manifest.json";
 
+import type { Aisle } from "./taxonomy";
+
 type SpriteEntry = {
   slug: string;
   label: string;
   aliases: string[];
   url?: string;
   original_url?: string;
+  aisle?: Aisle;
 };
 
 const ENTRIES = (manifest.sprites as SpriteEntry[]).slice();
@@ -47,6 +50,15 @@ export function spriteUrl(slug: string): string | null {
 
 export function spriteOriginalUrl(slug: string): string | null {
   return BY_SLUG.get(slug)?.original_url ?? null;
+}
+
+export function spriteAisle(slug: string | null): Aisle | null {
+  if (!slug) return null;
+  return BY_SLUG.get(slug)?.aisle ?? null;
+}
+
+export function aisleForName(name: string): Aisle | null {
+  return spriteAisle(findSprite(name));
 }
 
 export function allSlugs(): string[] {

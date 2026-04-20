@@ -10,7 +10,8 @@
         "extra virgin olive oil",
         "evoo"
       ],
-      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/olive-oil.png"
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/olive-oil.png",
+      "aisle": "oils-vinegars"
     },
     {
       "slug": "ground-beef",
@@ -20,7 +21,8 @@
         "beef mince",
         "minced beef"
       ],
-      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/ground-beef.png"
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/ground-beef.png",
+      "aisle": "meat"
     },
     {
       "slug": "ground-pork",
@@ -30,7 +32,8 @@
         "pork mince",
         "minced pork"
       ],
-      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/ground-pork.png"
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/ground-pork.png",
+      "aisle": "meat"
     },
     {
       "slug": "kosher-salt",
@@ -41,7 +44,8 @@
         "sea salt",
         "flaky salt"
       ],
-      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/kosher-salt.png"
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/kosher-salt.png",
+      "aisle": "spices"
     },
     {
       "slug": "black-pepper",
@@ -52,7 +56,8 @@
         "freshly ground black pepper",
         "ground pepper"
       ],
-      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/black-pepper.png"
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/black-pepper.png",
+      "aisle": "spices"
     },
     {
       "slug": "garlic",
@@ -63,7 +68,8 @@
         "garlic cloves",
         "cloves garlic"
       ],
-      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/garlic.png"
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/garlic.png",
+      "aisle": "produce"
     },
     {
       "slug": "yellow-onion",
@@ -74,7 +80,8 @@
         "onion",
         "onions"
       ],
-      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/yellow-onion.png"
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/yellow-onion.png",
+      "aisle": "produce"
     },
     {
       "slug": "fennel-bulb",
@@ -84,7 +91,8 @@
         "fennel",
         "fennel bulbs"
       ],
-      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/fennel-bulb.png"
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/fennel-bulb.png",
+      "aisle": "produce"
     },
     {
       "slug": "fennel-seed",
@@ -93,7 +101,8 @@
         "fennel seed",
         "fennel seeds"
       ],
-      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/fennel-seed.png"
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/fennel-seed.png",
+      "aisle": "spices"
     },
     {
       "slug": "red-pepper-flakes",
@@ -104,7 +113,8 @@
         "chili flakes",
         "crushed red pepper"
       ],
-      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/red-pepper-flakes.png"
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/red-pepper-flakes.png",
+      "aisle": "spices"
     },
     {
       "slug": "white-wine",
@@ -114,7 +124,8 @@
         "white wine",
         "wine"
       ],
-      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/white-wine.png"
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/white-wine.png",
+      "aisle": "wine-spirits"
     },
     {
       "slug": "crushed-tomatoes",
@@ -125,7 +136,8 @@
         "whole peeled tomatoes",
         "tomatoes"
       ],
-      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/crushed-tomatoes.png"
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/crushed-tomatoes.png",
+      "aisle": "canned-jarred"
     },
     {
       "slug": "broth",
@@ -137,7 +149,8 @@
         "broth",
         "stock"
       ],
-      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/broth.png"
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/broth.png",
+      "aisle": "canned-jarred"
     },
     {
       "slug": "whole-milk",
@@ -146,7 +159,8 @@
         "whole milk",
         "milk"
       ],
-      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/whole-milk.png"
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/whole-milk.png",
+      "aisle": "dairy"
     },
     {
       "slug": "butter",
@@ -155,7 +169,8 @@
         "unsalted butter",
         "butter"
       ],
-      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/butter.png"
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/butter.png",
+      "aisle": "dairy"
     },
     {
       "slug": "parmesan",
@@ -166,7 +181,8 @@
         "parmigiano reggiano",
         "parmesan cheese"
       ],
-      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/parmesan.png"
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/parmesan.png",
+      "aisle": "dairy"
     },
     {
       "slug": "pasta",
@@ -178,7 +194,8 @@
         "fettuccine",
         "spaghetti"
       ],
-      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/pasta.png"
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/pasta.png",
+      "aisle": "bread-grains"
     },
     {
       "slug": "water",
@@ -186,7 +203,2349 @@
       "aliases": [
         "water"
       ],
-      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/water.png"
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/water.png",
+      "aisle": "other"
+    },
+    {
+      "slug": "whole-chicken",
+      "label": "a raw whole chicken",
+      "aliases": [
+        "whole chicken",
+        "roasting chicken"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/whole-chicken.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/whole-chicken.png",
+      "aisle": "meat"
+    },
+    {
+      "slug": "chicken-breast",
+      "label": "raw boneless skinless chicken breasts",
+      "aliases": [
+        "chicken breast",
+        "chicken breasts",
+        "boneless skinless chicken breast"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/chicken-breast.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/chicken-breast.png",
+      "aisle": "meat"
+    },
+    {
+      "slug": "chicken-thigh",
+      "label": "raw bone-in chicken thighs",
+      "aliases": [
+        "chicken thigh",
+        "chicken thighs",
+        "bone-in chicken thigh"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/chicken-thigh.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/chicken-thigh.png",
+      "aisle": "meat"
+    },
+    {
+      "slug": "chicken-wing",
+      "label": "raw chicken wings",
+      "aliases": [
+        "chicken wing",
+        "chicken wings"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/chicken-wing.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/chicken-wing.png",
+      "aisle": "meat"
+    },
+    {
+      "slug": "chicken-drumstick",
+      "label": "raw chicken drumsticks",
+      "aliases": [
+        "chicken drumstick",
+        "drumstick",
+        "drumsticks"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/chicken-drumstick.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/chicken-drumstick.png",
+      "aisle": "meat"
+    },
+    {
+      "slug": "ground-chicken",
+      "label": "a portion of raw ground chicken",
+      "aliases": [
+        "ground chicken",
+        "minced chicken"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/ground-chicken.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/ground-chicken.png",
+      "aisle": "meat"
+    },
+    {
+      "slug": "ground-turkey",
+      "label": "a portion of raw ground turkey",
+      "aliases": [
+        "ground turkey",
+        "minced turkey"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/ground-turkey.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/ground-turkey.png",
+      "aisle": "meat"
+    },
+    {
+      "slug": "pork-chop",
+      "label": "a thick raw bone-in pork chop",
+      "aliases": [
+        "pork chop",
+        "pork chops",
+        "bone-in pork chop"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/pork-chop.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/pork-chop.png",
+      "aisle": "meat"
+    },
+    {
+      "slug": "pork-tenderloin",
+      "label": "a raw pork tenderloin",
+      "aliases": [
+        "pork tenderloin",
+        "tenderloin"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/pork-tenderloin.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/pork-tenderloin.png",
+      "aisle": "meat"
+    },
+    {
+      "slug": "pork-shoulder",
+      "label": "a raw pork shoulder roast",
+      "aliases": [
+        "pork shoulder",
+        "boston butt",
+        "pork butt"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/pork-shoulder.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/pork-shoulder.png",
+      "aisle": "meat"
+    },
+    {
+      "slug": "bacon",
+      "label": "raw strips of bacon",
+      "aliases": [
+        "bacon",
+        "bacon strips",
+        "thick-cut bacon"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/bacon.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/bacon.png",
+      "aisle": "meat"
+    },
+    {
+      "slug": "prosciutto",
+      "label": "thin slices of prosciutto",
+      "aliases": [
+        "prosciutto",
+        "prosciutto di parma"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/prosciutto.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/prosciutto.png",
+      "aisle": "meat"
+    },
+    {
+      "slug": "pancetta",
+      "label": "diced cubes of pancetta",
+      "aliases": [
+        "pancetta",
+        "diced pancetta"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/pancetta.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/pancetta.png",
+      "aisle": "meat"
+    },
+    {
+      "slug": "italian-sausage",
+      "label": "raw italian sausage links",
+      "aliases": [
+        "italian sausage",
+        "sweet italian sausage",
+        "hot italian sausage"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/italian-sausage.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/italian-sausage.png",
+      "aisle": "meat"
+    },
+    {
+      "slug": "beef-steak",
+      "label": "a raw ribeye steak",
+      "aliases": [
+        "ribeye",
+        "ribeye steak",
+        "beef steak",
+        "steak"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/beef-steak.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/beef-steak.png",
+      "aisle": "meat"
+    },
+    {
+      "slug": "beef-brisket",
+      "label": "a raw beef brisket",
+      "aliases": [
+        "brisket",
+        "beef brisket"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/beef-brisket.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/beef-brisket.png",
+      "aisle": "meat"
+    },
+    {
+      "slug": "beef-short-ribs",
+      "label": "raw beef short ribs",
+      "aliases": [
+        "short ribs",
+        "beef short ribs"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/beef-short-ribs.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/beef-short-ribs.png",
+      "aisle": "meat"
+    },
+    {
+      "slug": "salmon",
+      "label": "a raw salmon fillet",
+      "aliases": [
+        "salmon",
+        "salmon fillet",
+        "salmon filet"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/salmon.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/salmon.png",
+      "aisle": "seafood"
+    },
+    {
+      "slug": "tuna",
+      "label": "a raw tuna steak",
+      "aliases": [
+        "tuna",
+        "tuna steak",
+        "ahi tuna"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/tuna.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/tuna.png",
+      "aisle": "seafood"
+    },
+    {
+      "slug": "shrimp",
+      "label": "raw peeled shrimp",
+      "aliases": [
+        "shrimp",
+        "prawns"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/shrimp.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/shrimp.png",
+      "aisle": "seafood"
+    },
+    {
+      "slug": "scallops",
+      "label": "raw sea scallops",
+      "aliases": [
+        "scallops",
+        "sea scallops"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/scallops.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/scallops.png",
+      "aisle": "seafood"
+    },
+    {
+      "slug": "cod",
+      "label": "a raw cod fillet",
+      "aliases": [
+        "cod",
+        "cod fillet"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/cod.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/cod.png",
+      "aisle": "seafood"
+    },
+    {
+      "slug": "anchovies",
+      "label": "tinned anchovy fillets in oil",
+      "aliases": [
+        "anchovies",
+        "anchovy",
+        "anchovy fillets"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/anchovies.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/anchovies.png",
+      "aisle": "canned-jarred"
+    },
+    {
+      "slug": "sardines",
+      "label": "tinned sardines",
+      "aliases": [
+        "sardines",
+        "sardine"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/sardines.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/sardines.png",
+      "aisle": "canned-jarred"
+    },
+    {
+      "slug": "mussels",
+      "label": "raw mussels in their shells",
+      "aliases": [
+        "mussels",
+        "mussel"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/mussels.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/mussels.png",
+      "aisle": "seafood"
+    },
+    {
+      "slug": "clams",
+      "label": "raw littleneck clams in their shells",
+      "aliases": [
+        "clams",
+        "clam",
+        "littleneck clams"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/clams.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/clams.png",
+      "aisle": "seafood"
+    },
+    {
+      "slug": "egg",
+      "label": "a single fresh whole egg in its shell",
+      "aliases": [
+        "egg",
+        "eggs",
+        "large egg",
+        "large eggs"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/egg.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/egg.png",
+      "aisle": "dairy"
+    },
+    {
+      "slug": "egg-yolk",
+      "label": "fresh egg yolks separated in a small bowl",
+      "aliases": [
+        "egg yolk",
+        "egg yolks",
+        "yolk",
+        "yolks"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/egg-yolk.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/egg-yolk.png",
+      "aisle": "dairy"
+    },
+    {
+      "slug": "egg-white",
+      "label": "egg whites separated in a small bowl",
+      "aliases": [
+        "egg white",
+        "egg whites"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/egg-white.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/egg-white.png",
+      "aisle": "dairy"
+    },
+    {
+      "slug": "tofu",
+      "label": "a block of firm white tofu",
+      "aliases": [
+        "tofu",
+        "firm tofu",
+        "extra-firm tofu"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/tofu.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/tofu.png",
+      "aisle": "dairy"
+    },
+    {
+      "slug": "red-onion",
+      "label": "a whole red onion",
+      "aliases": [
+        "red onion",
+        "red onions"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/red-onion.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/red-onion.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "white-onion",
+      "label": "a whole white onion",
+      "aliases": [
+        "white onion",
+        "white onions"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/white-onion.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/white-onion.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "scallion",
+      "label": "a small bunch of fresh scallions",
+      "aliases": [
+        "scallion",
+        "scallions",
+        "green onion",
+        "green onions",
+        "spring onion"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/scallion.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/scallion.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "shallot",
+      "label": "a small whole shallot with papery skin",
+      "aliases": [
+        "shallot",
+        "shallots"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/shallot.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/shallot.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "leek",
+      "label": "a fresh whole leek",
+      "aliases": [
+        "leek",
+        "leeks"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/leek.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/leek.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "celery",
+      "label": "a few stalks of fresh celery",
+      "aliases": [
+        "celery",
+        "celery stalk",
+        "celery stalks",
+        "celery rib"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/celery.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/celery.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "carrot",
+      "label": "a fresh whole carrot",
+      "aliases": [
+        "carrot",
+        "carrots"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/carrot.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/carrot.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "potato",
+      "label": "a whole russet potato",
+      "aliases": [
+        "potato",
+        "potatoes",
+        "russet potato",
+        "russet potatoes"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/potato.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/potato.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "sweet-potato",
+      "label": "a whole sweet potato",
+      "aliases": [
+        "sweet potato",
+        "sweet potatoes",
+        "yam",
+        "yams"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/sweet-potato.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/sweet-potato.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "tomato",
+      "label": "a single ripe red vine tomato",
+      "aliases": [
+        "fresh tomato",
+        "fresh tomatoes",
+        "ripe tomato",
+        "vine tomato"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/tomato.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/tomato.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "cherry-tomatoes",
+      "label": "a small pile of fresh cherry tomatoes",
+      "aliases": [
+        "cherry tomatoes",
+        "cherry tomato",
+        "grape tomatoes"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/cherry-tomatoes.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/cherry-tomatoes.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "cucumber",
+      "label": "a whole fresh cucumber",
+      "aliases": [
+        "cucumber",
+        "cucumbers",
+        "english cucumber"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/cucumber.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/cucumber.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "bell-pepper",
+      "label": "a whole fresh red bell pepper",
+      "aliases": [
+        "bell pepper",
+        "bell peppers",
+        "red bell pepper",
+        "green bell pepper",
+        "yellow bell pepper"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/bell-pepper.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/bell-pepper.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "jalapeno",
+      "label": "a whole fresh jalapeño pepper",
+      "aliases": [
+        "jalapeño",
+        "jalapeno",
+        "jalapenos"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/jalapeno.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/jalapeno.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "serrano",
+      "label": "a whole fresh serrano pepper",
+      "aliases": [
+        "serrano",
+        "serrano pepper",
+        "serrano chile"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/serrano.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/serrano.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "poblano",
+      "label": "a whole fresh poblano pepper",
+      "aliases": [
+        "poblano",
+        "poblano pepper",
+        "poblano chile"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/poblano.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/poblano.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "eggplant",
+      "label": "a whole shiny purple eggplant",
+      "aliases": [
+        "eggplant",
+        "aubergine"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/eggplant.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/eggplant.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "zucchini",
+      "label": "a whole fresh green zucchini",
+      "aliases": [
+        "zucchini",
+        "courgette"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/zucchini.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/zucchini.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "yellow-squash",
+      "label": "a whole fresh yellow summer squash",
+      "aliases": [
+        "yellow squash",
+        "summer squash"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/yellow-squash.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/yellow-squash.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "butternut-squash",
+      "label": "a whole butternut squash",
+      "aliases": [
+        "butternut squash",
+        "butternut"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/butternut-squash.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/butternut-squash.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "broccoli",
+      "label": "a fresh head of broccoli",
+      "aliases": [
+        "broccoli",
+        "broccoli florets"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/broccoli.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/broccoli.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "cauliflower",
+      "label": "a fresh head of cauliflower",
+      "aliases": [
+        "cauliflower",
+        "cauliflower florets"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/cauliflower.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/cauliflower.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "cabbage",
+      "label": "a whole green cabbage",
+      "aliases": [
+        "cabbage",
+        "green cabbage",
+        "savoy cabbage",
+        "napa cabbage"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/cabbage.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/cabbage.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "brussels-sprouts",
+      "label": "fresh brussels sprouts",
+      "aliases": [
+        "brussels sprouts",
+        "brussel sprouts"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/brussels-sprouts.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/brussels-sprouts.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "kale",
+      "label": "a fresh bunch of curly kale",
+      "aliases": [
+        "kale",
+        "lacinato kale",
+        "tuscan kale"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/kale.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/kale.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "spinach",
+      "label": "a small pile of fresh baby spinach leaves",
+      "aliases": [
+        "spinach",
+        "baby spinach"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/spinach.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/spinach.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "arugula",
+      "label": "a small pile of fresh baby arugula",
+      "aliases": [
+        "arugula",
+        "rocket"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/arugula.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/arugula.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "romaine",
+      "label": "a fresh head of romaine lettuce",
+      "aliases": [
+        "romaine",
+        "romaine lettuce",
+        "lettuce"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/romaine.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/romaine.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "asparagus",
+      "label": "a small bundle of fresh green asparagus spears",
+      "aliases": [
+        "asparagus",
+        "asparagus spears"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/asparagus.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/asparagus.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "green-beans",
+      "label": "a small handful of fresh green beans",
+      "aliases": [
+        "green beans",
+        "string beans",
+        "haricots verts"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/green-beans.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/green-beans.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "peas",
+      "label": "a small pile of fresh shelled green peas",
+      "aliases": [
+        "peas",
+        "green peas",
+        "fresh peas"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/peas.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/peas.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "corn",
+      "label": "a fresh ear of corn with husk peeled back",
+      "aliases": [
+        "corn",
+        "corn on the cob",
+        "ear of corn",
+        "fresh corn"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/corn.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/corn.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "mushroom",
+      "label": "a small pile of fresh button mushrooms",
+      "aliases": [
+        "mushroom",
+        "mushrooms",
+        "button mushroom",
+        "white mushroom",
+        "cremini"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/mushroom.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/mushroom.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "shiitake",
+      "label": "fresh shiitake mushrooms",
+      "aliases": [
+        "shiitake",
+        "shiitake mushrooms"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/shiitake.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/shiitake.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "portobello",
+      "label": "a fresh portobello mushroom",
+      "aliases": [
+        "portobello",
+        "portobello mushroom",
+        "portabella"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/portobello.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/portobello.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "ginger",
+      "label": "a fresh knob of ginger root",
+      "aliases": [
+        "ginger",
+        "fresh ginger",
+        "ginger root"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/ginger.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/ginger.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "avocado",
+      "label": "a single ripe whole avocado",
+      "aliases": [
+        "avocado",
+        "avocados",
+        "hass avocado"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/avocado.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/avocado.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "lemon",
+      "label": "a single fresh whole lemon",
+      "aliases": [
+        "lemon",
+        "lemons",
+        "fresh lemon"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/lemon.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/lemon.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "lime",
+      "label": "a single fresh whole lime",
+      "aliases": [
+        "lime",
+        "limes",
+        "fresh lime"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/lime.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/lime.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "orange",
+      "label": "a single fresh whole orange",
+      "aliases": [
+        "orange",
+        "oranges",
+        "navel orange"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/orange.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/orange.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "lemon-zest",
+      "label": "a small pile of fresh lemon zest curls",
+      "aliases": [
+        "lemon zest",
+        "zest of lemon"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/lemon-zest.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/lemon-zest.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "lime-zest",
+      "label": "a small pile of fresh lime zest curls",
+      "aliases": [
+        "lime zest",
+        "zest of lime"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/lime-zest.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/lime-zest.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "orange-zest",
+      "label": "a small pile of fresh orange zest curls",
+      "aliases": [
+        "orange zest",
+        "zest of orange"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/orange-zest.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/orange-zest.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "apple",
+      "label": "a single fresh whole red apple",
+      "aliases": [
+        "apple",
+        "apples",
+        "honeycrisp apple",
+        "granny smith"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/apple.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/apple.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "pear",
+      "label": "a single fresh whole pear",
+      "aliases": [
+        "pear",
+        "pears",
+        "bartlett pear"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/pear.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/pear.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "banana",
+      "label": "a single ripe yellow banana",
+      "aliases": [
+        "banana",
+        "bananas"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/banana.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/banana.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "mango",
+      "label": "a single ripe whole mango",
+      "aliases": [
+        "mango",
+        "mangoes",
+        "mangos"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/mango.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/mango.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "pineapple",
+      "label": "a single fresh whole pineapple",
+      "aliases": [
+        "pineapple",
+        "fresh pineapple"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/pineapple.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/pineapple.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "peach",
+      "label": "a single ripe whole peach",
+      "aliases": [
+        "peach",
+        "peaches",
+        "fresh peach"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/peach.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/peach.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "strawberry",
+      "label": "a small pile of fresh ripe strawberries",
+      "aliases": [
+        "strawberry",
+        "strawberries"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/strawberry.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/strawberry.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "blueberry",
+      "label": "a small pile of fresh ripe blueberries",
+      "aliases": [
+        "blueberry",
+        "blueberries"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/blueberry.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/blueberry.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "raspberry",
+      "label": "a small pile of fresh ripe raspberries",
+      "aliases": [
+        "raspberry",
+        "raspberries"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/raspberry.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/raspberry.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "grapes",
+      "label": "a small bunch of fresh red grapes",
+      "aliases": [
+        "grape",
+        "grapes",
+        "red grapes",
+        "green grapes"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/grapes.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/grapes.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "heavy-cream",
+      "label": "a small pitcher of heavy cream",
+      "aliases": [
+        "heavy cream",
+        "heavy whipping cream",
+        "double cream"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/heavy-cream.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/heavy-cream.png",
+      "aisle": "dairy"
+    },
+    {
+      "slug": "half-and-half",
+      "label": "a small pitcher of half-and-half",
+      "aliases": [
+        "half and half",
+        "half-and-half"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/half-and-half.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/half-and-half.png",
+      "aisle": "dairy"
+    },
+    {
+      "slug": "sour-cream",
+      "label": "a small dollop of sour cream in a bowl",
+      "aliases": [
+        "sour cream"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/sour-cream.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/sour-cream.png",
+      "aisle": "dairy"
+    },
+    {
+      "slug": "yogurt",
+      "label": "a small bowl of plain yogurt",
+      "aliases": [
+        "yogurt",
+        "plain yogurt",
+        "yoghurt"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/yogurt.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/yogurt.png",
+      "aisle": "dairy"
+    },
+    {
+      "slug": "greek-yogurt",
+      "label": "a small bowl of thick plain greek yogurt",
+      "aliases": [
+        "greek yogurt",
+        "greek yoghurt"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/greek-yogurt.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/greek-yogurt.png",
+      "aisle": "dairy"
+    },
+    {
+      "slug": "mozzarella",
+      "label": "a fresh ball of mozzarella cheese",
+      "aliases": [
+        "mozzarella",
+        "fresh mozzarella",
+        "buffalo mozzarella"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/mozzarella.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/mozzarella.png",
+      "aisle": "dairy"
+    },
+    {
+      "slug": "cheddar",
+      "label": "a wedge of sharp orange cheddar cheese",
+      "aliases": [
+        "cheddar",
+        "cheddar cheese",
+        "sharp cheddar"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/cheddar.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/cheddar.png",
+      "aisle": "dairy"
+    },
+    {
+      "slug": "feta",
+      "label": "a block of crumbly white feta cheese",
+      "aliases": [
+        "feta",
+        "feta cheese"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/feta.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/feta.png",
+      "aisle": "dairy"
+    },
+    {
+      "slug": "ricotta",
+      "label": "a small bowl of fresh ricotta cheese",
+      "aliases": [
+        "ricotta",
+        "ricotta cheese"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/ricotta.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/ricotta.png",
+      "aisle": "dairy"
+    },
+    {
+      "slug": "goat-cheese",
+      "label": "a small log of fresh goat cheese",
+      "aliases": [
+        "goat cheese",
+        "chèvre",
+        "chevre"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/goat-cheese.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/goat-cheese.png",
+      "aisle": "dairy"
+    },
+    {
+      "slug": "cream-cheese",
+      "label": "a block of cream cheese",
+      "aliases": [
+        "cream cheese"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/cream-cheese.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/cream-cheese.png",
+      "aisle": "dairy"
+    },
+    {
+      "slug": "gruyere",
+      "label": "a wedge of gruyère cheese",
+      "aliases": [
+        "gruyère",
+        "gruyere",
+        "gruyere cheese"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/gruyere.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/gruyere.png",
+      "aisle": "dairy"
+    },
+    {
+      "slug": "vegetable-oil",
+      "label": "a clear bottle of vegetable oil",
+      "aliases": [
+        "vegetable oil",
+        "neutral oil"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/vegetable-oil.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/vegetable-oil.png",
+      "aisle": "oils-vinegars"
+    },
+    {
+      "slug": "canola-oil",
+      "label": "a clear bottle of canola oil",
+      "aliases": [
+        "canola oil"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/canola-oil.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/canola-oil.png",
+      "aisle": "oils-vinegars"
+    },
+    {
+      "slug": "sesame-oil",
+      "label": "a small bottle of toasted sesame oil",
+      "aliases": [
+        "sesame oil",
+        "toasted sesame oil"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/sesame-oil.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/sesame-oil.png",
+      "aisle": "oils-vinegars"
+    },
+    {
+      "slug": "coconut-oil",
+      "label": "a small jar of solid white coconut oil",
+      "aliases": [
+        "coconut oil"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/coconut-oil.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/coconut-oil.png",
+      "aisle": "oils-vinegars"
+    },
+    {
+      "slug": "balsamic-vinegar",
+      "label": "a small bottle of dark balsamic vinegar",
+      "aliases": [
+        "balsamic vinegar",
+        "balsamic"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/balsamic-vinegar.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/balsamic-vinegar.png",
+      "aisle": "oils-vinegars"
+    },
+    {
+      "slug": "red-wine-vinegar",
+      "label": "a small bottle of red wine vinegar",
+      "aliases": [
+        "red wine vinegar"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/red-wine-vinegar.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/red-wine-vinegar.png",
+      "aisle": "oils-vinegars"
+    },
+    {
+      "slug": "white-wine-vinegar",
+      "label": "a small bottle of white wine vinegar",
+      "aliases": [
+        "white wine vinegar"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/white-wine-vinegar.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/white-wine-vinegar.png",
+      "aisle": "oils-vinegars"
+    },
+    {
+      "slug": "rice-vinegar",
+      "label": "a small bottle of clear rice vinegar",
+      "aliases": [
+        "rice vinegar",
+        "rice wine vinegar"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/rice-vinegar.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/rice-vinegar.png",
+      "aisle": "oils-vinegars"
+    },
+    {
+      "slug": "apple-cider-vinegar",
+      "label": "a small bottle of amber apple cider vinegar",
+      "aliases": [
+        "apple cider vinegar",
+        "cider vinegar"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/apple-cider-vinegar.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/apple-cider-vinegar.png",
+      "aisle": "oils-vinegars"
+    },
+    {
+      "slug": "soy-sauce",
+      "label": "a small bottle of dark soy sauce",
+      "aliases": [
+        "soy sauce",
+        "shoyu",
+        "tamari"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/soy-sauce.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/soy-sauce.png",
+      "aisle": "condiments"
+    },
+    {
+      "slug": "fish-sauce",
+      "label": "a small bottle of amber fish sauce",
+      "aliases": [
+        "fish sauce",
+        "nam pla"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/fish-sauce.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/fish-sauce.png",
+      "aisle": "condiments"
+    },
+    {
+      "slug": "worcestershire",
+      "label": "a small bottle of worcestershire sauce",
+      "aliases": [
+        "worcestershire",
+        "worcestershire sauce"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/worcestershire.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/worcestershire.png",
+      "aisle": "condiments"
+    },
+    {
+      "slug": "sriracha",
+      "label": "a small bottle of bright red sriracha sauce",
+      "aliases": [
+        "sriracha",
+        "sriracha sauce"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/sriracha.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/sriracha.png",
+      "aisle": "condiments"
+    },
+    {
+      "slug": "ketchup",
+      "label": "a small bottle of ketchup",
+      "aliases": [
+        "ketchup",
+        "tomato ketchup"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/ketchup.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/ketchup.png",
+      "aisle": "condiments"
+    },
+    {
+      "slug": "dijon-mustard",
+      "label": "a small jar of yellow dijon mustard",
+      "aliases": [
+        "dijon",
+        "dijon mustard"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/dijon-mustard.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/dijon-mustard.png",
+      "aisle": "condiments"
+    },
+    {
+      "slug": "yellow-mustard",
+      "label": "a small jar of bright yellow mustard",
+      "aliases": [
+        "yellow mustard",
+        "mustard",
+        "prepared mustard"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/yellow-mustard.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/yellow-mustard.png",
+      "aisle": "condiments"
+    },
+    {
+      "slug": "mayonnaise",
+      "label": "a small jar of creamy white mayonnaise",
+      "aliases": [
+        "mayonnaise",
+        "mayo"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/mayonnaise.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/mayonnaise.png",
+      "aisle": "condiments"
+    },
+    {
+      "slug": "tomato-paste",
+      "label": "a small open can of dark red tomato paste",
+      "aliases": [
+        "tomato paste",
+        "tomato concentrate"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/tomato-paste.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/tomato-paste.png",
+      "aisle": "canned-jarred"
+    },
+    {
+      "slug": "tomato-sauce",
+      "label": "a small jar of red tomato sauce",
+      "aliases": [
+        "tomato sauce",
+        "marinara"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/tomato-sauce.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/tomato-sauce.png",
+      "aisle": "canned-jarred"
+    },
+    {
+      "slug": "coconut-milk",
+      "label": "a can of full-fat coconut milk",
+      "aliases": [
+        "coconut milk",
+        "full-fat coconut milk"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/coconut-milk.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/coconut-milk.png",
+      "aisle": "canned-jarred"
+    },
+    {
+      "slug": "all-purpose-flour",
+      "label": "a small pile of white all-purpose flour",
+      "aliases": [
+        "all-purpose flour",
+        "all purpose flour",
+        "ap flour",
+        "flour"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/all-purpose-flour.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/all-purpose-flour.png",
+      "aisle": "baking"
+    },
+    {
+      "slug": "bread-flour",
+      "label": "a small pile of white bread flour",
+      "aliases": [
+        "bread flour"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/bread-flour.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/bread-flour.png",
+      "aisle": "baking"
+    },
+    {
+      "slug": "whole-wheat-flour",
+      "label": "a small pile of whole wheat flour",
+      "aliases": [
+        "whole wheat flour",
+        "wheat flour"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/whole-wheat-flour.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/whole-wheat-flour.png",
+      "aisle": "baking"
+    },
+    {
+      "slug": "almond-flour",
+      "label": "a small pile of fine almond flour",
+      "aliases": [
+        "almond flour",
+        "almond meal"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/almond-flour.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/almond-flour.png",
+      "aisle": "baking"
+    },
+    {
+      "slug": "granulated-sugar",
+      "label": "a small pile of white granulated sugar",
+      "aliases": [
+        "granulated sugar",
+        "white sugar",
+        "sugar"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/granulated-sugar.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/granulated-sugar.png",
+      "aisle": "baking"
+    },
+    {
+      "slug": "brown-sugar",
+      "label": "a small pile of soft light brown sugar",
+      "aliases": [
+        "brown sugar",
+        "light brown sugar",
+        "dark brown sugar"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/brown-sugar.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/brown-sugar.png",
+      "aisle": "baking"
+    },
+    {
+      "slug": "powdered-sugar",
+      "label": "a small pile of fine powdered sugar",
+      "aliases": [
+        "powdered sugar",
+        "confectioners sugar",
+        "icing sugar"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/powdered-sugar.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/powdered-sugar.png",
+      "aisle": "baking"
+    },
+    {
+      "slug": "honey",
+      "label": "a small jar of golden honey with a dipper",
+      "aliases": [
+        "honey"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/honey.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/honey.png",
+      "aisle": "baking"
+    },
+    {
+      "slug": "maple-syrup",
+      "label": "a small bottle of dark maple syrup",
+      "aliases": [
+        "maple syrup",
+        "pure maple syrup"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/maple-syrup.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/maple-syrup.png",
+      "aisle": "baking"
+    },
+    {
+      "slug": "vanilla-extract",
+      "label": "a small bottle of dark vanilla extract",
+      "aliases": [
+        "vanilla extract",
+        "vanilla"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/vanilla-extract.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/vanilla-extract.png",
+      "aisle": "baking"
+    },
+    {
+      "slug": "vanilla-bean",
+      "label": "a single fresh whole vanilla bean pod",
+      "aliases": [
+        "vanilla bean",
+        "vanilla pod"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/vanilla-bean.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/vanilla-bean.png",
+      "aisle": "baking"
+    },
+    {
+      "slug": "baking-powder",
+      "label": "a small open tin of white baking powder",
+      "aliases": [
+        "baking powder"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/baking-powder.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/baking-powder.png",
+      "aisle": "baking"
+    },
+    {
+      "slug": "baking-soda",
+      "label": "a small open box of white baking soda",
+      "aliases": [
+        "baking soda",
+        "bicarbonate of soda",
+        "sodium bicarbonate"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/baking-soda.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/baking-soda.png",
+      "aisle": "baking"
+    },
+    {
+      "slug": "cocoa-powder",
+      "label": "a small pile of dark unsweetened cocoa powder",
+      "aliases": [
+        "cocoa powder",
+        "unsweetened cocoa",
+        "cacao powder"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/cocoa-powder.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/cocoa-powder.png",
+      "aisle": "baking"
+    },
+    {
+      "slug": "chocolate-chips",
+      "label": "a small pile of dark chocolate chips",
+      "aliases": [
+        "chocolate chips",
+        "chocolate chunks",
+        "semi-sweet chocolate chips"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/chocolate-chips.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/chocolate-chips.png",
+      "aisle": "baking"
+    },
+    {
+      "slug": "dark-chocolate",
+      "label": "a broken bar of dark chocolate",
+      "aliases": [
+        "dark chocolate",
+        "bittersweet chocolate"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/dark-chocolate.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/dark-chocolate.png",
+      "aisle": "baking"
+    },
+    {
+      "slug": "yeast",
+      "label": "a small pile of granular active dry yeast",
+      "aliases": [
+        "yeast",
+        "active dry yeast",
+        "instant yeast"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/yeast.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/yeast.png",
+      "aisle": "baking"
+    },
+    {
+      "slug": "cornstarch",
+      "label": "a small pile of fine white cornstarch",
+      "aliases": [
+        "cornstarch",
+        "corn starch",
+        "cornflour"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/cornstarch.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/cornstarch.png",
+      "aisle": "baking"
+    },
+    {
+      "slug": "basil",
+      "label": "a small bunch of fresh basil leaves",
+      "aliases": [
+        "basil",
+        "fresh basil",
+        "basil leaves"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/basil.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/basil.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "oregano",
+      "label": "a small sprig of fresh oregano",
+      "aliases": [
+        "oregano",
+        "fresh oregano",
+        "dried oregano"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/oregano.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/oregano.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "thyme",
+      "label": "a small bunch of fresh thyme sprigs",
+      "aliases": [
+        "thyme",
+        "fresh thyme",
+        "thyme leaves",
+        "dried thyme"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/thyme.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/thyme.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "rosemary",
+      "label": "a small sprig of fresh rosemary",
+      "aliases": [
+        "rosemary",
+        "fresh rosemary",
+        "dried rosemary"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/rosemary.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/rosemary.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "sage",
+      "label": "a small bunch of fresh sage leaves",
+      "aliases": [
+        "sage",
+        "fresh sage",
+        "sage leaves"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/sage.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/sage.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "parsley",
+      "label": "a small bunch of fresh flat-leaf parsley",
+      "aliases": [
+        "parsley",
+        "fresh parsley",
+        "italian parsley",
+        "flat-leaf parsley"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/parsley.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/parsley.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "cilantro",
+      "label": "a small bunch of fresh cilantro",
+      "aliases": [
+        "cilantro",
+        "fresh cilantro",
+        "coriander leaves"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/cilantro.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/cilantro.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "dill",
+      "label": "a small bunch of fresh feathery dill",
+      "aliases": [
+        "dill",
+        "fresh dill",
+        "dill weed"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/dill.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/dill.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "chives",
+      "label": "a small bundle of fresh chives",
+      "aliases": [
+        "chives",
+        "fresh chives"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/chives.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/chives.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "mint",
+      "label": "a small bunch of fresh mint leaves",
+      "aliases": [
+        "mint",
+        "fresh mint",
+        "mint leaves"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/mint.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/mint.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "tarragon",
+      "label": "a small sprig of fresh tarragon",
+      "aliases": [
+        "tarragon",
+        "fresh tarragon"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/tarragon.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/tarragon.png",
+      "aisle": "produce"
+    },
+    {
+      "slug": "bay-leaf",
+      "label": "a few dried bay leaves",
+      "aliases": [
+        "bay leaf",
+        "bay leaves",
+        "bay"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/bay-leaf.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/bay-leaf.png",
+      "aisle": "spices"
+    },
+    {
+      "slug": "cumin",
+      "label": "a small pile of ground cumin",
+      "aliases": [
+        "cumin",
+        "ground cumin",
+        "cumin seeds"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/cumin.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/cumin.png",
+      "aisle": "spices"
+    },
+    {
+      "slug": "coriander",
+      "label": "a small pile of ground coriander",
+      "aliases": [
+        "coriander",
+        "ground coriander",
+        "coriander seeds"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/coriander.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/coriander.png",
+      "aisle": "spices"
+    },
+    {
+      "slug": "paprika",
+      "label": "a small pile of bright red sweet paprika",
+      "aliases": [
+        "paprika",
+        "sweet paprika"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/paprika.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/paprika.png",
+      "aisle": "spices"
+    },
+    {
+      "slug": "smoked-paprika",
+      "label": "a small pile of deep red smoked paprika",
+      "aliases": [
+        "smoked paprika",
+        "pimentón"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/smoked-paprika.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/smoked-paprika.png",
+      "aisle": "spices"
+    },
+    {
+      "slug": "cayenne",
+      "label": "a small pile of bright red cayenne pepper",
+      "aliases": [
+        "cayenne",
+        "cayenne pepper",
+        "ground cayenne"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/cayenne.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/cayenne.png",
+      "aisle": "spices"
+    },
+    {
+      "slug": "turmeric",
+      "label": "a small pile of bright yellow ground turmeric",
+      "aliases": [
+        "turmeric",
+        "ground turmeric"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/turmeric.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/turmeric.png",
+      "aisle": "spices"
+    },
+    {
+      "slug": "cinnamon",
+      "label": "a small pile of warm brown ground cinnamon",
+      "aliases": [
+        "cinnamon",
+        "ground cinnamon",
+        "cinnamon stick"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/cinnamon.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/cinnamon.png",
+      "aisle": "spices"
+    },
+    {
+      "slug": "nutmeg",
+      "label": "a whole nutmeg seed beside ground nutmeg",
+      "aliases": [
+        "nutmeg",
+        "ground nutmeg",
+        "fresh nutmeg"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/nutmeg.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/nutmeg.png",
+      "aisle": "spices"
+    },
+    {
+      "slug": "allspice",
+      "label": "a small pile of dark allspice berries",
+      "aliases": [
+        "allspice",
+        "ground allspice"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/allspice.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/allspice.png",
+      "aisle": "spices"
+    },
+    {
+      "slug": "cloves",
+      "label": "a small pile of dried whole cloves",
+      "aliases": [
+        "cloves",
+        "ground cloves",
+        "whole cloves"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/cloves.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/cloves.png",
+      "aisle": "spices"
+    },
+    {
+      "slug": "cardamom",
+      "label": "a few whole green cardamom pods",
+      "aliases": [
+        "cardamom",
+        "green cardamom",
+        "ground cardamom"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/cardamom.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/cardamom.png",
+      "aisle": "spices"
+    },
+    {
+      "slug": "star-anise",
+      "label": "a few whole dried star anise pods",
+      "aliases": [
+        "star anise"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/star-anise.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/star-anise.png",
+      "aisle": "spices"
+    },
+    {
+      "slug": "saffron",
+      "label": "a small pinch of red saffron threads",
+      "aliases": [
+        "saffron",
+        "saffron threads"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/saffron.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/saffron.png",
+      "aisle": "spices"
+    },
+    {
+      "slug": "curry-powder",
+      "label": "a small pile of golden curry powder",
+      "aliases": [
+        "curry powder"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/curry-powder.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/curry-powder.png",
+      "aisle": "spices"
+    },
+    {
+      "slug": "chili-powder",
+      "label": "a small pile of dark red chili powder",
+      "aliases": [
+        "chili powder",
+        "chile powder"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/chili-powder.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/chili-powder.png",
+      "aisle": "spices"
+    },
+    {
+      "slug": "garam-masala",
+      "label": "a small pile of warm brown garam masala",
+      "aliases": [
+        "garam masala"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/garam-masala.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/garam-masala.png",
+      "aisle": "spices"
+    },
+    {
+      "slug": "garlic-powder",
+      "label": "a small pile of pale yellow garlic powder",
+      "aliases": [
+        "garlic powder",
+        "granulated garlic"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/garlic-powder.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/garlic-powder.png",
+      "aisle": "spices"
+    },
+    {
+      "slug": "onion-powder",
+      "label": "a small pile of pale tan onion powder",
+      "aliases": [
+        "onion powder"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/onion-powder.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/onion-powder.png",
+      "aisle": "spices"
+    },
+    {
+      "slug": "white-pepper",
+      "label": "a small pile of ground white pepper",
+      "aliases": [
+        "white pepper",
+        "ground white pepper"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/white-pepper.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/white-pepper.png",
+      "aisle": "spices"
+    },
+    {
+      "slug": "mustard-seed",
+      "label": "a small pile of yellow mustard seeds",
+      "aliases": [
+        "mustard seed",
+        "mustard seeds"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/mustard-seed.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/mustard-seed.png",
+      "aisle": "spices"
+    },
+    {
+      "slug": "sumac",
+      "label": "a small pile of deep red sumac powder",
+      "aliases": [
+        "sumac",
+        "ground sumac"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/sumac.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/sumac.png",
+      "aisle": "spices"
+    },
+    {
+      "slug": "spaghetti",
+      "label": "a small bundle of dry spaghetti",
+      "aliases": [
+        "spaghetti"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/spaghetti.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/spaghetti.png",
+      "aisle": "bread-grains"
+    },
+    {
+      "slug": "penne",
+      "label": "a small pile of dry penne pasta",
+      "aliases": [
+        "penne"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/penne.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/penne.png",
+      "aisle": "bread-grains"
+    },
+    {
+      "slug": "rigatoni",
+      "label": "a small pile of dry rigatoni pasta",
+      "aliases": [
+        "rigatoni"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/rigatoni.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/rigatoni.png",
+      "aisle": "bread-grains"
+    },
+    {
+      "slug": "linguine",
+      "label": "a small bundle of dry linguine",
+      "aliases": [
+        "linguine"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/linguine.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/linguine.png",
+      "aisle": "bread-grains"
+    },
+    {
+      "slug": "fettuccine",
+      "label": "a small bundle of dry fettuccine",
+      "aliases": [
+        "fettuccine"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/fettuccine.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/fettuccine.png",
+      "aisle": "bread-grains"
+    },
+    {
+      "slug": "orzo",
+      "label": "a small pile of dry orzo pasta",
+      "aliases": [
+        "orzo"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/orzo.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/orzo.png",
+      "aisle": "bread-grains"
+    },
+    {
+      "slug": "lasagna-sheets",
+      "label": "a stack of dry lasagna sheets",
+      "aliases": [
+        "lasagna sheets",
+        "lasagna noodles",
+        "lasagne sheets"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/lasagna-sheets.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/lasagna-sheets.png",
+      "aisle": "bread-grains"
+    },
+    {
+      "slug": "white-rice",
+      "label": "a small pile of long-grain white rice",
+      "aliases": [
+        "white rice",
+        "long grain rice",
+        "rice"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/white-rice.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/white-rice.png",
+      "aisle": "bread-grains"
+    },
+    {
+      "slug": "brown-rice",
+      "label": "a small pile of long-grain brown rice",
+      "aliases": [
+        "brown rice"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/brown-rice.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/brown-rice.png",
+      "aisle": "bread-grains"
+    },
+    {
+      "slug": "basmati-rice",
+      "label": "a small pile of long fragrant basmati rice",
+      "aliases": [
+        "basmati rice",
+        "basmati"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/basmati-rice.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/basmati-rice.png",
+      "aisle": "bread-grains"
+    },
+    {
+      "slug": "jasmine-rice",
+      "label": "a small pile of long fragrant jasmine rice",
+      "aliases": [
+        "jasmine rice",
+        "jasmine"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/jasmine-rice.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/jasmine-rice.png",
+      "aisle": "bread-grains"
+    },
+    {
+      "slug": "arborio-rice",
+      "label": "a small pile of short-grain arborio rice",
+      "aliases": [
+        "arborio rice",
+        "arborio",
+        "risotto rice"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/arborio-rice.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/arborio-rice.png",
+      "aisle": "bread-grains"
+    },
+    {
+      "slug": "quinoa",
+      "label": "a small pile of pale uncooked quinoa",
+      "aliases": [
+        "quinoa"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/quinoa.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/quinoa.png",
+      "aisle": "bread-grains"
+    },
+    {
+      "slug": "couscous",
+      "label": "a small pile of pale dry couscous",
+      "aliases": [
+        "couscous"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/couscous.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/couscous.png",
+      "aisle": "bread-grains"
+    },
+    {
+      "slug": "oats",
+      "label": "a small pile of rolled oats",
+      "aliases": [
+        "oats",
+        "rolled oats",
+        "old fashioned oats",
+        "oatmeal"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/oats.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/oats.png",
+      "aisle": "bread-grains"
+    },
+    {
+      "slug": "polenta",
+      "label": "a small pile of coarse golden polenta",
+      "aliases": [
+        "polenta",
+        "cornmeal"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/polenta.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/polenta.png",
+      "aisle": "bread-grains"
+    },
+    {
+      "slug": "bread",
+      "label": "a rustic round loaf of crusty bread",
+      "aliases": [
+        "bread",
+        "rustic bread",
+        "boule",
+        "loaf"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/bread.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/bread.png",
+      "aisle": "bread-grains"
+    },
+    {
+      "slug": "bread-crumbs",
+      "label": "a small pile of golden plain breadcrumbs",
+      "aliases": [
+        "bread crumbs",
+        "breadcrumbs"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/bread-crumbs.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/bread-crumbs.png",
+      "aisle": "bread-grains"
+    },
+    {
+      "slug": "panko",
+      "label": "a small pile of crisp white panko breadcrumbs",
+      "aliases": [
+        "panko",
+        "panko breadcrumbs"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/panko.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/panko.png",
+      "aisle": "bread-grains"
+    },
+    {
+      "slug": "tortilla",
+      "label": "a stack of soft corn tortillas",
+      "aliases": [
+        "tortilla",
+        "tortillas",
+        "corn tortilla",
+        "flour tortilla"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/tortilla.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/tortilla.png",
+      "aisle": "bread-grains"
+    },
+    {
+      "slug": "chickpeas",
+      "label": "a small pile of dry chickpeas",
+      "aliases": [
+        "chickpeas",
+        "chickpea",
+        "garbanzo beans",
+        "garbanzos"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/chickpeas.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/chickpeas.png",
+      "aisle": "pantry"
+    },
+    {
+      "slug": "black-beans",
+      "label": "a small pile of dry black beans",
+      "aliases": [
+        "black beans",
+        "black bean"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/black-beans.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/black-beans.png",
+      "aisle": "pantry"
+    },
+    {
+      "slug": "kidney-beans",
+      "label": "a small pile of dry red kidney beans",
+      "aliases": [
+        "kidney beans",
+        "red kidney beans"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/kidney-beans.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/kidney-beans.png",
+      "aisle": "pantry"
+    },
+    {
+      "slug": "pinto-beans",
+      "label": "a small pile of dry speckled pinto beans",
+      "aliases": [
+        "pinto beans",
+        "pinto bean"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/pinto-beans.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/pinto-beans.png",
+      "aisle": "pantry"
+    },
+    {
+      "slug": "white-beans",
+      "label": "a small pile of dry white cannellini beans",
+      "aliases": [
+        "white beans",
+        "cannellini beans",
+        "navy beans",
+        "great northern beans"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/white-beans.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/white-beans.png",
+      "aisle": "pantry"
+    },
+    {
+      "slug": "lentils",
+      "label": "a small pile of dry brown lentils",
+      "aliases": [
+        "lentils",
+        "brown lentils",
+        "green lentils",
+        "lentil"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/lentils.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/lentils.png",
+      "aisle": "pantry"
+    },
+    {
+      "slug": "red-lentils",
+      "label": "a small pile of dry split red lentils",
+      "aliases": [
+        "red lentils",
+        "split red lentils",
+        "masoor dal"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/red-lentils.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/red-lentils.png",
+      "aisle": "pantry"
+    },
+    {
+      "slug": "almonds",
+      "label": "a small handful of whole raw almonds",
+      "aliases": [
+        "almonds",
+        "almond",
+        "raw almonds"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/almonds.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/almonds.png",
+      "aisle": "nuts-seeds"
+    },
+    {
+      "slug": "walnuts",
+      "label": "a small handful of walnut halves",
+      "aliases": [
+        "walnuts",
+        "walnut",
+        "walnut halves"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/walnuts.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/walnuts.png",
+      "aisle": "nuts-seeds"
+    },
+    {
+      "slug": "pecans",
+      "label": "a small handful of pecan halves",
+      "aliases": [
+        "pecans",
+        "pecan"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/pecans.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/pecans.png",
+      "aisle": "nuts-seeds"
+    },
+    {
+      "slug": "pistachios",
+      "label": "a small handful of shelled green pistachios",
+      "aliases": [
+        "pistachios",
+        "pistachio"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/pistachios.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/pistachios.png",
+      "aisle": "nuts-seeds"
+    },
+    {
+      "slug": "pine-nuts",
+      "label": "a small pile of pale pine nuts",
+      "aliases": [
+        "pine nuts",
+        "pine nut",
+        "pignoli"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/pine-nuts.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/pine-nuts.png",
+      "aisle": "nuts-seeds"
+    },
+    {
+      "slug": "cashews",
+      "label": "a small handful of raw cashews",
+      "aliases": [
+        "cashews",
+        "cashew"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/cashews.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/cashews.png",
+      "aisle": "nuts-seeds"
+    },
+    {
+      "slug": "hazelnuts",
+      "label": "a small handful of whole hazelnuts",
+      "aliases": [
+        "hazelnuts",
+        "hazelnut",
+        "filberts"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/hazelnuts.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/hazelnuts.png",
+      "aisle": "nuts-seeds"
+    },
+    {
+      "slug": "sesame-seeds",
+      "label": "a small pile of pale sesame seeds",
+      "aliases": [
+        "sesame seeds",
+        "sesame seed"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/sesame-seeds.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/sesame-seeds.png",
+      "aisle": "nuts-seeds"
+    },
+    {
+      "slug": "kalamata-olives",
+      "label": "a small pile of dark kalamata olives",
+      "aliases": [
+        "kalamata olives",
+        "kalamata",
+        "olives"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/kalamata-olives.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/kalamata-olives.png",
+      "aisle": "canned-jarred"
+    },
+    {
+      "slug": "capers",
+      "label": "a small pile of brined capers",
+      "aliases": [
+        "capers"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/capers.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/capers.png",
+      "aisle": "canned-jarred"
+    },
+    {
+      "slug": "pickles",
+      "label": "a few whole dill pickles",
+      "aliases": [
+        "pickles",
+        "dill pickles",
+        "pickle"
+      ],
+      "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/pickles.png",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/pickles.png",
+      "aisle": "canned-jarred"
     }
   ]
 }

@@ -51,12 +51,19 @@ if (!blobToken) {
 
 const args = argv.slice(2);
 const force = args.includes("--force");
-const onlySlugs = args.filter((a) => !a.startsWith("--"));
+const limitIdx = args.findIndex((a) => a === "--limit");
+const limit = limitIdx >= 0 ? parseInt(args[limitIdx + 1], 10) : Infinity;
+const onlySlugs = args.filter((a, i) => !a.startsWith("--") && i !== limitIdx + 1);
 
 const manifest = JSON.parse(await readFile(MANIFEST, "utf8"));
-const targets = manifest.sprites.filter((s) =>
+let targets = manifest.sprites.filter((s) =>
   onlySlugs.length === 0 ? true : onlySlugs.includes(s.slug)
 );
+// When --limit is set without --force, prefer entries that don't yet have a
+// `url` so each batch picks fresh work.
+if (Number.isFinite(limit) && !force) {
+  targets = targets.filter((s) => !s.url).slice(0, limit);
+}
 
 function buildPrompt(label) {
   return manifest.style_prompt.replace("{label}", label);

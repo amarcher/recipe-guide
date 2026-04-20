@@ -1,12 +1,25 @@
 import type { CookCard, Ingredient } from "@/app/types";
-import { findSprite } from "./sprites";
+import { findSprite, spriteAisle } from "./sprites";
 import { parseQty, formatQty, scaleQty } from "./scale";
+import { derivePrepKind, type Aisle, type PrepKind } from "./taxonomy";
+
+// Higher = more involved → wins when the same ingredient is used multiple
+// ways across a recipe (e.g. one step "minced", another "to taste").
+const PREP_PRIORITY: Record<PrepKind, number> = {
+  measure: 0,
+  toast: 1,
+  grind: 2,
+  grate: 3,
+  knife: 4,
+};
 
 export type MiseEntry = {
   key: string;
   item: string;
   unit: string | null;
   slug: string | null;
+  aisle: Aisle | null;
+  prepKind: PrepKind;
   // Best-effort summed quantity. null = no parseable numeric (e.g. "to taste").
   numericTotal: number | null;
   // Raw quantity strings (post-scale) shown as fallback if no numericTotal.
@@ -38,6 +51,8 @@ export function buildMise(card: CookCard, factor: number): MiseEntry[] {
         item: ing.item,
         unit: ing.unit,
         slug,
+        aisle: spriteAisle(slug),
+        prepKind: derivePrepKind(ing.prep),
         numericTotal: null,
         rawParts: [],
         prepHints: [],
@@ -46,6 +61,13 @@ export function buildMise(card: CookCard, factor: number): MiseEntry[] {
     }
     if (ing.prep && !entry.prepHints.includes(ing.prep)) {
       entry.prepHints.push(ing.prep);
+      // The first ingredient set entry.prepKind; if a later usage is heavier
+      // (e.g. one step says "minced", another says "to taste"), promote the
+      // entry to the more involved prep kind.
+      const candidate = derivePrepKind(ing.prep);
+      if (PREP_PRIORITY[candidate] > PREP_PRIORITY[entry.prepKind]) {
+        entry.prepKind = candidate;
+      }
     }
     const n = ing.quantity ? parseQty(ing.quantity) : null;
     if (n !== null) {
