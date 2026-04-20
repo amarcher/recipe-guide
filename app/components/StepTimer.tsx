@@ -13,16 +13,35 @@ import {
 import { formatClock } from "@/app/lib/duration";
 import {
   playBeep,
+  primeAudio,
+  vibrate,
   speakText,
   cancelSpeech,
   ensureNotificationPermission,
   notify,
 } from "@/app/lib/alarm";
 import { getAlarmSettings } from "@/app/lib/settings";
+import { speakOnCast, useCastState } from "@/app/lib/cast";
+import {
+  readTimerState,
+  useTimerState,
+  writeTimerState,
+  type TimerState,
+} from "@/app/lib/timer-state";
 
-type Status = "idle" | "running" | "checking" | "paused" | "done";
+type AlarmKind = "check" | "done";
+
+function deriveRemainingMs(s: TimerState, lowMs: number): number {
+  if (s.status === "running" || s.status === "checking") {
+    return s.endAt == null ? lowMs : Math.max(0, s.endAt - Date.now());
+  }
+  if (s.status === "paused") return s.pausedRemainingMs ?? lowMs;
+  if (s.status === "done") return 0;
+  return lowMs;
+}
 
 export function StepTimer({
+  recipeId,
   lowSec,
   highSec,
   stepNumber,
@@ -31,6 +50,7 @@ export function StepTimer({
   onToggleDone,
   onComplete,
 }: {
+  recipeId: string;
   lowSec: number;
   highSec: number;
   stepNumber: number;
@@ -40,58 +60,76 @@ export function StepTimer({
   onComplete: () => void;
 }) {
   const isRange = highSec > lowSec + 1;
-  const [status, setStatus] = useState<Status>("idle");
-  const [remaining, setRemaining] = useState(lowSec);
-  const [alarm, setAlarm] = useState<{ kind: "check" | "done" } | null>(null);
-  const endAt = useRef<number | null>(null);
-  const tick = useRef<number | null>(null);
-  const alertsFired = useRef<{ low: boolean; high: boolean }>({
-    low: false,
-    high: false,
-  });
+  const lowMs = lowSec * 1000;
+  const highMs = highSec * 1000;
+  const persisted = useTimerState(recipeId, stepNumber);
+  const cast = useCastState();
 
+  const [alarm, setAlarm] = useState<{ kind: AlarmKind } | null>(null);
+  const [remainingMs, setRemainingMs] = useState<number>(() =>
+    deriveRemainingMs(persisted, lowMs)
+  );
+  const tick = useRef<number | null>(null);
+
+  // Drive ticking + phase transitions. On mount with a persisted running
+  // timer whose endAt is already in the past, the first loop iteration
+  // detects it and fires — so no separate catch-up effect is needed.
   useEffect(() => {
+    if (persisted.status !== "running" && persisted.status !== "checking") {
+      if (tick.current != null) {
+        clearTimeout(tick.current);
+        tick.current = null;
+      }
+      return;
+    }
+    let cancelled = false;
     function loop() {
-      if (endAt.current == null) return;
-      const sec = (endAt.current - Date.now()) / 1000;
-      if (sec <= 0) {
-        if (
-          isRange &&
-          !alertsFired.current.low &&
-          status === "running"
-        ) {
-          alertsFired.current.low = true;
-          endAt.current = Date.now() + (highSec - lowSec) * 1000;
-          setRemaining(highSec - lowSec);
-          setStatus("checking");
+      if (cancelled) return;
+      const s = readTimerState(recipeId, stepNumber);
+      if (s.endAt == null) return;
+      const now = Date.now();
+      if (now >= s.endAt) {
+        if (s.status === "running" && isRange && !s.firedLow) {
+          writeTimerState(recipeId, stepNumber, {
+            ...s,
+            status: "checking",
+            endAt: now + (highMs - lowMs),
+            firedLow: true,
+          });
           setAlarm({ kind: "check" });
-          tick.current = window.setTimeout(loop, 200);
+          // Effect re-run (on status change) will restart the loop.
           return;
         }
-        alertsFired.current.high = true;
-        setRemaining(0);
-        setStatus("done");
-        endAt.current = null;
+        writeTimerState(recipeId, stepNumber, {
+          ...s,
+          status: "done",
+          endAt: null,
+          firedLow: true,
+          firedHigh: true,
+        });
         setAlarm({ kind: "done" });
         onComplete();
         return;
       }
-      setRemaining(sec);
+      setRemainingMs(s.endAt - now);
       tick.current = window.setTimeout(loop, 200);
     }
-    if (status === "running" || status === "checking") {
-      tick.current = window.setTimeout(loop, 200);
-    }
+    tick.current = window.setTimeout(loop, 0);
     return () => {
+      cancelled = true;
       if (tick.current != null) {
         clearTimeout(tick.current);
         tick.current = null;
       }
     };
-  }, [status, onComplete, isRange, lowSec, highSec]);
+  }, [persisted.status, recipeId, stepNumber, isRange, lowMs, highMs, onComplete]);
 
-  // The looping alarm. Fires immediately, then repeats on `intervalSec` until
-  // the user silences it (any timer button) or `maxSec` elapses.
+  function update(patch: Partial<TimerState>) {
+    writeTimerState(recipeId, stepNumber, { ...persisted, ...patch });
+  }
+
+  // Looping alarm pulse. Fires immediately then repeats until silenced or the
+  // safety cap expires.
   useEffect(() => {
     if (!alarm) return;
     const settings = getAlarmSettings();
@@ -99,8 +137,18 @@ export function StepTimer({
     const verb = alarm.kind === "check" ? "Check now" : "Time’s up for";
     const announcement = `${verb}: step ${stepNumber}, ${stepHeadline}`;
     const pulse = () => {
-      playBeep(settings.volume);
+      vibrate();
+      if (cast.status === "connected") {
+        // When casting, the Home is the speaker — don't duplicate audio on
+        // the computer. Vibration still fires so you feel it on your phone.
+        void speakOnCast(announcement);
+        return;
+      }
+      const audible = playBeep(settings.volume);
       if (settings.ttsEnabled) speakText(announcement);
+      if (!audible) {
+        console.info("[alarm] audio muted — relying on vibration");
+      }
     };
     pulse();
     if (settings.notifyEnabled) notify(`Step ${stepNumber}: ${stepHeadline}`, verb);
@@ -114,39 +162,70 @@ export function StepTimer({
       window.clearTimeout(cap);
       cancelSpeech();
     };
-  }, [alarm, stepHeadline, stepNumber]);
+  }, [alarm, stepHeadline, stepNumber, cast.status]);
 
   function silenceAlarm() {
     setAlarm(null);
   }
 
   async function start() {
+    primeAudio();
     await ensureNotificationPermission();
     silenceAlarm();
-    if (status === "checking") {
-      endAt.current = Date.now() + remaining * 1000;
-      setStatus("checking");
-    } else {
-      endAt.current = Date.now() + remaining * 1000;
-      setStatus("running");
-    }
+    const phaseMs = persisted.status === "checking" ? highMs - lowMs : lowMs;
+    const leftMs =
+      persisted.status === "paused"
+        ? persisted.pausedRemainingMs ?? phaseMs
+        : phaseMs;
+    const nextStatus: TimerState["status"] =
+      persisted.status === "checking" ? "checking" : "running";
+    update({
+      status: nextStatus,
+      endAt: Date.now() + leftMs,
+      pausedRemainingMs: null,
+      firedLow: persisted.firedLow || nextStatus === "checking",
+      firedHigh: false,
+    });
   }
+
   function pause() {
     silenceAlarm();
-    setStatus("paused");
-    endAt.current = null;
+    const remMs =
+      persisted.endAt != null ? Math.max(0, persisted.endAt - Date.now()) : 0;
+    update({
+      status: "paused",
+      endAt: null,
+      pausedRemainingMs: remMs,
+    });
   }
+
   function reset() {
     silenceAlarm();
-    setStatus("idle");
-    setRemaining(lowSec);
-    endAt.current = null;
-    alertsFired.current = { low: false, high: false };
+    writeTimerState(recipeId, stepNumber, {
+      status: "idle",
+      endAt: null,
+      pausedRemainingMs: null,
+      firedLow: false,
+      firedHigh: false,
+    });
   }
+
   function toggleDone() {
     silenceAlarm();
     onToggleDone();
   }
+
+  const status = persisted.status;
+  const displayMs =
+    status === "running" || status === "checking"
+      ? remainingMs
+      : status === "paused"
+      ? persisted.pausedRemainingMs ?? lowMs
+      : status === "done"
+      ? 0
+      : lowMs;
+  const remaining = displayMs / 1000;
+  const checkRemSec = status === "checking" ? remaining : highSec - lowSec;
 
   const tone =
     alarm
@@ -179,7 +258,7 @@ export function StepTimer({
         )}
         {!alarm && status === "checking" && (
           <span className="text-xs font-medium uppercase tracking-wider">
-            check now · {formatClock(highSec - lowSec)} until max
+            check now · {formatClock(checkRemSec)} until max
           </span>
         )}
         {!alarm && status === "done" && (

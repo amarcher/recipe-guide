@@ -13,12 +13,14 @@ import type { CookCard, Ingredient } from "@/app/types";
 import { scaleQty, scaleServings } from "@/app/lib/scale";
 import { parseMinutesRange } from "@/app/lib/duration";
 import { discoverSprites } from "@/app/lib/sprites";
+import { recipeIdFor } from "@/app/lib/storage";
 import { Scaler } from "./Scaler";
 import { Timeline } from "./Timeline";
 import { StepIcon } from "./StepIcon";
 import { StepTimer } from "./StepTimer";
 import { MisePlace } from "./MisePlace";
 import { Sprite } from "./Sprite";
+import { CastButton } from "./CastButton";
 
 function IngredientLine({ ing, factor }: { ing: Ingredient; factor: number }) {
   const qty = scaleQty(ing.quantity, factor);
@@ -68,6 +70,7 @@ export function CookCardView({ card }: { card: CookCard }) {
   const [factor, setFactor] = useState(1);
   const [doneSteps, setDoneSteps] = useState<Set<number>>(new Set());
   const servings = scaleServings(card.servings, factor);
+  const localId = recipeIdFor(card);
 
   const toggleDone = useCallback((n: number) => {
     setDoneSteps((prev) => {
@@ -139,6 +142,9 @@ export function CookCardView({ card }: { card: CookCard }) {
             Scale
           </span>
           <Scaler value={factor} onChange={setFactor} />
+          <div className="ml-auto">
+            <CastButton />
+          </div>
         </div>
 
         {(card.equipment.length > 0 || card.pantry_ingredients.length > 0) && (
@@ -245,6 +251,7 @@ export function CookCardView({ card }: { card: CookCard }) {
 
                 {range != null ? (
                   <StepTimer
+                    recipeId={localId}
                     lowSec={Math.round(range.low * 60)}
                     highSec={Math.round(range.high * 60)}
                     stepNumber={step.number}
