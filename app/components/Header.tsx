@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { ChefHat, Library, Users } from "lucide-react";
-import { SettingsButton } from "./SettingsButton";
-import { UserMenu } from "./UserMenu";
+import { AvatarMenu } from "./AvatarMenu";
 
 export function Header() {
   return (
@@ -29,8 +28,7 @@ export function Header() {
             <Users className="h-4 w-4" />
             <span className="hidden sm:inline">Families</span>
           </Link>
-          <SettingsButton />
-          <UserMenu />
+          <AvatarMenu />
         </nav>
       </div>
     </header>
