@@ -16,19 +16,7 @@ export function CastButton() {
     void initCast();
   }, []);
 
-  if (state.status === "unsupported") {
-    return (
-      <button
-        type="button"
-        disabled
-        title={state.error ?? "Cast not supported in this browser"}
-        className="inline-flex items-center gap-1.5 rounded-full border border-stone-200 bg-stone-50 px-3 py-1 text-xs font-medium text-stone-400"
-      >
-        <Speaker className="h-3.5 w-3.5" />
-        Cast
-      </button>
-    );
-  }
+  if (state.status === "unsupported") return null;
 
   if (state.status === "connected") {
     return (
