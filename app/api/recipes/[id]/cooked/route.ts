@@ -30,11 +30,20 @@ export async function POST(
   });
   if (!row) return NextResponse.json({ error: "not found" }, { status: 404 });
 
+  const now = new Date();
   const updated = await prisma.savedRecipe.update({
     where: { id: row.id },
     data: {
-      lastCookedAt: new Date(),
+      lastCookedAt: now,
       cookCount: { increment: 1 },
+    },
+  });
+
+  const cookLog = await prisma.cookLog.create({
+    data: {
+      savedRecipeId: row.id,
+      userId: user.userId,
+      cookedAt: now,
     },
   });
 
@@ -46,5 +55,6 @@ export async function POST(
   return NextResponse.json({
     cookCount: updated.cookCount,
     lastCookedAt: updated.lastCookedAt?.getTime() ?? null,
+    cookLogId: cookLog.id,
   });
 }

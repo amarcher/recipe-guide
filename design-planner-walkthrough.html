@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Weekly planner — walkthrough</title>
+<style>
+  :root {
+    --bg: #0f1012;
+    --panel: #17181c;
+    --panel-2: #1d1e23;
+    --fg: #ececf1;
+    --muted: #8f909a;
+    --accent: #e4a55a;
+    --good: #7fcf9a;
+    --kid: #f2c16b;
+    --stone: #bfbfc7;
+    --border: #2a2b32;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg); color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter",
+                 system-ui, sans-serif;
+    font-size: 17px; line-height: 1.55;
+    height: 100%; overflow: hidden;
+  }
+  .deck { position: relative; width: 100vw; height: 100vh; }
+  .slide {
+    position: absolute; inset: 0;
+    padding: 5vh 7vw;
+    display: none;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+  .slide.active { display: flex; }
+  h1 {
+    font-size: 2.4rem; font-weight: 600; margin: 0 0 1.2rem;
+    letter-spacing: -0.015em;
+  }
+  h2 {
+    font-size: 1rem; font-weight: 500; margin: 0 0 0.3rem;
+    color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em;
+  }
+  h3 {
+    font-size: 1.15rem; font-weight: 600; margin: 1.2rem 0 0.4rem;
+    color: var(--accent);
+  }
+  p { margin: 0 0 0.9rem; max-width: 75ch; }
+  ul { margin: 0 0 1rem; padding-left: 1.2rem; max-width: 75ch; }
+  li { margin-bottom: 0.35rem; }
+  code {
+    font-family: "SF Mono", "JetBrains Mono", Menlo, monospace;
+    background: var(--panel); padding: 0.08em 0.32em; border-radius: 4px;
+    font-size: 0.92em;
+  }
+  .muted { color: var(--muted); }
+  .subtitle { color: var(--muted); font-size: 1.1rem; margin-bottom: 1.5rem; }
+  .counter {
+    position: absolute; bottom: 1.4rem; right: 2rem;
+    color: var(--muted); font-size: 0.85rem; font-variant-numeric: tabular-nums;
+  }
+  .hint {
+    position: absolute; bottom: 1.4rem; left: 2rem;
+    color: var(--muted); font-size: 0.85rem;
+  }
+
+  .flow {
+    display: grid; grid-template-columns: repeat(6, 1fr); gap: 0.4rem;
+    margin: 1rem 0 1.5rem; max-width: 1100px;
+  }
+  .flow .step {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.8rem 0.7rem;
+    font-size: 0.82rem; line-height: 1.3;
+  }
+  .flow .step strong {
+    display: block; color: var(--accent);
+    font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em;
+    margin-bottom: 0.3rem;
+  }
+  .flow .step.active { border-color: var(--accent); background: rgba(228,165,90,0.08); }
+
+  .two {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem;
+    max-width: 1150px;
+  }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.1rem 1.2rem;
+  }
+  .card h4 { margin: 0 0 0.5rem; font-size: 1.05rem; color: var(--accent); }
+  .card .sub { color: var(--muted); font-size: 0.88rem; }
+
+  .mockup {
+    background: #0b0c0f;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.1rem;
+    font-family: "SF Mono", "JetBrains Mono", Menlo, monospace;
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin: 0.7rem 0;
+    white-space: pre;
+    overflow-x: auto;
+  }
+  .mockup .accent { color: var(--accent); }
+  .mockup .good { color: var(--good); }
+  .mockup .kid { color: var(--kid); }
+  .mockup .stone { color: var(--stone); }
+
+  .pill {
+    display: inline-block;
+    padding: 0.15rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    background: rgba(228,165,90,0.15);
+    color: var(--accent);
+    border: 1px solid rgba(228,165,90,0.35);
+  }
+  .pill.kid { background: rgba(242,193,107,0.12); color: var(--kid); border-color: rgba(242,193,107,0.3); }
+  .pill.good { background: rgba(127,207,154,0.12); color: var(--good); border-color: rgba(127,207,154,0.3); }
+
+  .big {
+    margin: 1.1rem 0;
+    padding: 1.2rem 1.4rem;
+    background: linear-gradient(180deg, rgba(228,165,90,0.10), rgba(228,165,90,0.02));
+    border: 1px solid rgba(228,165,90,0.35);
+    border-radius: 10px;
+    max-width: 900px;
+  }
+  .big strong { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="deck">
+
+<!-- 1 -->
+<section class="slide active">
+  <h2>Walkthrough</h2>
+  <h1>Weekly planner — how this thing is meant to be used</h1>
+  <p class="subtitle">What "Regenerate skeleton" and "Regenerate candidates" actually do, and where the rest of the week fits.</p>
+  <p>The planner is a new layer on top of the existing recipe-execution app. It answers a different question: <em>what are we eating this week and what do we need to buy?</em> — rather than <em>how do I cook this recipe right now?</em></p>
+  <p class="muted">11 slides. Arrow keys, or click right/left on the screen to navigate.</p>
+</section>
+
+<!-- 2 -->
+<section class="slide">
+  <h2>The weekly loop at a glance</h2>
+  <h1>Sunday plans once, the rest of the week just cooks</h1>
+  <div class="flow">
+    <div class="step"><strong>1 · Intake</strong>Chat about the week. What's in the fridge, what kids will eat, what mood we're in.</div>
+    <div class="step"><strong>2 · Skeleton</strong>The thesis: hero ingredients + themes + rationale. No recipes yet.</div>
+    <div class="step"><strong>3 · Candidates</strong>3–5 meal options per slot, honoring the skeleton.</div>
+    <div class="step"><strong>4 · Commit</strong>Pick what you'll actually cook. Menu, not calendar.</div>
+    <div class="step"><strong>5 · Groceries</strong>One shopping list rolled up from commits.</div>
+    <div class="step"><strong>6 · Cook</strong>Night-of, open any committed meal in the existing guide.</div>
+  </div>
+  <p>The two buttons currently on the plan page — <span class="pill">Regenerate skeleton</span> and <span class="pill">Regenerate candidates</span> — trigger stages 2 and 3. Stage 1 (intake) isn't wired yet; we've seeded a realistic intake to demo everything downstream.</p>
+</section>
+
+<!-- 3 -->
+<section class="slide">
+  <h2>Stage 1 · Intake</h2>
+  <h1>A Sunday-night conversation, not a form</h1>
+  <p>A lightweight chat with the agent produces a structured <code>PlanIntake</code>: week mood (use-up / explore / survival), pantry items, aspirations, kid rules (reliable hits + hard nos), cook-time limits, which meals to cover.</p>
+  <div class="mockup"><span class="accent">Agent:</span> "Hey — what's the vibe this week?"
+<span class="stone">You:</span>   "We've got a pound of ground turkey to use. Kids need dinners + breakfasts. Adults lunches Mon-Fri. One explore slot would be nice."
+<span class="accent">Agent:</span> "Got it. Any aspirations lingering?"
+<span class="stone">You:</span>   "I've been curious about shakshuka."
+<span class="accent">Agent:</span> "Kids' hard-nos still fish and mushrooms?"
+<span class="stone">You:</span>   "Yep."
+<span class="accent">Agent:</span> <span class="muted">[calls signal_intake_complete]</span></div>
+  <p>Output is a structured object the downstream stages consume. <strong>This UI is still to build</strong> — next milestone. Today the planner runs off a seeded intake with the exact same shape.</p>
+</section>
+
+<!-- 4 -->
+<section class="slide">
+  <h2>Stage 2 · Skeleton</h2>
+  <h1>The thesis for the week — no recipes yet</h1>
+  <p>One LLM call. Input: your intake + recent cooking history. Output: hero ingredients (what we'll reuse across slots), themes (how the week hangs together), a constraint acknowledgment, and a narrative rationale.</p>
+  <div class="mockup"><span class="accent">heroIngredients</span>:
+  - ground turkey   <span class="muted">→ DINNER x2   (must use)</span>
+  - spinach         <span class="muted">→ DINNER x1, LUNCH x1</span>
+  - eggs            <span class="muted">→ DINNER x1 (shakshuka), BREAKFAST x2</span>
+<span class="accent">themes</span>:
+  - Clear the fridge: turkey + spinach lead the week
+  - Mediterranean weeknights for adults, one shakshuka explore
+<span class="accent">rationale</span>:
+  "You said turkey and spinach are the pressure points, so they
+   lead. The shakshuka curiosity gets its one explore slot and
+   uses the eggs and spinach you already have..."</div>
+  <p>That narrative is what you saw at the top of your plan page in the amber panel. <strong>"Regenerate skeleton"</strong> re-runs this single call — nothing else. Useful when the intake changes, or when you want a fresh take on the thesis.</p>
+</section>
+
+<!-- 5 -->
+<section class="slide">
+  <h2>Stage 3 · Candidates</h2>
+  <h1>Turn the thesis into specific meals, per slot</h1>
+  <p>One LLM call per <code>(slot, eaters)</code> combination — so ~6 parallel calls for a typical week. Each call gets the skeleton, the intake, the family's recent recipes, and produces 3–5 candidate meals for just its slot. Every candidate comes with a fully-drafted <code>CookCard</code> (ingredients + steps) so cook-night has something to render.</p>
+  <div class="two">
+    <div class="card">
+      <h4>Per-slot specialization</h4>
+      <p class="sub">The ADULTS slot pulls from aspirations ("curious about shakshuka"). The KIDS slot pulls from reliableHits ("pasta, quesadillas"). The ADULTS+KIDS slot picks dishes that work for both.</p>
+    </div>
+    <div class="card">
+      <h4>Reuse is the point</h4>
+      <p class="sub">If the skeleton says turkey appears in 2 dinners, at least 2 candidates in the dinner slot use it. That's how the grocery list stays tight.</p>
+    </div>
+  </div>
+  <p><strong>"Regenerate candidates"</strong> re-runs all per-slot calls. Non-committed candidates are wiped and replaced; committed ones are preserved so you don't lose your picks. Requires a skeleton to exist.</p>
+</section>
+
+<!-- 6 -->
+<section class="slide">
+  <h2>Skeleton vs candidates</h2>
+  <h1>The cheat sheet</h1>
+  <div class="two">
+    <div class="card" style="border-color: rgba(228,165,90,0.4);">
+      <h4>Regenerate skeleton</h4>
+      <p class="sub"><strong>1 LLM call.</strong> Cheap + fast (~10s).</p>
+      <p class="sub"><strong>Produces:</strong> hero ingredients, themes, rationale text.</p>
+      <p class="sub"><strong>Shown as:</strong> the amber narrative panel at the top of the plan.</p>
+      <p class="sub"><strong>When you'd re-run:</strong> the week's thesis feels wrong, or you've edited the intake.</p>
+    </div>
+    <div class="card" style="border-color: rgba(228,165,90,0.4);">
+      <h4>Regenerate candidates</h4>
+      <p class="sub"><strong>N parallel LLM calls</strong> (one per slot+eaters combo). Slower (~30–60s).</p>
+      <p class="sub"><strong>Produces:</strong> 3–5 meals per slot with full <code>CookCard</code> drafts + badges.</p>
+      <p class="sub"><strong>Shown as:</strong> the menu cards grouped by meal type + eaters.</p>
+      <p class="sub"><strong>When you'd re-run:</strong> the candidates feel weak, or the skeleton changed.</p>
+    </div>
+  </div>
+  <p><strong>Order matters.</strong> Skeleton first, then candidates. The candidate prompt reads the skeleton to know which heroes to reach for and which themes to honor. Regenerating the skeleton invalidates what the candidates are working off of, so you'll usually follow with a candidate regeneration.</p>
+</section>
+
+<!-- 7 -->
+<section class="slide">
+  <h2>Stage 4 · The menu UI</h2>
+  <h1>Browse, commit, un-commit — not a calendar</h1>
+  <p>Candidates are grouped by <code>(slot, eaters)</code>. Each section is its own conversation:</p>
+  <div class="mockup"><span class="accent">Dinner</span>  · <span class="stone">Adults + kids</span>            <span class="muted">1/3</span>
+  ┌ Turkey + spinach pasta bake ┐  <span class="good">✓ committed</span>
+  │ One-pan turkey rice bowls   │  <span class="muted">+</span>
+  │ Sheet-pan harissa chicken   │  <span class="muted">+</span>
+  └─────────────────────────────┘
+<span class="accent">Dinner</span>  · <span class="stone">Adults</span>                   <span class="muted">0/3</span>
+  Shakshuka with feta · Orzo with kalamatas · ...
+
+<span class="kid">╭─ Breakfast · Kids ──────────────────── 0/2 ─╮</span>
+<span class="kid">│</span>  Scrambled eggs + toast
+<span class="kid">│</span>  Overnight oats with berries
+<span class="kid">╰─────────────────────────────────────────────╯</span></div>
+  <p><strong>Kid-only sections sit inside a warm amber panel</strong> so the kid track is parseable at a glance without reading headers. Adult-only and mixed sections stay neutral. Committed cards flip to emerald. Each card's footer shows up to four hero-ingredient <em>sprites</em>, overlapping like a cast list, so you can see the ingredients at a glance before reading anything.</p>
+</section>
+
+<!-- 8 -->
+<section class="slide">
+  <h2>Stage 5 · Grocery list</h2>
+  <h1>Self-assembles from commits — shop once, cook all week</h1>
+  <p>Committing a candidate triggers a rebuild of the plan's grocery list. Every committed meal's ingredients are unioned and deduped by <code>(slug, unit)</code>. Uncommitting removes the row (even if it was checked off). Checking an item as purchased persists across rebuilds so you don't lose your place.</p>
+  <div class="mockup"><span class="good">✓</span>  <span class="muted">bell pepper</span>       3
+☐  black beans              1 can
+☐  chicken thighs           2 lb
+☐  crushed tomatoes         1 can
+☐  eggs                     6
+☐  feta                     ½ cup
+☐  kalamata olives          ⅓ cup</div>
+  <p>Each row shows the same ingredient sprite used in the recipe execution flow — visual continuity between planning and cooking. Items yet to be matched to a sprite auto-discover in the background via the same pipeline Mise Place uses.</p>
+</section>
+
+<!-- 9 -->
+<section class="slide">
+  <h2>Stage 6 · Cook night</h2>
+  <h1>Open a committed meal in the existing execution guide</h1>
+  <p>When Tuesday rolls around, you open the plan, pick whatever queued meal makes sense tonight, and the app drops you into the <em>existing</em> <code>CookCardView</code> — mise en place, timeline, per-step timers, everything we already had. The planner's job ends at "here's what you're cooking"; execution is untouched.</p>
+  <div class="big">
+    <p><strong>The key constraint:</strong> the planner is additive. The recipe-execution layer that already existed stays exactly as it was — that layer reduces cooking anxiety for the principal user, and we're not diluting it to fit a different workflow.</p>
+  </div>
+  <p class="muted">The hand-off itself — clicking a committed meal → opening CookCardView — is the next small piece to wire after the intake chat. Today's queued meals are browseable but don't yet launch a cook session.</p>
+</section>
+
+<!-- 10 -->
+<section class="slide">
+  <h2>Visual vocabulary</h2>
+  <h1>What the colors and shapes mean</h1>
+  <ul>
+    <li><span class="pill">amber panel</span> — the week's thesis (rationale + themes), or a kid-only section of the menu. Both read as "warm background, guidance inside."</li>
+    <li><span class="pill good">emerald</span> — you've committed to this. On cards it fills the commit button and tints the card; on the grocery list it checks off an item.</li>
+    <li><span class="pill kid">kid chip</span> — the Baby icon + "Kids" label on a section header. Mirrors the amber panel treatment.</li>
+    <li><span class="pill">sprite cluster</span> — the overlapping circles on each card footer. Hero ingredients, at a glance, without reading.</li>
+    <li><span class="pill">badges</span> (e.g. "Kid-reliable", "Under 30 min", "Clears the fridge") — auto-generated from the scoring pass so strong candidates advertise their strengths.</li>
+  </ul>
+  <p>Everything neutral (stone/white) is the default: Adults-only sections, non-committed cards, unchecked grocery rows. Color is reserved for signal.</p>
+</section>
+
+<!-- 11 -->
+<section class="slide">
+  <h2>Where we are, what's next</h2>
+  <h1>Current state + the last remaining piece</h1>
+  <h3>Built and live</h3>
+  <ul>
+    <li>Prisma schema for WeeklyPlan, MealCandidate, PlannedMeal, GroceryItem (Neon).</li>
+    <li>Skeleton + candidate LLM pipeline (AI SDK v6, Anthropic provider).</li>
+    <li>Deterministic scoring/ranking with badges, mood-weighted combine, diversity penalty.</li>
+    <li>Menu view UI with kid/adult visual differentiation, sprite clusters, commit toggle.</li>
+    <li>Grocery list with auto-rollup, sprite rendering, purchased state.</li>
+    <li>Hand-authored <code>design-slot-split.html</code> deck recording the adult/kid row schema decision.</li>
+  </ul>
+  <h3>Still to build</h3>
+  <ul>
+    <li><strong>Intake chat UI</strong> — the Sunday conversation that produces the intake in the first place. Today we seed it.</li>
+    <li><strong>Cook-night hand-off</strong> — clicking a committed meal opens <code>CookCardView</code>. One small link away.</li>
+    <li><strong>Create-plan flow</strong> — the "new plan" button on the <code>/plan</code> index. Spawns a DRAFT plan and takes you into the chat.</li>
+  </ul>
+  <p class="muted" style="margin-top: 1rem;">After those, the planner is feature-complete for a first real-world trial.</p>
+</section>
+
+</div>
+
+<div class="counter" id="counter">1 / 11</div>
+<div class="hint">← →  navigate</div>
+
+<script>
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const counter = document.getElementById('counter');
+  let idx = 0;
+  function show(i) {
+    idx = Math.max(0, Math.min(slides.length - 1, i));
+    slides.forEach((s, n) => s.classList.toggle('active', n === idx));
+    counter.textContent = (idx + 1) + ' / ' + slides.length;
+  }
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') { show(idx + 1); e.preventDefault(); }
+    else if (e.key === 'ArrowLeft' || e.key === 'Backspace') { show(idx - 1); e.preventDefault(); }
+    else if (e.key === 'Home') { show(0); }
+    else if (e.key === 'End') { show(slides.length - 1); }
+  });
+  document.addEventListener('click', (e) => {
+    const w = window.innerWidth;
+    if (e.clientX > w * 0.6) show(idx + 1);
+    else if (e.clientX < w * 0.4) show(idx - 1);
+  });
+</script>
+</body>
+</html>

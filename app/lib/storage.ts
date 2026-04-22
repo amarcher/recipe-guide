@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useRef, useSyncExternalStore } from "react";
 import { useSession } from "next-auth/react";
 import type { CookCard } from "@/app/types";
 
@@ -11,6 +11,7 @@ export type SavedRecipe = {
   lastCookedAt: number | null;
   cookCount: number;
   family?: { id: string; name: string } | null;
+  photoUrl?: string | null;
 };
 
 // Stable hash of (sourceUrl, title). Used as the LOCAL recipe ID. The server
@@ -160,6 +161,7 @@ type ServerRecipeRow = {
   savedAt: number;
   lastCookedAt: number | null;
   cookCount: number;
+  photoUrl?: string | null;
 };
 
 function serverToLocal(r: ServerRecipeRow): SavedRecipe {
@@ -170,6 +172,7 @@ function serverToLocal(r: ServerRecipeRow): SavedRecipe {
     lastCookedAt: r.lastCookedAt,
     cookCount: r.cookCount,
     family: r.family,
+    photoUrl: r.photoUrl ?? null,
   };
 }
 
@@ -224,9 +227,20 @@ export function useSavedRecipe(id: string | null): {
   loaded: boolean;
 } {
   const mode = useMode();
+  const refetchedFor = useRef<string | null>(null);
   useEffect(() => {
-    if (mode === "remote" && !remoteMirror) void fetchRemoteList();
-  }, [mode]);
+    if (mode !== "remote" || !id) return;
+    if (!remoteMirror) {
+      void fetchRemoteList();
+      return;
+    }
+    // Mirror exists but the id isn't in it — likely just materialized from
+    // the planner. Fetch the single row directly and inject into the mirror.
+    if (!remoteMirror[id] && refetchedFor.current !== id) {
+      refetchedFor.current = id;
+      void fetchOneIntoMirror(id);
+    }
+  }, [mode, id]);
 
   const localSnapshot = useCallback(
     () => (id ? getLocalMirror()[id] ?? null : null),
@@ -246,11 +260,28 @@ export function useSavedRecipe(id: string | null): {
     remoteSnapshot,
     () => null
   );
-  const loaded = useSyncExternalStore(
+  const hydrated = useSyncExternalStore(
     noopSubscribe,
     trueSnapshot,
     falseSnapshot
   );
+
+  // Subscribe to a tiny "did we finish the single-row fetch for this id" flag
+  // so we can show Loading while it's in flight and only show the missing-
+  // recipe state after the fetch has settled.
+  const singleFetchDone = useSyncExternalStore(
+    subscribeRemote,
+    useCallback(
+      () => (id ? attemptedSingleFetch.has(id) : true),
+      [id]
+    ),
+    trueSnapshot
+  );
+
+  const remoteFetchPending =
+    mode === "remote" && !!id && !remoteValue && !singleFetchDone;
+  const loaded = hydrated && !remoteFetchPending;
+
   return {
     recipe: mode === "remote" ? remoteValue : localValue,
     loaded,
@@ -367,25 +398,36 @@ export async function deleteRecipe(id: string): Promise<void> {
   writeLocal(rest);
 }
 
-export async function markCooked(id: string): Promise<void> {
+export async function markCooked(
+  id: string
+): Promise<{ cookLogId: string | null }> {
   if (isSignedInClient() && remoteMirror?.[id]) {
-    await fetch(`/api/recipes/${id}/cooked`, { method: "POST" });
+    const res = await fetch(`/api/recipes/${id}/cooked`, { method: "POST" });
+    let cookLogId: string | null = null;
+    if (res.ok) {
+      const body = (await res
+        .json()
+        .catch(() => ({}))) as { cookLogId?: string };
+      cookLogId = body.cookLogId ?? null;
+    }
     await fetchRemoteList();
     // Also clear remote mise checks (server does this; reflect locally)
     miseLocalMirror.set(id, new Set());
     miseListeners.get(id)?.forEach((cb) => cb());
-    return;
+    return { cookLogId };
   }
   const current = getLocalMirror();
   const r = current[id];
-  if (!r) return;
-  const updated: SavedRecipe = {
-    ...r,
-    lastCookedAt: Date.now(),
-    cookCount: (r.cookCount ?? 0) + 1,
-  };
-  writeLocal({ ...current, [id]: updated });
+  if (r) {
+    const updated: SavedRecipe = {
+      ...r,
+      lastCookedAt: Date.now(),
+      cookCount: (r.cookCount ?? 0) + 1,
+    };
+    writeLocal({ ...current, [id]: updated });
+  }
   writeMiseLocal(id, new Set());
+  return { cookLogId: null };
 }
 
 // ─── Mise en place checks ───────────────────────────────────────────────────
@@ -518,6 +560,38 @@ export function hasUnsyncedLocal(): boolean {
 }
 
 // Imperative reads kept for non-hook callers (still local-mode only)
+// Force-refresh the remote mirror. Use when a server-side action creates a
+// new SavedRecipe the client needs to see before navigating.
+export async function refreshSavedRecipes(): Promise<void> {
+  if (!isSignedInClient()) return;
+  remoteFetchInflight = null;
+  await fetchRemoteList();
+}
+
+// Ids we've attempted to single-fetch this page-lifetime. The hook uses this
+// to distinguish "haven't looked yet" (keep showing Loading) from "looked and
+// it really isn't there" (show missing-recipe state).
+const attemptedSingleFetch = new Set<string>();
+
+// Fetch a single saved recipe by id and merge it into the remote mirror.
+// Used when the mirror is stale (e.g. just after materializing a planner
+// candidate) and we need the new recipe to appear without a full list refetch.
+async function fetchOneIntoMirror(id: string): Promise<void> {
+  try {
+    const res = await fetch(`/api/recipes/${id}`);
+    if (res.ok) {
+      const body = (await res.json()) as ServerRecipeRow;
+      const next = { ...(remoteMirror ?? {}), [id]: serverToLocal(body) };
+      remoteMirror = next;
+    }
+  } catch {
+    // ignore — will mark attempted below so UI falls through to missing state
+  } finally {
+    attemptedSingleFetch.add(id);
+    notifyRemote();
+  }
+}
+
 export function listRecipes(): SavedRecipe[] {
   return localListSnapshot();
 }

@@ -78,15 +78,19 @@ export function startCookingSession(s: CookSession) {
   write(s);
 }
 
-export async function finishCookingSession(): Promise<void> {
+export async function finishCookingSession(): Promise<{
+  cookLogId: string | null;
+  savedId: string;
+} | null> {
   const s = read();
-  if (!s) return;
+  if (!s) return null;
   clearTimersForRecipe(s.localId);
   write(null);
   try {
-    await markCooked(s.savedId);
+    const r = await markCooked(s.savedId);
+    return { cookLogId: r.cookLogId, savedId: s.savedId };
   } catch {
-    // markCooked already swallows transient errors; ignore.
+    return { cookLogId: null, savedId: s.savedId };
   }
 }
 

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChefHat, Library, Users } from "lucide-react";
+import { CalendarRange, ChefHat, Library, Users } from "lucide-react";
 import { AvatarMenu } from "./AvatarMenu";
 
 export function Header() {
@@ -14,6 +14,13 @@ export function Header() {
           Recipe Guide
         </Link>
         <nav className="flex items-center gap-1">
+          <Link
+            href="/plan"
+            className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-stone-600 hover:bg-stone-100 hover:text-stone-900"
+          >
+            <CalendarRange className="h-4 w-4" />
+            <span className="hidden sm:inline">Plan</span>
+          </Link>
           <Link
             href="/library"
             className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-stone-600 hover:bg-stone-100 hover:text-stone-900"

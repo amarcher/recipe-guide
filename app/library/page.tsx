@@ -12,6 +12,7 @@ import {
   syncLocalToCloud,
 } from "@/app/lib/storage";
 import { useMyFamilies } from "@/app/lib/families";
+import { LibraryCardMedia } from "./LibraryCardMedia";
 
 const noopSubscribe = () => () => {};
 const trueSnapshot = () => true;
@@ -188,8 +189,13 @@ export default function LibraryPage() {
             {recipes.map((r) => (
               <li
                 key={r.id}
-                className="group relative flex flex-col rounded-xl border border-stone-200 bg-white p-4 shadow-sm transition hover:border-stone-300"
+                className="group relative flex flex-col overflow-hidden rounded-xl border border-stone-200 bg-white p-4 shadow-sm transition hover:border-stone-300"
               >
+                <LibraryCardMedia
+                  recipeId={r.id}
+                  photoUrl={r.photoUrl ?? null}
+                  title={r.card.title}
+                />
                 <Link href={`/recipe/${r.id}`} className="flex-1">
                   <div className="flex items-center justify-between gap-2 text-[11px] uppercase tracking-wider text-stone-400">
                     <span className="truncate">

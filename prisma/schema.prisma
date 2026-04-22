@@ -25,6 +25,9 @@ model User {
   familyMemberships FamilyMember[]
   savedRecipes  SavedRecipe[]
   miseChecks    MiseCheck[]
+  cookLogs      CookLog[]
+  weeklyPlans   WeeklyPlan[]    @relation("WeeklyPlanCreator")
+  purchasedGroceryItems GroceryItem[] @relation("GroceryPurchaser")
 }
 
 model Account {
@@ -72,13 +75,15 @@ enum FamilyRole {
 }
 
 model Family {
-  id        String   @id @default(cuid())
-  name      String
-  createdAt DateTime @default(now())
+  id            String   @id @default(cuid())
+  name          String
+  createdAt     DateTime @default(now())
+  syncExecution Boolean  @default(true)
 
   members FamilyMember[]
   invites FamilyInvite[]
   recipes SavedRecipe[]
+  plans   WeeklyPlan[]
 }
 
 model FamilyMember {
@@ -147,6 +152,7 @@ model SavedRecipe {
   family       Family?      @relation(fields: [familyId], references: [id], onDelete: Cascade)
 
   miseChecks MiseCheck[]
+  cookLogs   CookLog[]
 
   @@unique([userId, parsedRecipeId, familyId])
   @@index([userId])
@@ -167,4 +173,179 @@ model MiseCheck {
 
   @@unique([savedRecipeId, userId, entryKey])
   @@index([savedRecipeId, userId])
+}
+
+// ─── Cook log (per-attempt history, photos) ────────────────────────────────
+// One row per "I cooked this" event. Photos attach here — a family with
+// multiple attempts retains the history. Latest row's photoUrl is what the
+// library card renders as its thumbnail.
+model CookLog {
+  id               String    @id @default(cuid())
+  savedRecipeId    String
+  userId           String
+  cookedAt         DateTime  @default(now())
+  photoUrl         String?
+  photoUploadedAt  DateTime?
+  notes            String?
+
+  savedRecipe SavedRecipe @relation(fields: [savedRecipeId], references: [id], onDelete: Cascade)
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([savedRecipeId, cookedAt])
+  @@index([userId, cookedAt])
+}
+
+// ─── Weekly meal planner ────────────────────────────────────────────────────
+// The week is a menu, not a calendar: committed meals are a pickable queue,
+// day assignment is deferred to cook-night. See memory:
+// project_menu_not_calendar.md for the rationale.
+
+enum PlanStatus {
+  DRAFT
+  INTAKE_COMPLETE
+  SKELETON_READY
+  CANDIDATES_READY
+  COMMITTED
+  ACTIVE
+  ARCHIVED
+}
+
+enum MealSlotType {
+  BREAKFAST
+  LUNCH
+  DINNER
+  SNACK
+}
+
+enum Eater {
+  ADULTS
+  KIDS
+}
+
+enum PlannedMealStatus {
+  QUEUED
+  COOKED
+  SKIPPED
+}
+
+enum KidFitTag {
+  RELIABLE
+  STRETCH
+  NEW
+}
+
+enum IntakeRole {
+  USER
+  ASSISTANT
+}
+
+model WeeklyPlan {
+  id          String     @id @default(cuid())
+  familyId    String?
+  createdById String
+  weekOf      DateTime
+  status      PlanStatus @default(DRAFT)
+  intake      Json?
+  skeleton    Json?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  family     Family?         @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  createdBy  User            @relation("WeeklyPlanCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  meals      PlannedMeal[]
+  candidates MealCandidate[]
+  groceries  GroceryItem[]
+  messages   IntakeMessage[]
+
+  @@index([familyId])
+  @@index([createdById])
+  @@index([status])
+}
+
+// A proposal for a meal in a plan. Generated in bulk (3-5 per slot/eaters
+// combo) by the per-slot LLM call, then scored and ranked deterministically.
+// Becomes a PlannedMeal if the user commits to it.
+model MealCandidate {
+  id                  String       @id @default(cuid())
+  planId              String
+  slot                MealSlotType
+  eaters              Eater[]
+  title               String
+  summary             String
+  rationale           String
+  heroIngredientSlugs String[]     @default([])
+  approxCookMinutes   Int
+  kidFitTag           KidFitTag    @default(RELIABLE)
+  composedCardDraft   Json
+  rank                Int?
+  score               Float?
+  filteredOutReason   String?
+  scoreBreakdownJson  Json?
+  badges              String[]     @default([])
+  rankedAt            DateTime?
+  discardedAt         DateTime?
+  createdAt           DateTime     @default(now())
+
+  plan         WeeklyPlan    @relation(fields: [planId], references: [id], onDelete: Cascade)
+  plannedMeals PlannedMeal[]
+
+  @@index([planId, slot])
+  @@index([planId, rank])
+}
+
+// A committed meal in the plan. One row per (eaters) slice — on split
+// adult/kid nights we get two rows, which is deliberate (see memory:
+// project_slot_schema_decision.md).
+model PlannedMeal {
+  id                String            @id @default(cuid())
+  planId            String
+  chosenCandidateId String
+  slot              MealSlotType
+  eaters            Eater[]
+  status            PlannedMealStatus @default(QUEUED)
+  targetDay         Int?
+  cookedAt          DateTime?
+  skippedAt         DateTime?
+  notes             String?
+  createdAt         DateTime          @default(now())
+
+  plan      WeeklyPlan    @relation(fields: [planId], references: [id], onDelete: Cascade)
+  candidate MealCandidate @relation(fields: [chosenCandidateId], references: [id], onDelete: Restrict)
+
+  @@index([planId, status])
+  @@index([chosenCandidateId])
+}
+
+// Aggregated grocery line item for a plan. Computed on commit/uncommit of
+// PlannedMeal rows, deduped by (planId, slug, unit).
+model GroceryItem {
+  id            String    @id @default(cuid())
+  planId        String
+  slug          String?
+  display       String
+  unit          String?
+  quantity      String?
+  purchased     Boolean   @default(false)
+  purchasedAt   DateTime?
+  purchasedById String?
+
+  plan        WeeklyPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  purchasedBy User?      @relation("GroceryPurchaser", fields: [purchasedById], references: [id])
+
+  @@index([planId, purchased])
+  @@index([planId, slug])
+}
+
+// Raw transcript of the intake conversation. The structured PlanIntake lives
+// in WeeklyPlan.intake; this is the ground truth for re-extraction.
+model IntakeMessage {
+  id        String     @id @default(cuid())
+  planId    String
+  role      IntakeRole
+  content   String
+  createdAt DateTime   @default(now())
+
+  plan WeeklyPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  @@index([planId, createdAt])
 }

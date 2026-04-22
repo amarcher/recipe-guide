@@ -26,6 +26,7 @@ import {
   startCookingSession,
   useCookSession,
 } from "@/app/lib/cook-session";
+import { CookPhotoPrompt } from "@/app/components/CookPhotoPrompt";
 
 function formatRelative(ts: number): string {
   const diff = Date.now() - ts;
@@ -58,6 +59,7 @@ export function SaveBar({
   const isCookingThis = cookSession?.localId === localId;
   const isAnotherCooking = !!cookSession && !isCookingThis;
   const [cookingPending, setCookingPending] = useState(false);
+  const [photoPromptCookLogId, setPhotoPromptCookLogId] = useState<string | null>(null);
 
   // For signed-out users, scopes is always just [Personal] (localStorage).
   const scopes: Scope[] = signedIn
@@ -119,7 +121,8 @@ export function SaveBar({
   async function onFinishCooking() {
     setCookingPending(true);
     try {
-      await finishCookingSession();
+      const r = await finishCookingSession();
+      if (r?.cookLogId) setPhotoPromptCookLogId(r.cookLogId);
     } finally {
       setCookingPending(false);
     }
@@ -180,6 +183,13 @@ export function SaveBar({
           </button>
         )}
       </div>
+
+      {photoPromptCookLogId && (
+        <CookPhotoPrompt
+          cookLogId={photoPromptCookLogId}
+          onDismiss={() => setPhotoPromptCookLogId(null)}
+        />
+      )}
 
       {/* Scope chips — one per library, click to toggle */}
       <div className="mt-3 flex flex-wrap gap-2">
