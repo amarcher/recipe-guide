@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Slot split — design decision</title>
+<style>
+  :root {
+    --bg: #0f1012;
+    --panel: #17181c;
+    --fg: #ececf1;
+    --muted: #8f909a;
+    --accent: #e4a55a;
+    --good: #7fcf9a;
+    --warn: #e07d7d;
+    --border: #2a2b32;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg); color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter",
+                 system-ui, sans-serif;
+    font-size: 18px; line-height: 1.55;
+    height: 100%; overflow: hidden;
+  }
+  .deck { position: relative; width: 100vw; height: 100vh; }
+  .slide {
+    position: absolute; inset: 0;
+    padding: 6vh 8vw;
+    display: none;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+  .slide.active { display: flex; }
+  h1 {
+    font-size: 2.4rem; font-weight: 600; margin: 0 0 1.2rem;
+    letter-spacing: -0.015em;
+  }
+  h2 {
+    font-size: 1.1rem; font-weight: 500; margin: 0 0 0.3rem;
+    color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em;
+  }
+  h3 {
+    font-size: 1.4rem; font-weight: 600; margin: 0 0 0.6rem;
+    color: var(--accent);
+  }
+  p { margin: 0 0 1rem; max-width: 72ch; }
+  ul { margin: 0 0 1rem; padding-left: 1.2rem; max-width: 72ch; }
+  li { margin-bottom: 0.4rem; }
+  code {
+    font-family: "SF Mono", "JetBrains Mono", Menlo, monospace;
+    background: var(--panel); padding: 0.1em 0.35em; border-radius: 4px;
+    font-size: 0.92em;
+  }
+  .muted { color: var(--muted); }
+  .accent { color: var(--accent); }
+  .good { color: var(--good); }
+  .warn { color: var(--warn); }
+
+  .counter {
+    position: absolute; bottom: 1.5rem; right: 2rem;
+    color: var(--muted); font-size: 0.85rem; font-variant-numeric: tabular-nums;
+  }
+  .hint {
+    position: absolute; bottom: 1.5rem; left: 2rem;
+    color: var(--muted); font-size: 0.85rem;
+  }
+
+  .grid {
+    display: grid; gap: 1.4rem; margin-top: 0.5rem;
+    grid-template-columns: 1fr 1fr;
+    max-width: 1100px;
+  }
+  .grid.three { grid-template-columns: 1fr 1fr 1fr; }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.2rem 1.3rem;
+  }
+  .card h4 {
+    margin: 0 0 0.5rem; font-size: 1.05rem;
+    color: var(--accent);
+  }
+  .card .pros, .card .cons {
+    font-size: 0.92rem; margin-top: 0.8rem;
+  }
+  .pros li::marker { color: var(--good); }
+  .cons li::marker { color: var(--warn); }
+
+  .diagram {
+    background: #0b0c0f;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.8rem 1rem;
+    font-family: "SF Mono", "JetBrains Mono", Menlo, monospace;
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin-bottom: 0.6rem;
+    white-space: pre;
+    overflow-x: auto;
+  }
+  .diagram .k { color: var(--accent); }
+  .diagram .v { color: var(--fg); }
+  .diagram .c { color: var(--good); }
+
+  .compare {
+    width: 100%; max-width: 1000px;
+    border-collapse: collapse;
+    margin-top: 0.5rem;
+    font-size: 0.95rem;
+  }
+  .compare th, .compare td {
+    padding: 0.7rem 0.9rem;
+    border-bottom: 1px solid var(--border);
+    text-align: left; vertical-align: top;
+  }
+  .compare th { color: var(--muted); font-weight: 500; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.06em; }
+  .compare td.dim { color: var(--muted); }
+  .compare tr:last-child td { border-bottom: none; }
+
+  .recommend {
+    margin-top: 1rem; padding: 1.2rem 1.5rem;
+    background: linear-gradient(180deg, rgba(228,165,90,0.10), rgba(228,165,90,0.03));
+    border: 1px solid rgba(228,165,90,0.35);
+    border-radius: 10px;
+    max-width: 900px;
+  }
+  .recommend strong { color: var(--accent); }
+
+  .subtitle { color: var(--muted); font-size: 1.1rem; margin-bottom: 2rem; }
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+
+<!-- Slide 1 -->
+<section class="slide active">
+  <h2>Design decision</h2>
+  <h1>The kid/adult slot split</h1>
+  <p class="subtitle">How do we model a dinner where adults and kids eat different things?</p>
+  <p>One decision, three options, a recommendation at the end. Most of the time it won't matter — most dinners, everyone eats the same thing. But when it <em>does</em> matter, the schema choice affects grocery rollups, sync, and the cook-night UI.</p>
+  <p class="muted">About 6 slides. Arrow keys to navigate.</p>
+</section>
+
+<!-- Slide 2 -->
+<section class="slide">
+  <h2>The situation</h2>
+  <h1>Friday dinner: two meals in one slot</h1>
+  <p>The menu skeleton landed on this for Friday:</p>
+  <div class="diagram"><span class="k">Slot</span>: Fri-DINNER   <span class="k">Eaters</span>: ADULTS + KIDS
+
+<span class="c">— Adults —</span>        shakshuka (honors the "been curious" aspiration)
+<span class="c">— Kids —</span>          quesadillas (kidRules.reliableHits)</div>
+  <p>Same slot, same evening, same kitchen — but two separate <code>CookCard</code>s. Shared ingredients (eggs, bell pepper, cheese on both) can be aggregated into one grocery list. But when you walk up to Friday night and hit "Cook," what does the app actually open?</p>
+  <p class="muted">That's the question. The schema has to pick a shape.</p>
+</section>
+
+<!-- Slide 3 -->
+<section class="slide">
+  <h2>Option A</h2>
+  <h1>One row, two chosen candidates</h1>
+  <div class="diagram"><span class="k">PlannedMeal</span> {
+  day: Fri,
+  slot: DINNER,
+  eaters: [ADULTS, KIDS],
+  <span class="c">adultCandidateId</span>: "shakshuka",
+  <span class="c">kidCandidateId</span>:   "quesadillas"
+}</div>
+  <p class="muted">One row per slot. Two nullable FK columns — when both groups eat the same thing, only one is set (or both point to the same candidate).</p>
+  <div class="grid">
+    <div class="card">
+      <h4 class="good">Pros</h4>
+      <ul class="pros">
+        <li>UI is naturally one card per slot — "Friday: shakshuka / kids get quesadillas"</li>
+        <li>Calendar view stays clean, one meal per evening</li>
+        <li>The "everyone eats the same thing" case is trivially one row</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4 class="warn">Cons</h4>
+      <ul class="cons">
+        <li>Execution UI is forced to render two <code>CookCard</code>s inside one screen (tabs, split view, or switcher) — new surface area</li>
+        <li>Mise and timers need a "which meal?" scope everywhere they're referenced</li>
+        <li>Asymmetric nullability — both-null is invalid, adult-null rare but possible; invariants leak into app code</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- Slide 4 -->
+<section class="slide">
+  <h2>Option B</h2>
+  <h1>Two rows, one slot</h1>
+  <div class="diagram"><span class="k">PlannedMeal</span> { day: Fri, slot: DINNER, eaters: [ADULTS], chosenId: "shakshuka" }
+<span class="k">PlannedMeal</span> { day: Fri, slot: DINNER, eaters: [KIDS],   chosenId: "quesadillas" }</div>
+  <p class="muted">Two separate rows when groups diverge. Unique constraint on slot becomes <code>(planId, day, slot, eaters)</code>, not <code>(planId, day, slot)</code>.</p>
+  <div class="grid">
+    <div class="card">
+      <h4 class="good">Pros</h4>
+      <ul class="pros">
+        <li>Each meal is a first-class <code>PlannedMeal</code> — existing execution flow (mise, timeline, timers) drops in with zero changes</li>
+        <li>Grocery rollup, sync, and Meezing all just iterate <code>PlannedMeal</code>s without special-casing</li>
+        <li>Kid quesadilla and adult shakshuka can cook at different times with independent timers, because they are independent</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4 class="warn">Cons</h4>
+      <ul class="cons">
+        <li>Calendar view has to render two cards for the same slot when split — mild visual overhead</li>
+        <li>"Everyone eats the same thing" is still one row, but now the `eaters` field has to enumerate ADULTS+KIDS — one extra bit of logic</li>
+        <li>You have to decide up-front whether to split (at skeleton time) or lazily (when the user picks different candidates)</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- Slide 5 -->
+<section class="slide">
+  <h2>Option C</h2>
+  <h1>Hybrid — one row plus optional kid variant</h1>
+  <div class="diagram"><span class="k">PlannedMeal</span> {
+  day: Fri,
+  slot: DINNER,
+  eaters: [ADULTS, KIDS],
+  <span class="c">chosenId</span>:        "shakshuka",        <span class="muted">// the main meal</span>
+  <span class="c">kidVariantId</span>?:   "quesadillas"       <span class="muted">// null most nights</span>
+}</div>
+  <p class="muted">One row per slot. The main meal is symmetric ("everyone's eating this"); a kid variant is an optional override. Asymmetric on purpose — adults are the cooks, so the adult meal is the spine.</p>
+  <div class="grid">
+    <div class="card">
+      <h4 class="good">Pros</h4>
+      <ul class="pros">
+        <li>Common case stays a single, simple row. Variant is null most of the time.</li>
+        <li>UI naturally renders the adult meal as the primary card with a subtle "kids are having X" strip</li>
+        <li>Matches how the household actually works — adult cooking the main, quickly assembling a kid alternative</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4 class="warn">Cons</h4>
+      <ul class="cons">
+        <li>Implicitly privileges the adult meal. If a night is truly "two equal meals" (e.g., a dinner party where adults do A and kids do B), it feels off</li>
+        <li>Every downstream query that aggregates meals (grocery, sync) has to remember to union <code>chosenId</code> + <code>kidVariantId</code></li>
+        <li>Can't extend to a third group cleanly — what if a kid has an allergy and needs their own variant? You'd have to evolve to Option B anyway</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- Slide 6 -->
+<section class="slide">
+  <h2>What actually differs</h2>
+  <h1>Side-by-side on the concerns that matter</h1>
+  <table class="compare">
+    <thead>
+      <tr><th>Concern</th><th>A · one row, two FKs</th><th>B · two rows</th><th>C · one row + variant</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Same-meal night (95% case)</td>
+        <td>One row, one FK set</td>
+        <td>One row, eaters = both</td>
+        <td>One row, variant null</td>
+      </tr>
+      <tr>
+        <td>Grocery rollup code</td>
+        <td>Union two FKs per row</td>
+        <td class="good">Iterate rows, done</td>
+        <td>Union FK + variant per row</td>
+      </tr>
+      <tr>
+        <td>Sync / Meezing</td>
+        <td>Needs "which meal" scope</td>
+        <td class="good">Drops in unchanged</td>
+        <td>Needs scope on variant nights</td>
+      </tr>
+      <tr>
+        <td>Cook-night UI</td>
+        <td>Tabbed / split screen</td>
+        <td>Two cards side by side</td>
+        <td>Primary + kid strip</td>
+      </tr>
+      <tr>
+        <td>Future third variant (allergy, guest)</td>
+        <td>Hard — needs more columns</td>
+        <td class="good">Trivial — another row</td>
+        <td>Hard — have to refactor to B</td>
+      </tr>
+      <tr>
+        <td>Calendar cleanliness</td>
+        <td class="good">Always one card per slot</td>
+        <td>Two cards on split nights</td>
+        <td class="good">Always one card per slot</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- Slide 7 -->
+<section class="slide">
+  <h2>Recommendation</h2>
+  <h1>Go with Option B — two rows</h1>
+  <div class="recommend">
+    <p><strong>Why:</strong> the split nights are real, and every other piece of the system we've been designing — grocery rollup, sync, Meezing, the existing execution flow — is already shaped around "one <code>PlannedMeal</code> = one thing you cook." Option B keeps that invariant intact. Options A and C both introduce special-case branches in every aggregation, and Option C boxes us in if a third variant ever shows up (kid allergy, dinner guest).</p>
+    <p><strong>The cost we're accepting:</strong> when adults and kids eat differently, the calendar renders two cards for that slot. That's fine — honestly, it's accurate. On a split night, you <em>are</em> cooking two meals, and pretending otherwise hides work from the grocery list and sync layer.</p>
+    <p><strong>What makes this safe to pick now:</strong> it's the shape that requires the fewest code changes in the existing <code>CookCardView</code> / mise / timer stack — which is the thing you most want to leave intact.</p>
+  </div>
+</section>
+
+<!-- Slide 8 -->
+<section class="slide">
+  <h2>If you go with the recommendation</h2>
+  <h1>What unblocks, what stays open</h1>
+  <h3>Unblocks</h3>
+  <ul>
+    <li>The <code>PlannedMeal</code> schema finalizes: <code>(planId, day, slot, eaters)</code> unique, one <code>chosenCandidateId</code> FK.</li>
+    <li>The menu-skeleton prompt can commit to emitting a second slot entry for kid-variant meals instead of a side field.</li>
+    <li>Grocery aggregation, sync, and Meezing can all iterate <code>PlannedMeal</code> without branching.</li>
+  </ul>
+  <h3>Still open (for later, not now)</h3>
+  <ul>
+    <li>The candidate-generation prompt for per-slot calls — the next thing to design.</li>
+    <li>How the UI visually groups two same-day same-slot rows on the calendar (a subtle pairing affordance, not a merged card).</li>
+    <li>Whether "everyone eats the same thing but kids get a smaller portion" is a variant or just a scaling note on one row. Probably the latter — doesn't need schema help.</li>
+  </ul>
+  <p class="muted" style="margin-top:1.5rem;">Say the word and we move on to the per-slot candidate prompt.</p>
+</section>
+
+</div>
+
+<div class="counter" id="counter">1 / 8</div>
+<div class="hint">← →  navigate</div>
+
+<script>
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const counter = document.getElementById('counter');
+  let idx = 0;
+  function show(i) {
+    idx = Math.max(0, Math.min(slides.length - 1, i));
+    slides.forEach((s, n) => s.classList.toggle('active', n === idx));
+    counter.textContent = (idx + 1) + ' / ' + slides.length;
+  }
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') { show(idx + 1); e.preventDefault(); }
+    else if (e.key === 'ArrowLeft' || e.key === 'Backspace') { show(idx - 1); e.preventDefault(); }
+    else if (e.key === 'Home') { show(0); }
+    else if (e.key === 'End') { show(slides.length - 1); }
+  });
+  document.addEventListener('click', (e) => {
+    const w = window.innerWidth;
+    if (e.clientX > w * 0.6) show(idx + 1);
+    else if (e.clientX < w * 0.4) show(idx - 1);
+  });
+</script>
+</body>
+</html>

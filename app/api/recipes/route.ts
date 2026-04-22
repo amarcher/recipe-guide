@@ -31,6 +31,12 @@ export async function GET() {
         select: { sourceUrl: true, title: true, cardJson: true },
       },
       family: { select: { id: true, name: true } },
+      cookLogs: {
+        where: { photoUrl: { not: null } },
+        orderBy: { photoUploadedAt: "desc" },
+        take: 1,
+        select: { photoUrl: true, photoUploadedAt: true },
+      },
     },
     orderBy: [{ lastCookedAt: "desc" }, { savedAt: "desc" }],
   });
@@ -45,6 +51,7 @@ export async function GET() {
       savedAt: r.savedAt.getTime(),
       lastCookedAt: r.lastCookedAt?.getTime() ?? null,
       cookCount: r.cookCount,
+      photoUrl: r.cookLogs[0]?.photoUrl ?? null,
     })),
   });
 }
