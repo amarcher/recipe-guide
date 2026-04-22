@@ -110,6 +110,12 @@ const StepDraft = z.object({
 
 export const CookCardDraft = z.object({
   title: z.string(),
+  tagline: z
+    .string()
+    .optional()
+    .describe(
+      "one evocative sentence, ≤12 words, Alison Roman voice — specific, sensory, a little dry"
+    ),
   total_time: z.string().optional(),
   steps: z.array(StepDraft).describe("3-7 steps"),
 });
