@@ -196,7 +196,7 @@ html {
 
 /* Root — cream paper surface, warm ink text, sans body. */
 body {
-  background: var(--color-stone-50);
+  background-color: var(--color-stone-50);
   color: var(--color-stone-900);
   font-family: var(--font-sans);
 }
