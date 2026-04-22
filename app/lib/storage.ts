@@ -14,6 +14,7 @@ export type SavedRecipe = {
   photoUrl?: string | null;
   videoUrl?: string | null;
   videoAspectRatio?: number | null;
+  fromInstagram?: boolean;
 };
 
 // Stable hash of (sourceUrl, title). Used as the LOCAL recipe ID. The server
@@ -166,6 +167,7 @@ type ServerRecipeRow = {
   photoUrl?: string | null;
   videoUrl?: string | null;
   videoAspectRatio?: number | null;
+  fromInstagram?: boolean;
 };
 
 function serverToLocal(r: ServerRecipeRow): SavedRecipe {
@@ -179,6 +181,7 @@ function serverToLocal(r: ServerRecipeRow): SavedRecipe {
     photoUrl: r.photoUrl ?? null,
     videoUrl: r.videoUrl ?? null,
     videoAspectRatio: r.videoAspectRatio ?? null,
+    fromInstagram: !!r.fromInstagram,
   };
 }
 

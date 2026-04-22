@@ -40,6 +40,7 @@ export async function GET() {
           photoUploadedAt: true,
           videoUrl: true,
           videoAspectRatio: true,
+          instagramPostId: true,
         },
       },
     },
@@ -59,6 +60,7 @@ export async function GET() {
       photoUrl: r.cookLogs[0]?.photoUrl ?? null,
       videoUrl: r.cookLogs[0]?.videoUrl ?? null,
       videoAspectRatio: r.cookLogs[0]?.videoAspectRatio ?? null,
+      fromInstagram: !!r.cookLogs[0]?.instagramPostId,
     })),
   });
 }

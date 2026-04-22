@@ -50,6 +50,7 @@ export type TileData = {
   latestLastCookedAt: number | null;
   savedAt: number;
   scopes: Array<{ id: string; name: string } | null>;
+  fromInstagram: boolean;
 };
 
 function formatRelative(ts: number, now: number): string {

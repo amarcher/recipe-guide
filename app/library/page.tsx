@@ -27,6 +27,7 @@ type BaseFilter =
   | "hits"
   | "never"
   | "personal"
+  | "instagram"
   | { familyId: string };
 
 export default function LibraryPage() {
@@ -67,6 +68,7 @@ export default function LibraryPage() {
           latestLastCookedAt: r.lastCookedAt,
           savedAt: r.savedAt,
           scopes: [r.family ?? null],
+          fromInstagram: !!r.fromInstagram,
           card: r.card,
         });
       } else {
@@ -81,6 +83,7 @@ export default function LibraryPage() {
           existing.videoUrl = r.videoUrl;
           existing.videoAspectRatio = r.videoAspectRatio ?? null;
         }
+        if (r.fromInstagram) existing.fromInstagram = true;
       }
     }
     return [...byUrl.values()];
@@ -106,6 +109,8 @@ export default function LibraryPage() {
     } else if (filter === "personal") {
       // Only tiles that have at least one personal save
       out = out.filter((r) => r.scopes.some((s) => s === null));
+    } else if (filter === "instagram") {
+      out = out.filter((r) => r.fromInstagram);
     } else if (typeof filter === "object") {
       out = out.filter((r) =>
         r.scopes.some((s) => s?.id === filter.familyId)
@@ -289,6 +294,13 @@ export default function LibraryPage() {
               label="Personal"
               active={filter === "personal"}
               onClick={() => setFilter("personal")}
+            />
+          )}
+          {tiles.some((t) => t.fromInstagram) && (
+            <FilterChip
+              label="From Instagram"
+              active={filter === "instagram"}
+              onClick={() => setFilter("instagram")}
             />
           )}
           {families.map((f) => (
