@@ -52,6 +52,7 @@ export default function LibraryPage() {
         byUrl.set(key, {
           id: r.id,
           title: r.card.title,
+          tagline: r.card.tagline ?? null,
           sourceUrl: r.card.source_url,
           photoUrl: r.photoUrl ?? null,
           heroes: heroesFromCard(r.card),
@@ -111,7 +112,12 @@ export default function LibraryPage() {
     }
 
     const q = query.trim().toLowerCase();
-    if (q) out = out.filter((r) => r.title.toLowerCase().includes(q));
+    if (q)
+      out = out.filter(
+        (r) =>
+          r.title.toLowerCase().includes(q) ||
+          (r.tagline ?? "").toLowerCase().includes(q)
+      );
 
     return out;
   }, [tiles, filter, query]);

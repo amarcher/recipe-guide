@@ -108,6 +108,7 @@ Every candidate returns a composedCardDraft — a CookCard draft the existing ap
 
 CARD DRAFT REQUIREMENTS
 - title: matches the candidate's title.
+- tagline: ONE short, evocative sentence (≤12 words), Alison Roman voice — specific, a little dry, sensory. Good: "Pink, buttery, a little unhinged." / "The bowl you eat on the couch." Not marketing copy.
 - steps: 3–7 steps. Each step has a short headline (3-5 words) and a tight action (under 30 words).
 - Re-attach ingredients to the step that adds them. Don't lump all ingredients into pantry_ingredients unless they truly span steps (salt, pepper).
 - Pick one icon per step from: flame, soup, boil, oven, knife, wine, leaf, mix, salt, rest, serve, blend.

@@ -39,6 +39,7 @@ export type TileKind = "photo" | "vignette" | "swatch";
 export type TileData = {
   id: string;
   title: string;
+  tagline: string | null;
   sourceUrl: string;
   photoUrl: string | null;
   heroes: string[];
@@ -222,7 +223,11 @@ export function RolodexTile({
           )}
 
           {kind === "swatch" && (
-            <SwatchCopy ink={wash.ink} title={tile.title} />
+            <SwatchCopy
+              ink={wash.ink}
+              tagline={tile.tagline}
+              title={tile.title}
+            />
           )}
 
           {(dragOver || uploading) && (
@@ -269,6 +274,13 @@ export function RolodexTile({
           <h2 className="font-serif text-[18px] font-medium leading-tight tracking-tight text-stone-900 line-clamp-2">
             {tile.title}
           </h2>
+
+          {/* Tagline only shows on non-swatch tiles; swatch already leads with it. */}
+          {tile.tagline && kind !== "swatch" && (
+            <p className="font-serif italic text-[13px] leading-snug text-stone-600 line-clamp-2">
+              {tile.tagline}
+            </p>
+          )}
 
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-stone-500">
             {host && <span>{host}</span>}
@@ -356,8 +368,16 @@ function VignetteArea({
   );
 }
 
-function SwatchCopy({ ink, title }: { ink: string; title: string }) {
-  const first = title.split(/\s+/).slice(0, 2).join(" ");
+function SwatchCopy({
+  ink,
+  tagline,
+  title,
+}: {
+  ink: string;
+  tagline: string | null;
+  title: string;
+}) {
+  const pull = tagline ?? title;
   return (
     <div className="flex h-full flex-col items-start justify-end p-5">
       <span
@@ -376,13 +396,13 @@ function SwatchCopy({ ink, title }: { ink: string; title: string }) {
         className="mt-2 font-serif italic"
         style={{
           color: ink,
-          fontSize: "24px",
-          lineHeight: 1.15,
+          fontSize: tagline ? "20px" : "24px",
+          lineHeight: 1.2,
           letterSpacing: "-0.01em",
           textWrap: "pretty",
         }}
       >
-        &ldquo;{first}&rdquo;
+        &ldquo;{pull}&rdquo;
       </span>
     </div>
   );
