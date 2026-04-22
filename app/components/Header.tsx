@@ -1,43 +1,50 @@
 import Link from "next/link";
-import { CalendarRange, ChefHat, Library, Users } from "lucide-react";
+import { CalendarRange, Library, Users } from "lucide-react";
 import { AvatarMenu } from "./AvatarMenu";
 
 export function Header() {
   return (
-    <header className="sticky top-0 z-10 border-b border-stone-200 bg-stone-50/80 backdrop-blur">
-      <div className="mx-auto flex w-full max-w-3xl items-center justify-between px-4 py-3">
+    <header className="sticky top-0 z-10 border-b border-stone-300 bg-stone-50/85 backdrop-blur">
+      <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3 px-4 py-3">
         <Link
           href="/"
-          className="flex items-center gap-2 text-sm font-semibold text-stone-900"
+          className="inline-flex items-center gap-2 font-serif text-[17px] font-medium tracking-tight text-stone-900"
         >
-          <ChefHat className="h-4 w-4" />
+          <span
+            aria-hidden
+            className="inline-flex h-7 w-7 items-center justify-center rounded-[7px] bg-stone-900 text-[18px] leading-none text-stone-50"
+          >
+            ◔
+          </span>
           Recipe Guide
         </Link>
         <nav className="flex items-center gap-1">
-          <Link
-            href="/plan"
-            className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-stone-600 hover:bg-stone-100 hover:text-stone-900"
-          >
-            <CalendarRange className="h-4 w-4" />
-            <span className="hidden sm:inline">Plan</span>
-          </Link>
-          <Link
-            href="/library"
-            className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-stone-600 hover:bg-stone-100 hover:text-stone-900"
-          >
-            <Library className="h-4 w-4" />
-            <span className="hidden sm:inline">Library</span>
-          </Link>
-          <Link
-            href="/settings"
-            className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-stone-600 hover:bg-stone-100 hover:text-stone-900"
-          >
-            <Users className="h-4 w-4" />
-            <span className="hidden sm:inline">Families</span>
-          </Link>
+          <HeaderTab href="/plan" label="Plan" Icon={CalendarRange} />
+          <HeaderTab href="/library" label="Library" Icon={Library} />
+          <HeaderTab href="/settings" label="Families" Icon={Users} />
           <AvatarMenu />
         </nav>
       </div>
     </header>
+  );
+}
+
+function HeaderTab({
+  href,
+  label,
+  Icon,
+}: {
+  href: string;
+  label: string;
+  Icon: React.ComponentType<{ className?: string }>;
+}) {
+  return (
+    <Link
+      href={href}
+      className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[13px] font-medium text-stone-600 transition hover:bg-stone-100 hover:text-stone-900"
+    >
+      <Icon className="h-3.5 w-3.5" />
+      <span className="hidden sm:inline">{label}</span>
+    </Link>
   );
 }

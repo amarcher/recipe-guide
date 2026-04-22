@@ -58,11 +58,9 @@ export default function Home() {
   return (
     <main className="flex flex-1 flex-col px-4 py-10 sm:py-14">
       <div className="mx-auto w-full max-w-3xl">
-        <div className="mb-8">
-          <h1 className="text-2xl font-semibold tracking-tight text-stone-900">
-            Recipe Guide
-          </h1>
-          <p className="mt-1 text-sm text-stone-600">
+        <div className="mb-7">
+          <h1 className="t-h1">Recipe Guide</h1>
+          <p className="t-lead mt-2 max-w-[60ch]">
             Paste any recipe URL. Get a one-screen guide with ingredients
             grouped by step, temperatures, and times.
           </p>
@@ -78,26 +76,26 @@ export default function Home() {
             placeholder="https://alisoneroman.com/recipes/alisons-bolognese/"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
-            className="flex-1 rounded-lg border border-stone-300 bg-white px-4 py-2.5 text-base text-stone-900 shadow-sm placeholder:text-stone-400 focus:border-stone-500 focus:outline-none focus:ring-2 focus:ring-stone-200 sm:text-sm"
+            className="flex-1 rounded-lg border border-stone-300 bg-white px-4 py-2.5 text-base text-stone-900 shadow-sm placeholder:text-stone-400 focus:border-ochre-500 focus:outline-none focus:ring-2 focus:ring-ochre-200 sm:text-sm"
             disabled={loading}
           />
           <button
             type="submit"
             disabled={loading}
-            className="inline-flex items-center justify-center rounded-lg bg-stone-900 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-stone-700 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex items-center justify-center rounded-lg bg-ochre-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-ochre-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading ? "Parsing…" : "Parse recipe"}
           </button>
         </form>
 
         {error && (
-          <div className="mt-6 rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
+          <div className="mt-6 rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
             {error}
           </div>
         )}
 
         {loading && !card && (
-          <div className="mt-10 animate-pulse text-center text-sm text-stone-500">
+          <div className="mt-10 animate-pulse text-center font-serif italic text-sm text-stone-500">
             Reading the page and re-organizing the recipe…
           </div>
         )}
