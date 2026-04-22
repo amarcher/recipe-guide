@@ -2,8 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useSession, signIn, signOut } from "next-auth/react";
-import { LogIn, LogOut, Volume2, FlaskConical } from "lucide-react";
+import { LogIn, LogOut, Volume2, FlaskConical, Settings } from "lucide-react";
 import {
   useAlarmSettings,
   setAlarmSettings,
@@ -158,8 +159,16 @@ export function AvatarMenu() {
             </button>
           </div>
 
-          {/* Sign out */}
-          <div className="border-t border-stone-100 pt-3">
+          {/* Settings + Sign out */}
+          <div className="space-y-1 border-t border-stone-100 pt-3">
+            <Link
+              href="/settings"
+              onClick={() => setOpen(false)}
+              className="inline-flex w-full items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium text-stone-700 hover:bg-stone-50"
+            >
+              <Settings className="h-3.5 w-3.5" />
+              Settings &amp; integrations
+            </Link>
             <button
               type="button"
               onClick={() => signOut({ callbackUrl: "/" })}

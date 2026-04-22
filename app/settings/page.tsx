@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { Plus, Users, Trash2, LogOut } from "lucide-react";
+import { Plus, Users, Trash2, LogOut, Camera } from "lucide-react";
 import {
   useMyFamilies,
   createFamily,
@@ -88,6 +88,20 @@ export default function SettingsPage() {
             <span className="font-medium">{session.data?.user?.email}</span>.
           </p>
         </div>
+
+        <section>
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-stone-500">
+            Integrations
+          </h2>
+          <Link
+            href="/settings/integrations"
+            className="inline-flex items-center gap-2 rounded-lg border border-stone-200 bg-white px-4 py-3 text-sm text-stone-800 hover:bg-stone-50"
+          >
+            <Camera className="h-4 w-4" />
+            Connect Instagram
+            <span className="text-stone-400">→</span>
+          </Link>
+        </section>
 
         <section>
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-stone-500">

@@ -2,12 +2,13 @@
 
 import { useMemo, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
-import { CloudUpload, Plus, Search } from "lucide-react";
+import { CloudUpload, Loader2, Plus, Search, Users, X } from "lucide-react";
 import { useSession } from "next-auth/react";
 import {
   useSavedRecipes,
   hasUnsyncedLocal,
   syncLocalToCloud,
+  refreshSavedRecipes,
 } from "@/app/lib/storage";
 import { useMyFamilies } from "@/app/lib/families";
 import {
@@ -38,6 +39,10 @@ export default function LibraryPage() {
   const [syncResult, setSyncResult] = useState<string | null>(null);
   const [filter, setFilter] = useState<BaseFilter>("inspire");
   const [query, setQuery] = useState("");
+  const [selectMode, setSelectMode] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [adding, setAdding] = useState(false);
+  const [addResult, setAddResult] = useState<string | null>(null);
   const needsSync = mounted && signedIn && !syncResult && hasUnsyncedLocal();
 
   // Dedupe the "All" view by source URL so a recipe saved to multiple scopes
@@ -55,6 +60,8 @@ export default function LibraryPage() {
           tagline: r.card.tagline ?? null,
           sourceUrl: r.card.source_url,
           photoUrl: r.photoUrl ?? null,
+          videoUrl: r.videoUrl ?? null,
+          videoAspectRatio: r.videoAspectRatio ?? null,
           heroes: heroesFromCard(r.card),
           totalCookCount: r.cookCount,
           latestLastCookedAt: r.lastCookedAt,
@@ -70,6 +77,10 @@ export default function LibraryPage() {
           r.lastCookedAt ?? 0
         ) || null;
         if (!existing.photoUrl && r.photoUrl) existing.photoUrl = r.photoUrl;
+        if (!existing.videoUrl && r.videoUrl) {
+          existing.videoUrl = r.videoUrl;
+          existing.videoAspectRatio = r.videoAspectRatio ?? null;
+        }
       }
     }
     return [...byUrl.values()];
@@ -122,6 +133,57 @@ export default function LibraryPage() {
     return out;
   }, [tiles, filter, query]);
 
+  function toggleSelect(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function enterSelectMode() {
+    setSelected(new Set());
+    setAddResult(null);
+    setSelectMode(true);
+  }
+
+  function exitSelectMode() {
+    setSelectMode(false);
+    setSelected(new Set());
+  }
+
+  async function onAddToFamily(familyId: string, familyName: string) {
+    if (selected.size === 0) return;
+    setAdding(true);
+    setAddResult(null);
+    try {
+      const r = await fetch("/api/recipes/bulk-add", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          savedRecipeIds: [...selected],
+          familyId,
+        }),
+      });
+      const body = await r.json();
+      if (!r.ok) throw new Error(body?.error ?? r.statusText);
+      const added = body.added as number;
+      const alreadyThere = body.alreadyThere as number;
+      setAddResult(
+        alreadyThere > 0
+          ? `Added ${added} to ${familyName}. ${alreadyThere} already there.`
+          : `Added ${added} to ${familyName}.`
+      );
+      await refreshSavedRecipes();
+      exitSelectMode();
+    } catch (e) {
+      setAddResult(e instanceof Error ? e.message : "bulk add failed");
+    } finally {
+      setAdding(false);
+    }
+  }
+
   async function onSync() {
     setSyncing(true);
     try {
@@ -148,17 +210,35 @@ export default function LibraryPage() {
             </p>
           </div>
 
-          <label className="relative inline-flex w-full sm:w-64">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-stone-500" />
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search the rolodex…"
-              className="flex-1 rounded-full border border-stone-300 bg-stone-50 py-2 pl-9 pr-3 text-sm text-stone-900 shadow-sm placeholder:text-stone-400 focus:border-ochre-500 focus:outline-none focus:ring-2 focus:ring-ochre-200"
-            />
-          </label>
+          <div className="flex items-center gap-2">
+            <label className="relative inline-flex w-full sm:w-64">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-stone-500" />
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search the rolodex…"
+                className="flex-1 rounded-full border border-stone-300 bg-stone-50 py-2 pl-9 pr-3 text-sm text-stone-900 shadow-sm placeholder:text-stone-400 focus:border-ochre-500 focus:outline-none focus:ring-2 focus:ring-ochre-200"
+              />
+            </label>
+            {signedIn && families.length > 0 && !selectMode && (
+              <button
+                type="button"
+                onClick={enterSelectMode}
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-stone-300 bg-stone-50 px-3.5 py-1.5 text-[13px] font-medium text-stone-700 hover:border-stone-400 hover:text-stone-900"
+              >
+                <Users className="h-3.5 w-3.5" />
+                Select
+              </button>
+            )}
+          </div>
         </header>
+
+        {addResult && (
+          <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+            {addResult}
+          </div>
+        )}
 
         {signedIn && needsSync && (
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
@@ -234,17 +314,78 @@ export default function LibraryPage() {
         ) : (
           <div className="columns-1 gap-3 sm:columns-2 lg:columns-3">
             {filtered.map((tile, i) => (
-              <RolodexTile key={tile.id} tile={tile} tall={i % 3 === 0} />
+              <RolodexTile
+                key={tile.id}
+                tile={tile}
+                tall={i % 3 === 0}
+                selectable={selectMode}
+                selected={selected.has(tile.id)}
+                onToggleSelect={toggleSelect}
+              />
             ))}
           </div>
         )}
 
-        <Link
-          href="/"
-          className="fixed bottom-6 right-6 z-20 inline-flex items-center gap-2 rounded-full bg-stone-900 px-4 py-2.5 text-sm font-medium text-stone-50 shadow-lg transition hover:bg-stone-800"
-        >
-          <Plus className="h-4 w-4" /> Paste a URL
-        </Link>
+        {selectMode ? (
+          <div className="pointer-events-none fixed inset-x-0 bottom-6 z-20 flex justify-center px-4">
+            <div className="pointer-events-auto flex flex-wrap items-center gap-2 rounded-full border border-stone-300 bg-stone-50/95 px-4 py-2 shadow-lg backdrop-blur">
+              <span className="text-sm font-medium text-stone-800">
+                {selected.size} selected
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  const allIds = filtered.map((t) => t.id);
+                  const everySelected =
+                    allIds.length > 0 &&
+                    allIds.every((id) => selected.has(id));
+                  setSelected(
+                    everySelected ? new Set() : new Set(allIds)
+                  );
+                }}
+                className="rounded-full border border-stone-300 bg-stone-50 px-3 py-1 text-[12px] font-medium text-stone-700 hover:bg-stone-100"
+              >
+                {filtered.length > 0 &&
+                filtered.every((t) => selected.has(t.id))
+                  ? "Clear"
+                  : `Select all ${filtered.length}`}
+              </button>
+              <span className="text-stone-300">·</span>
+              <span className="text-sm text-stone-600">Add to</span>
+              {families.map((f) => (
+                <button
+                  key={f.id}
+                  type="button"
+                  disabled={selected.size === 0 || adding}
+                  onClick={() => void onAddToFamily(f.id, f.name)}
+                  className="inline-flex items-center gap-1 rounded-full bg-stone-900 px-3 py-1.5 text-[13px] font-medium text-stone-50 transition hover:bg-stone-800 disabled:opacity-50"
+                >
+                  {adding ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <Users className="h-3 w-3" />
+                  )}
+                  {f.name}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={exitSelectMode}
+                className="ml-1 inline-flex items-center gap-1 rounded-full border border-stone-300 bg-stone-50 px-3 py-1.5 text-[13px] font-medium text-stone-700 hover:bg-stone-100"
+              >
+                <X className="h-3 w-3" />
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : (
+          <Link
+            href="/"
+            className="fixed bottom-6 right-6 z-20 inline-flex items-center gap-2 rounded-full bg-stone-900 px-4 py-2.5 text-sm font-medium text-stone-50 shadow-lg transition hover:bg-stone-800"
+          >
+            <Plus className="h-4 w-4" /> Paste a URL
+          </Link>
+        )}
       </div>
     </main>
   );

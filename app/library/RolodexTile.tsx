@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -8,6 +8,7 @@ import { Clock, ImagePlus, Loader2, Trash2, Users } from "lucide-react";
 import type { CookCard } from "@/app/types";
 import { Sprite } from "@/app/components/Sprite";
 import { deleteRecipe } from "@/app/lib/storage";
+import { useConfirm } from "@/app/components/ConfirmDialog";
 
 export type WashKey = "rose" | "ochre" | "emerald" | "amber";
 
@@ -34,7 +35,7 @@ const WASH: Record<WashKey, { bg: string; ink: string; hint: string }> = {
   },
 };
 
-export type TileKind = "photo" | "vignette" | "swatch";
+export type TileKind = "video" | "photo" | "vignette" | "swatch";
 
 export type TileData = {
   id: string;
@@ -42,6 +43,8 @@ export type TileData = {
   tagline: string | null;
   sourceUrl: string;
   photoUrl: string | null;
+  videoUrl: string | null;
+  videoAspectRatio: number | null;
   heroes: string[];
   totalCookCount: number;
   latestLastCookedAt: number | null;
@@ -91,11 +94,18 @@ export function heroesFromCard(card: CookCard, limit = 3): string[] {
 export function RolodexTile({
   tile,
   tall,
+  selectable = false,
+  selected = false,
+  onToggleSelect,
 }: {
   tile: TileData;
   tall: boolean;
+  selectable?: boolean;
+  selected?: boolean;
+  onToggleSelect?: (id: string) => void;
 }) {
   const router = useRouter();
+  const confirm = useConfirm();
   const fileInput = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -103,11 +113,17 @@ export function RolodexTile({
   const [uploadError, setUploadError] = useState<string | null>(null);
 
   const shownPhoto = localUrl ?? tile.photoUrl;
-  const kind: TileKind = shownPhoto
-    ? "photo"
-    : tile.heroes.length > 0
-    ? "vignette"
-    : "swatch";
+  // Prefer video when we have one AND no user-uploaded photo override.
+  // A locally uploaded photo (via the corner button) takes precedence so the
+  // user always has a way to replace the Instagram video with their own shot.
+  const kind: TileKind =
+    !localUrl && tile.videoUrl
+      ? "video"
+      : shownPhoto
+      ? "photo"
+      : tile.heroes.length > 0
+      ? "vignette"
+      : "swatch";
   const wash = WASH[pickWash(tile.id)];
   const visualHeight = tall ? 220 : 160;
 
@@ -162,10 +178,24 @@ export function RolodexTile({
     fileInput.current?.click();
   }
 
-  function onDelete(e: React.MouseEvent) {
+  async function onDelete(e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
-    if (!confirm(`Remove "${tile.title}" from your library?`)) return;
+    const ok = await confirm({
+      title: "Remove from library?",
+      message: (
+        <>
+          <span className="font-medium text-stone-900">
+            &ldquo;{tile.title}&rdquo;
+          </span>{" "}
+          will disappear from every scope you&rsquo;ve saved it to. Cook logs
+          and photos go with it.
+        </>
+      ),
+      confirmLabel: "Remove",
+      tone: "danger",
+    });
+    if (!ok) return;
     void deleteRecipe(tile.id);
   }
 
@@ -189,24 +219,52 @@ export function RolodexTile({
         }
       : null;
 
+  function onSelectClick(e: React.MouseEvent) {
+    if (!selectable) return;
+    e.preventDefault();
+    e.stopPropagation();
+    onToggleSelect?.(tile.id);
+  }
+
+  const articleClass = `group relative mb-3 break-inside-avoid overflow-hidden rounded-2xl border bg-stone-50 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${
+    selected
+      ? "border-stone-900 ring-2 ring-stone-900"
+      : "border-stone-300 hover:border-stone-400"
+  }`;
+
+  const tileHref = selectable ? "#" : `/recipe/${tile.id}`;
+
   return (
     <article
       onDragOver={onDragOver}
       onDragEnter={onDragOver}
       onDragLeave={() => setDragOver(false)}
       onDrop={onDrop}
-      className="group relative mb-3 break-inside-avoid overflow-hidden rounded-2xl border border-stone-300 bg-stone-50 shadow-sm transition hover:-translate-y-0.5 hover:border-stone-400 hover:shadow-md"
+      className={articleClass}
       style={{ transitionDuration: "180ms" }}
     >
-      <Link href={`/recipe/${tile.id}`} className="block">
+      <Link
+        href={tileHref}
+        onClick={onSelectClick}
+        className="block"
+      >
         {/* Visual */}
         <div
           className="relative overflow-hidden"
           style={{
             height: visualHeight,
-            background: kind === "photo" ? "#efe5d0" : wash.bg,
+            background:
+              kind === "photo" || kind === "video" ? "#efe5d0" : wash.bg,
           }}
         >
+          {kind === "video" && tile.videoUrl && (
+            <InViewVideo
+              src={tile.videoUrl}
+              poster={tile.photoUrl ?? undefined}
+              title={tile.title}
+            />
+          )}
+
           {kind === "photo" && shownPhoto && (
             <Image
               src={shownPhoto}
@@ -240,6 +298,19 @@ export function RolodexTile({
             </div>
           )}
 
+          {selectable && (
+            <span
+              aria-hidden
+              className={`absolute left-3 bottom-3 inline-flex h-6 w-6 items-center justify-center rounded-full border-2 text-xs font-bold transition ${
+                selected
+                  ? "border-stone-900 bg-stone-900 text-stone-50"
+                  : "border-stone-50/85 bg-stone-50/60 text-transparent backdrop-blur"
+              }`}
+            >
+              ✓
+            </span>
+          )}
+
           {cookChip && (
             <span
               className={`absolute left-3 top-3 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
@@ -252,15 +323,17 @@ export function RolodexTile({
             </span>
           )}
 
-          <button
-            type="button"
-            onClick={onPickPhoto}
-            className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-stone-50/90 px-2 py-1 text-[11px] font-medium text-stone-800 shadow-sm backdrop-blur transition hover:bg-stone-50"
-            aria-label={shownPhoto ? "Change photo" : "Add photo"}
-          >
-            <ImagePlus className="h-3 w-3" />
-            {shownPhoto ? "Change" : "Add photo"}
-          </button>
+          {!selectable && (
+            <button
+              type="button"
+              onClick={onPickPhoto}
+              className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-stone-50/90 px-2 py-1 text-[11px] font-medium text-stone-800 shadow-sm backdrop-blur transition hover:bg-stone-50"
+              aria-label={shownPhoto ? "Change photo" : "Add photo"}
+            >
+              <ImagePlus className="h-3 w-3" />
+              {shownPhoto ? "Change" : "Add photo"}
+            </button>
+          )}
 
           {uploadError && (
             <div className="absolute bottom-2 left-2 right-2 rounded bg-rose-900/80 px-2 py-1 text-[11px] text-stone-50">
@@ -309,14 +382,16 @@ export function RolodexTile({
         </div>
       </Link>
 
-      <button
-        type="button"
-        onClick={onDelete}
-        aria-label="Remove from library"
-        className="absolute right-2 bottom-2 rounded-full p-1.5 text-stone-400 opacity-0 transition hover:bg-stone-100 hover:text-rose-600 group-hover:opacity-100"
-      >
-        <Trash2 className="h-3.5 w-3.5" />
-      </button>
+      {!selectable && (
+        <button
+          type="button"
+          onClick={onDelete}
+          aria-label="Remove from library"
+          className="absolute right-2 bottom-2 rounded-full p-1.5 text-stone-400 opacity-0 transition hover:bg-stone-100 hover:text-rose-600 group-hover:opacity-100"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </button>
+      )}
 
       <input
         ref={fileInput}
@@ -329,6 +404,54 @@ export function RolodexTile({
         }}
       />
     </article>
+  );
+}
+
+// Autoplay muted loops are gorgeous in a grid but expensive if they all run
+// at once. IntersectionObserver gates playback to tiles actually in view.
+// Safari also refuses to autoplay a video that isn't muted AND playsInline.
+function InViewVideo({
+  src,
+  poster,
+  title,
+}: {
+  src: string;
+  poster: string | undefined;
+  title: string;
+}) {
+  const ref = useRef<HTMLVideoElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (typeof IntersectionObserver === "undefined") {
+      el.play().catch(() => {});
+      return;
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) el.play().catch(() => {});
+          else el.pause();
+        }
+      },
+      { threshold: 0.2 }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  return (
+    <video
+      ref={ref}
+      src={src}
+      poster={poster}
+      muted
+      loop
+      playsInline
+      preload="metadata"
+      aria-label={title}
+      className="absolute inset-0 h-full w-full object-cover"
+    />
   );
 }
 

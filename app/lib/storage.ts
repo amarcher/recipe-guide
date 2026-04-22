@@ -12,6 +12,8 @@ export type SavedRecipe = {
   cookCount: number;
   family?: { id: string; name: string } | null;
   photoUrl?: string | null;
+  videoUrl?: string | null;
+  videoAspectRatio?: number | null;
 };
 
 // Stable hash of (sourceUrl, title). Used as the LOCAL recipe ID. The server
@@ -162,6 +164,8 @@ type ServerRecipeRow = {
   lastCookedAt: number | null;
   cookCount: number;
   photoUrl?: string | null;
+  videoUrl?: string | null;
+  videoAspectRatio?: number | null;
 };
 
 function serverToLocal(r: ServerRecipeRow): SavedRecipe {
@@ -173,6 +177,8 @@ function serverToLocal(r: ServerRecipeRow): SavedRecipe {
     cookCount: r.cookCount,
     family: r.family,
     photoUrl: r.photoUrl ?? null,
+    videoUrl: r.videoUrl ?? null,
+    videoAspectRatio: r.videoAspectRatio ?? null,
   };
 }
 

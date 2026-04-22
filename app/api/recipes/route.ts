@@ -35,7 +35,12 @@ export async function GET() {
         where: { photoUrl: { not: null } },
         orderBy: { photoUploadedAt: "desc" },
         take: 1,
-        select: { photoUrl: true, photoUploadedAt: true },
+        select: {
+          photoUrl: true,
+          photoUploadedAt: true,
+          videoUrl: true,
+          videoAspectRatio: true,
+        },
       },
     },
     orderBy: [{ lastCookedAt: "desc" }, { savedAt: "desc" }],
@@ -52,6 +57,8 @@ export async function GET() {
       lastCookedAt: r.lastCookedAt?.getTime() ?? null,
       cookCount: r.cookCount,
       photoUrl: r.cookLogs[0]?.photoUrl ?? null,
+      videoUrl: r.cookLogs[0]?.videoUrl ?? null,
+      videoAspectRatio: r.cookLogs[0]?.videoAspectRatio ?? null,
     })),
   });
 }

@@ -1,22 +1,12 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { CalendarRange } from "lucide-react";
 import { prisma } from "@/app/lib/prisma";
 import { requireUser } from "@/app/lib/server-auth";
 import { NewPlanButton } from "./NewPlanButton";
+import { PlanTile } from "./PlanTile";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-const STATUS_LABEL: Record<string, string> = {
-  DRAFT: "Draft",
-  INTAKE_COMPLETE: "Intake complete",
-  SKELETON_READY: "Skeleton ready",
-  CANDIDATES_READY: "Ready to pick meals",
-  COMMITTED: "Meals committed",
-  ACTIVE: "Active",
-  ARCHIVED: "Archived",
-};
 
 export default async function PlansIndex() {
   const user = await requireUser();
@@ -72,36 +62,16 @@ export default async function PlansIndex() {
           <ul className="grid gap-3 sm:grid-cols-2">
             {plans.map((p) => (
               <li key={p.id}>
-                <Link
-                  href={`/plan/${p.id}`}
-                  className="flex flex-col rounded-xl border border-stone-200 bg-white p-4 shadow-sm transition hover:border-stone-300"
-                >
-                  <div className="flex items-center justify-between gap-2 text-[11px] uppercase tracking-wider text-stone-400">
-                    <span>
-                      Week of{" "}
-                      {p.weekOf.toLocaleDateString(undefined, {
-                        month: "short",
-                        day: "numeric",
-                      })}
-                    </span>
-                    {p.family ? (
-                      <span className="rounded-full bg-stone-100 px-2 py-0.5 text-stone-600">
-                        {p.family.name}
-                      </span>
-                    ) : (
-                      <span className="rounded-full bg-stone-50 px-2 py-0.5 text-stone-500">
-                        Personal
-                      </span>
-                    )}
-                  </div>
-                  <h2 className="mt-2 text-base font-semibold text-stone-900">
-                    {STATUS_LABEL[p.status] ?? p.status}
-                  </h2>
-                  <div className="mt-2 flex gap-4 text-xs text-stone-500">
-                    <span>{p._count.candidates} candidates</span>
-                    <span>{p._count.meals} committed</span>
-                  </div>
-                </Link>
+                <PlanTile
+                  plan={{
+                    id: p.id,
+                    weekOfMs: p.weekOf.getTime(),
+                    status: p.status,
+                    family: p.family,
+                    candidateCount: p._count.candidates,
+                    mealCount: p._count.meals,
+                  }}
+                />
               </li>
             ))}
           </ul>
