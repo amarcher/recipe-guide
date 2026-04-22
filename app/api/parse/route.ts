@@ -31,11 +31,13 @@ Your job:
 7. Preserve quantities exactly as written ("1", "1/2", "1 1/2", "a pinch"). Use null for unit if it's countable ("2 onions" → quantity:"2", unit:null, item:"onion").
 8. If a value is unknown, use null. Do not invent.
 9. Pick exactly one "icon" per step from: flame (sear/brown/sauté/fry), soup (simmer/sauce/stew), boil (boil/blanch), oven (bake/roast/broil), knife (chop/slice/prep), wine (deglaze/add liquid), leaf (herbs/fresh garnish), mix (stir/fold/whisk/combine), salt (season/finish), rest (chill/rest/marinate/wait), serve (plate/serve), blend (blend/purée/emulsify).
+10. Write a "tagline" — ONE short, evocative sentence (≤12 words) that makes someone want to cook this. Alison Roman voice: specific, a little dry, sensory. Not marketing. Good: "Pink, buttery, a little unhinged." / "Egg yolks, black pepper, the whole dance." / "The bowl you eat on the couch." Bad: "A delicious dish your family will love."
 
 Return ONLY valid JSON matching the provided schema. No prose, no markdown.`;
 
 const SCHEMA_HINT = `{
   "title": string,
+  "tagline": string | null,         // one evocative sentence, ≤12 words
   "servings": string | null,        // e.g. "4-6 servings"
   "total_time": string | null,      // e.g. "2 hours"
   "active_time": string | null,

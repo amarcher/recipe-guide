@@ -7,7 +7,7 @@ A Next.js 16 app that turns any recipe URL into a one-screen "recipe guide": a m
 ## Architecture
 
 - **`app/api/parse/route.ts`** — POST { url } → strips HTML, sends to Claude (`claude-opus-4-7`) with a system prompt that returns a strict JSON shape matching `app/types.ts`. Re-attaches each ingredient to the step that actually uses it. Picks one of 12 step icon enum values.
-- **`app/types.ts`** — `CookCard`, `Step`, `Ingredient`, `StepIcon`. The schema returned by the parser and consumed everywhere.
+- **`app/types.ts`** — `CookCard`, `Step`, `Ingredient`, `StepIcon`. The schema returned by the parser and consumed everywhere. `CookCard.tagline` is an optional, LLM-generated one-liner (Alison Roman voice, ≤12 words) used as the pull-quote on library rolodex swatch tiles and as a subtitle under the title on photo/vignette tiles. Older cached recipes predate it — backfill via `npm run backfill:taglines`.
 - **`app/components/CookCardView.tsx`** — top-level recipe renderer. Composes `Scaler`, `MisePlace`, `Timeline`, `StepIcon`, `StepTimer`. Holds the `factor` (scale) and `doneSteps` state for one card.
 - **`app/components/MisePlace.tsx`** — aggregated ingredient grid. Each tile is a button that toggles a "got it out" check (persisted per-recipe via `useMiseChecks`).
 - **`app/components/Timeline.tsx`** — proportional segment bar; click a segment to scroll to that step.

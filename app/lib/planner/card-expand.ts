@@ -5,6 +5,7 @@ export function expandDraft(draft: CookCardDraft, sourceUrl: string): CookCard {
   return {
     title: draft.title,
     source_url: sourceUrl,
+    tagline: draft.tagline ?? null,
     servings: null,
     total_time: draft.total_time ?? null,
     active_time: null,
