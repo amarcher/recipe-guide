@@ -1,35 +1,32 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
-import { ChefHat, Clock, CloudUpload, Trash2, Users } from "lucide-react";
+import { CloudUpload, Plus, Search } from "lucide-react";
 import { useSession } from "next-auth/react";
 import {
   useSavedRecipes,
-  deleteRecipe,
-  markCooked,
   hasUnsyncedLocal,
   syncLocalToCloud,
 } from "@/app/lib/storage";
 import { useMyFamilies } from "@/app/lib/families";
-import { LibraryCardMedia } from "./LibraryCardMedia";
+import {
+  RolodexTile,
+  heroesFromCard,
+  type TileData,
+} from "./RolodexTile";
 
 const noopSubscribe = () => () => {};
 const trueSnapshot = () => true;
 const falseSnapshot = () => false;
 
-type Filter = "all" | "personal" | { familyId: string };
-
-function formatRelative(ts: number): string {
-  const diff = Date.now() - ts;
-  const day = 24 * 60 * 60 * 1000;
-  if (diff < day) return "today";
-  if (diff < 2 * day) return "yesterday";
-  const days = Math.floor(diff / day);
-  if (days < 14) return `${days}d ago`;
-  if (days < 60) return `${Math.floor(days / 7)}w ago`;
-  return new Date(ts).toLocaleDateString();
-}
+type BaseFilter =
+  | "inspire"
+  | "recent"
+  | "hits"
+  | "never"
+  | "personal"
+  | { familyId: string };
 
 export default function LibraryPage() {
   const allRecipes = useSavedRecipes();
@@ -39,30 +36,30 @@ export default function LibraryPage() {
   const mounted = useSyncExternalStore(noopSubscribe, trueSnapshot, falseSnapshot);
   const [syncing, setSyncing] = useState(false);
   const [syncResult, setSyncResult] = useState<string | null>(null);
-  const [filter, setFilter] = useState<Filter>("all");
+  const [filter, setFilter] = useState<BaseFilter>("inspire");
+  const [query, setQuery] = useState("");
   const needsSync = mounted && signedIn && !syncResult && hasUnsyncedLocal();
 
-  // For per-scope filters, just filter the saves directly. For All, dedupe
-  // by sourceUrl so a recipe saved in N libraries shows as one card with
-  // all N scope pills + summed cook count.
-  type GroupedRecipe = (typeof allRecipes)[number] & {
-    scopes: Array<{ id: string; name: string } | null>;
-    totalCookCount: number;
-    latestLastCookedAt: number | null;
-  };
-
-  let recipes: GroupedRecipe[];
-  if (filter === "all") {
-    const byUrl = new Map<string, GroupedRecipe>();
+  // Dedupe the "All" view by source URL so a recipe saved to multiple scopes
+  // shows as a single tile with combined scope pills + summed cook count.
+  const tiles: TileData[] = useMemo(() => {
+    type Accum = TileData & { card: import("@/app/types").CookCard };
+    const byUrl = new Map<string, Accum>();
     for (const r of allRecipes) {
       const key = r.card.source_url;
       const existing = byUrl.get(key);
       if (!existing) {
         byUrl.set(key, {
-          ...r,
-          scopes: [r.family ?? null],
+          id: r.id,
+          title: r.card.title,
+          sourceUrl: r.card.source_url,
+          photoUrl: r.photoUrl ?? null,
+          heroes: heroesFromCard(r.card),
           totalCookCount: r.cookCount,
           latestLastCookedAt: r.lastCookedAt,
+          savedAt: r.savedAt,
+          scopes: [r.family ?? null],
+          card: r.card,
         });
       } else {
         existing.scopes.push(r.family ?? null);
@@ -71,31 +68,61 @@ export default function LibraryPage() {
           existing.latestLastCookedAt ?? 0,
           r.lastCookedAt ?? 0
         ) || null;
+        if (!existing.photoUrl && r.photoUrl) existing.photoUrl = r.photoUrl;
       }
     }
-    recipes = [...byUrl.values()].sort(
-      (a, b) =>
-        (b.latestLastCookedAt ?? b.savedAt) -
-        (a.latestLastCookedAt ?? a.savedAt)
-    );
-  } else {
-    recipes = allRecipes
-      .filter((r) =>
-        filter === "personal" ? !r.family : r.family?.id === filter.familyId
-      )
-      .map((r) => ({
-        ...r,
-        scopes: [r.family ?? null],
-        totalCookCount: r.cookCount,
-        latestLastCookedAt: r.lastCookedAt,
-      }));
-  }
+    return [...byUrl.values()];
+  }, [allRecipes]);
+
+  const filtered = useMemo(() => {
+    let out = tiles;
+
+    if (filter === "recent") {
+      out = [...out]
+        .sort(
+          (a, b) =>
+            (b.latestLastCookedAt ?? b.savedAt) -
+            (a.latestLastCookedAt ?? a.savedAt)
+        )
+        .slice(0, 12);
+    } else if (filter === "hits") {
+      out = out
+        .filter((r) => r.totalCookCount >= 3)
+        .sort((a, b) => b.totalCookCount - a.totalCookCount);
+    } else if (filter === "never") {
+      out = out.filter((r) => r.totalCookCount === 0);
+    } else if (filter === "personal") {
+      // Only tiles that have at least one personal save
+      out = out.filter((r) => r.scopes.some((s) => s === null));
+    } else if (typeof filter === "object") {
+      out = out.filter((r) =>
+        r.scopes.some((s) => s?.id === filter.familyId)
+      );
+    } else {
+      // inspire — default sort: most-cooked, then most-recent, then just-saved
+      out = [...out].sort((a, b) => {
+        if (b.totalCookCount !== a.totalCookCount)
+          return b.totalCookCount - a.totalCookCount;
+        return (
+          (b.latestLastCookedAt ?? b.savedAt) -
+          (a.latestLastCookedAt ?? a.savedAt)
+        );
+      });
+    }
+
+    const q = query.trim().toLowerCase();
+    if (q) out = out.filter((r) => r.title.toLowerCase().includes(q));
+
+    return out;
+  }, [tiles, filter, query]);
 
   async function onSync() {
     setSyncing(true);
     try {
       const r = await syncLocalToCloud();
-      setSyncResult(`Synced ${r.pushed} of ${r.total} local recipes to your account.`);
+      setSyncResult(
+        `Synced ${r.pushed} of ${r.total} local recipes to your account.`
+      );
     } catch (e) {
       setSyncResult(e instanceof Error ? e.message : "sync failed");
     } finally {
@@ -104,26 +131,28 @@ export default function LibraryPage() {
   }
 
   return (
-    <main className="flex flex-1 flex-col px-4 py-10 sm:py-14">
-      <div className="mx-auto w-full max-w-3xl">
-        <div className="mb-6 flex items-baseline justify-between">
+    <main className="flex flex-1 flex-col px-4 py-10 sm:py-12">
+      <div className="mx-auto w-full max-w-5xl">
+        <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-stone-900">
-              Library
-            </h1>
-            <p className="mt-1 text-sm text-stone-600">
-              {signedIn
-                ? "Your saved recipes, synced across your devices."
-                : "Your saved recipes. Sign in to sync across devices."}
+            <h1 className="t-h1">The rolodex</h1>
+            <p className="t-lead mt-1 max-w-[56ch]">
+              Everything you&rsquo;ve cooked, wanted to cook, or been inspired by.
+              Flip through until something jumps out.
             </p>
           </div>
-          <Link
-            href="/"
-            className="text-sm font-medium text-stone-700 hover:text-stone-900"
-          >
-            + Parse a new recipe
-          </Link>
-        </div>
+
+          <label className="relative inline-flex w-full sm:w-64">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-stone-500" />
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search the rolodex…"
+              className="flex-1 rounded-full border border-stone-300 bg-stone-50 py-2 pl-9 pr-3 text-sm text-stone-900 shadow-sm placeholder:text-stone-400 focus:border-ochre-500 focus:outline-none focus:ring-2 focus:ring-ochre-200"
+            />
+          </label>
+        </header>
 
         {signedIn && needsSync && (
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
@@ -148,152 +177,93 @@ export default function LibraryPage() {
           </div>
         )}
 
-        {signedIn && families.length > 0 && (
-          <div className="mb-4 flex flex-wrap items-center gap-1 rounded-full border border-stone-200 bg-white p-1 shadow-sm w-fit">
-            <FilterTab
-              active={filter === "all"}
-              onClick={() => setFilter("all")}
-              label="All"
-              count={new Set(allRecipes.map((r) => r.card.source_url)).size}
-            />
-            <FilterTab
+        <nav className="mb-6 flex flex-wrap gap-1.5">
+          <FilterChip
+            label="Inspire me"
+            active={filter === "inspire"}
+            onClick={() => setFilter("inspire")}
+          />
+          <FilterChip
+            label="Recent"
+            active={filter === "recent"}
+            onClick={() => setFilter("recent")}
+          />
+          <FilterChip
+            label="Greatest hits"
+            active={filter === "hits"}
+            onClick={() => setFilter("hits")}
+          />
+          <FilterChip
+            label="Never cooked"
+            active={filter === "never"}
+            onClick={() => setFilter("never")}
+          />
+          {signedIn && (
+            <FilterChip
+              label="Personal"
               active={filter === "personal"}
               onClick={() => setFilter("personal")}
-              label="Personal"
-              count={allRecipes.filter((r) => !r.family).length}
             />
-            {families.map((f) => (
-              <FilterTab
-                key={f.id}
-                active={typeof filter === "object" && filter.familyId === f.id}
-                onClick={() => setFilter({ familyId: f.id })}
-                label={f.name}
-                count={allRecipes.filter((r) => r.family?.id === f.id).length}
-              />
+          )}
+          {families.map((f) => (
+            <FilterChip
+              key={f.id}
+              label={f.name}
+              active={typeof filter === "object" && filter.familyId === f.id}
+              onClick={() => setFilter({ familyId: f.id })}
+            />
+          ))}
+        </nav>
+
+        {filtered.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-stone-300 bg-stone-50 p-10 text-center">
+            <p className="t-lead text-stone-600">
+              {query.trim()
+                ? "Nothing matching that — try another word, or switch filters."
+                : tiles.length === 0
+                ? "No saved recipes yet. Paste a URL on the home page and click Save."
+                : "Nothing in this filter. Pick another one, or clear the search."}
+            </p>
+          </div>
+        ) : (
+          <div className="columns-1 gap-3 sm:columns-2 lg:columns-3">
+            {filtered.map((tile, i) => (
+              <RolodexTile key={tile.id} tile={tile} tall={i % 3 === 0} />
             ))}
           </div>
         )}
 
-        {recipes.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-stone-300 bg-white p-10 text-center">
-            <p className="text-sm text-stone-600">
-              No saved recipes yet. Paste a URL on the{" "}
-              <Link href="/" className="font-medium text-stone-900 underline">
-                home page
-              </Link>{" "}
-              and click <span className="font-medium">Save to library</span>.
-            </p>
-          </div>
-        ) : (
-          <ul className="grid gap-3 sm:grid-cols-2">
-            {recipes.map((r) => (
-              <li
-                key={r.id}
-                className="group relative flex flex-col overflow-hidden rounded-xl border border-stone-200 bg-white p-4 shadow-sm transition hover:border-stone-300"
-              >
-                <LibraryCardMedia
-                  recipeId={r.id}
-                  photoUrl={r.photoUrl ?? null}
-                  title={r.card.title}
-                />
-                <Link href={`/recipe/${r.id}`} className="flex-1">
-                  <div className="flex items-center justify-between gap-2 text-[11px] uppercase tracking-wider text-stone-400">
-                    <span className="truncate">
-                      {new URL(r.card.source_url).hostname.replace(/^www\./, "")}
-                    </span>
-                    <div className="flex flex-wrap justify-end gap-1">
-                      {r.scopes.map((s, i) => (
-                        <span
-                          key={s?.id ?? `personal-${i}`}
-                          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 ${
-                            s
-                              ? "bg-stone-100 text-stone-600"
-                              : "bg-stone-50 text-stone-500"
-                          }`}
-                        >
-                          {s ? <Users className="h-3 w-3" /> : null}
-                          {s?.name ?? "Personal"}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                  <h2 className="mt-1 line-clamp-2 text-base font-semibold text-stone-900">
-                    {r.card.title}
-                  </h2>
-                  <div className="mt-3 flex flex-wrap gap-3 text-xs text-stone-500">
-                    {r.card.total_time && (
-                      <span className="inline-flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {r.card.total_time}
-                      </span>
-                    )}
-                    <span className="inline-flex items-center gap-1">
-                      <ChefHat className="h-3 w-3" />
-                      {r.totalCookCount === 0
-                        ? "never cooked"
-                        : `cooked ${r.totalCookCount}× · last ${formatRelative(r.latestLastCookedAt!)}`}
-                    </span>
-                  </div>
-                </Link>
-                <div className="mt-3 flex justify-between border-t border-stone-100 pt-3">
-                  <button
-                    type="button"
-                    onClick={() => markCooked(r.id)}
-                    className="text-xs font-medium text-stone-600 hover:text-stone-900"
-                  >
-                    + I cooked this
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (confirm(`Remove "${r.card.title}" from your library?`)) {
-                        deleteRecipe(r.id);
-                      }
-                    }}
-                    aria-label="Delete"
-                    className="text-stone-400 opacity-0 transition group-hover:opacity-100 hover:text-rose-600"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
+        <Link
+          href="/"
+          className="fixed bottom-6 right-6 z-20 inline-flex items-center gap-2 rounded-full bg-stone-900 px-4 py-2.5 text-sm font-medium text-stone-50 shadow-lg transition hover:bg-stone-800"
+        >
+          <Plus className="h-4 w-4" /> Paste a URL
+        </Link>
       </div>
     </main>
   );
 }
 
-function FilterTab({
+function FilterChip({
+  label,
   active,
   onClick,
-  label,
-  count,
 }: {
+  label: string;
   active: boolean;
   onClick: () => void;
-  label: string;
-  count: number;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition ${
+      className={`inline-flex items-center rounded-full border px-3.5 py-1.5 text-[13px] transition ${
         active
-          ? "bg-stone-900 text-white"
-          : "text-stone-600 hover:bg-stone-100"
+          ? "border-stone-900 bg-stone-900 text-stone-50"
+          : "border-stone-300 bg-stone-50 text-stone-700 hover:border-stone-400 hover:text-stone-900"
       }`}
     >
       {label}
-      <span
-        className={`tabular-nums ${
-          active ? "text-stone-300" : "text-stone-400"
-        }`}
-      >
-        {count}
-      </span>
     </button>
   );
 }
