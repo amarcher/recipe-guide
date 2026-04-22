@@ -188,6 +188,12 @@
   color: var(--color-stone-700);
 }
 
+/* Reserve space for a scrollbar even when the content fits, so content
+   doesn't shift horizontally the moment a page grows past the fold. */
+html {
+  scrollbar-gutter: stable;
+}
+
 /* Root — cream paper surface, warm ink text, sans body. */
 body {
   background: var(--color-stone-50);
