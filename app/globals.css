@@ -1,26 +1,202 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* =============================================================================
+   Mised design tokens. See CLAUDE.md for voice + visual rules.
+   Paper (cream) dominant, ink text, ochre accent. Rose/amber/emerald preserved
+   for the commit-state language but retuned to read on cream instead of stone.
+   ============================================================================= */
+
+@theme {
+  /* Fonts — next/font exposes Fraunces/Inter/JetBrains as --font-fraunces
+     etc. in layout.tsx, then we alias them into the semantic token names
+     Tailwind reads for its font-* utilities. */
+  --font-sans:
+    var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    Helvetica, Arial, sans-serif;
+  --font-serif:
+    var(--font-fraunces), "Iowan Old Style", Georgia, "Times New Roman", serif;
+  --font-mono:
+    var(--font-jetbrains), ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  /* Stone = warm paper/ink. Overrides Tailwind defaults so every bg-stone-*
+     / text-stone-* / border-stone-* class in the app shifts to the design
+     system's cream + warm-brown scale without touching each call site. */
+  --color-stone-50: #fbf7ef;
+  --color-stone-100: #f6efe1;
+  --color-stone-200: #efe5d0;
+  --color-stone-300: #e6d9be;
+  --color-stone-400: #c7b89f;
+  --color-stone-500: #9a8a74;
+  --color-stone-600: #6b5b49;
+  --color-stone-700: #3a2d20;
+  --color-stone-800: #2b2016;
+  --color-stone-900: #231a12;
+  --color-stone-950: #1a130c;
+
+  /* Ochre — brand accent. No Tailwind default to override; this adds
+     bg-ochre-*, text-ochre-*, border-ochre-* utilities. */
+  --color-ochre-50: #fdf6e7;
+  --color-ochre-100: #f9e8bf;
+  --color-ochre-200: #f3d689;
+  --color-ochre-300: #ecc05a;
+  --color-ochre-400: #dfa738;
+  --color-ochre-500: #c88a1f;
+  --color-ochre-600: #a96d14;
+  --color-ochre-700: #835310;
+  --color-ochre-800: #5e3c0c;
+  --color-ochre-900: #3d2708;
+
+  /* Rose — retuned for cream background. */
+  --color-rose-50: #fdeeeb;
+  --color-rose-100: #f9d5cc;
+  --color-rose-200: #f1ab9b;
+  --color-rose-300: #e88873;
+  --color-rose-500: #c84a2e;
+  --color-rose-600: #a63319;
+  --color-rose-700: #7a230f;
+  --color-rose-800: #5c1a0b;
+  --color-rose-900: #3e1207;
+
+  /* Amber — for in-progress / saved / warm notices. */
+  --color-amber-50: #fbeedc;
+  --color-amber-100: #f6d9ae;
+  --color-amber-200: #ecbe76;
+  --color-amber-300: #e0a547;
+  --color-amber-500: #b37516;
+  --color-amber-600: #90590e;
+  --color-amber-700: #6b4208;
+  --color-amber-800: #4e3005;
+  --color-amber-900: #3a2405;
+
+  /* Emerald — for done / committed. Reads clean on cream. */
+  --color-emerald-50: #eaf2e2;
+  --color-emerald-100: #cfe0b8;
+  --color-emerald-200: #a4c484;
+  --color-emerald-300: #78a255;
+  --color-emerald-500: #4f7a2a;
+  --color-emerald-600: #3a6020;
+  --color-emerald-700: #2a4518;
+  --color-emerald-800: #1d3211;
+  --color-emerald-900: #17270d;
+
+  /* Shadows — warm ochre-tinted instead of cool black. */
+  --shadow-xs: 0 1px 0 rgba(107, 73, 25, 0.05);
+  --shadow-sm:
+    0 1px 2px rgba(107, 73, 25, 0.06), 0 1px 1px rgba(107, 73, 25, 0.04);
+  --shadow-md:
+    0 4px 12px -2px rgba(107, 73, 25, 0.1),
+    0 2px 4px -1px rgba(107, 73, 25, 0.06);
+  --shadow-lg:
+    0 12px 28px -8px rgba(107, 73, 25, 0.14),
+    0 4px 8px -2px rgba(107, 73, 25, 0.06);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* =============================================================================
+   Semantic type classes — drop these on headlines/labels for the design-system
+   voice without re-typing the ladder each time.
+   ============================================================================= */
+
+.t-eyebrow {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-stone-600);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+.t-display {
+  font-family: var(--font-serif);
+  font-size: 3.5rem;
+  font-weight: 500;
+  font-style: italic;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--color-stone-900);
 }
 
+.t-h1 {
+  font-family: var(--font-serif);
+  font-size: 2.5rem;
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--color-stone-900);
+}
+
+.t-h2 {
+  font-family: var(--font-serif);
+  font-size: 1.875rem;
+  font-weight: 500;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  color: var(--color-stone-900);
+}
+
+.t-h3 {
+  font-family: var(--font-sans);
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--color-stone-900);
+}
+
+.t-lead {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+  font-size: 1.125rem;
+  line-height: 1.6;
+  color: var(--color-stone-700);
+  text-wrap: pretty;
+}
+
+.t-body {
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--color-stone-700);
+  text-wrap: pretty;
+}
+
+.t-meta {
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--color-stone-600);
+}
+
+.t-caption {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  color: var(--color-stone-500);
+}
+
+.t-mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.8125rem;
+  color: var(--color-stone-700);
+}
+
+.t-pullquote {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 1.5rem;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  color: var(--color-stone-700);
+}
+
+/* Reserve space for a scrollbar even when the content fits, so content
+   doesn't shift horizontally the moment a page grows past the fold. */
+html {
+  scrollbar-gutter: stable;
+}
+
+/* Root — cream paper surface, warm ink text, sans body. */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-stone-50);
+  color: var(--color-stone-900);
+  font-family: var(--font-sans);
 }
