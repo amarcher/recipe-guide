@@ -32,6 +32,12 @@ export type Step = {
   doneness_cue: string | null;
 };
 
+// Where a CookCard came from. 'url' = parsed from a real recipe page (the
+// original flow). 'instagram-reconstructed' = best-guess reconstruction from
+// an Instagram caption + photo when no recipe link was available; timings
+// and steps are soft. Missing field on older cached entries means 'url'.
+export type Provenance = "url" | "instagram-reconstructed";
+
 export type CookCard = {
   title: string;
   source_url: string;
@@ -39,6 +45,7 @@ export type CookCard = {
   // parser as one evocative sentence; surfaced in the library rolodex swatch
   // tile and under the title on photo/vignette tiles.
   tagline?: string | null;
+  provenance?: Provenance;
   servings: string | null;
   total_time: string | null;
   active_time: string | null;

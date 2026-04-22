@@ -116,6 +116,13 @@ export function CookCardView({ card }: { card: CookCard }) {
           {card.title}
         </h1>
 
+        {card.provenance === "instagram-reconstructed" && (
+          <p className="mt-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] leading-snug text-amber-900">
+            Reconstructed from an Instagram post. Ingredients are a good guess;
+            step timings are soft — trust your eyes and the doneness cues.
+          </p>
+        )}
+
         <div className="mt-4 flex flex-wrap items-center gap-2">
           {servings && (
             <MetaPill icon={Users}>

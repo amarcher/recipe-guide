@@ -28,6 +28,7 @@ model User {
   cookLogs      CookLog[]
   weeklyPlans   WeeklyPlan[]    @relation("WeeklyPlanCreator")
   purchasedGroceryItems GroceryItem[] @relation("GroceryPurchaser")
+  instagramConnection InstagramConnection?
 }
 
 model Account {
@@ -186,10 +187,14 @@ model CookLog {
   cookedAt         DateTime  @default(now())
   photoUrl         String?
   photoUploadedAt  DateTime?
+  videoUrl         String?
+  videoAspectRatio Float?
   notes            String?
+  instagramPostId  String?   @unique
 
   savedRecipe SavedRecipe @relation(fields: [savedRecipeId], references: [id], onDelete: Cascade)
   user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  instagramPost InstagramPost? @relation(fields: [instagramPostId], references: [id], onDelete: SetNull)
 
   @@index([savedRecipeId, cookedAt])
   @@index([userId, cookedAt])
@@ -334,6 +339,57 @@ model GroceryItem {
 
   @@index([planId, purchased])
   @@index([planId, slug])
+}
+
+// ─── Instagram ingestion ───────────────────────────────────────────────────
+// Per-user connection to the IG Graph API. One IG account → one connection
+// row. Long-lived access tokens last ~60 days and must be refreshed before
+// they expire. Imports currently land in the connecting user's personal
+// library; family-scoped imports are a phase-3 addition.
+
+model InstagramConnection {
+  id                 String    @id @default(cuid())
+  userId             String    @unique
+  instagramAccountId String
+  username           String?
+  accessToken        String    @db.Text
+  tokenExpiresAt     DateTime?
+  lastSyncedAt       DateTime?
+  lastSyncError      String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  user  User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  posts InstagramPost[]
+
+  @@index([userId])
+}
+
+// Cache of every IG post we've seen for a connection. Dedup key is the IG
+// media ID. Rehosted Blob URLs are the source of truth for rendering —
+// Instagram CDN URLs expire in hours.
+model InstagramPost {
+  id               String    @id @default(cuid())
+  connectionId     String
+  postId           String    @unique
+  permalink        String
+  postedAt         DateTime
+  caption          String?   @db.Text
+  mediaType        String
+  mediaBlobUrl     String?
+  videoBlobUrl     String?
+  thumbnailBlobUrl String?
+  aspectRatio      Float?
+  savedRecipeId    String?
+  processedAt      DateTime?
+  processingError  String?   @db.Text
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  connection InstagramConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  cookLog    CookLog?
+
+  @@index([connectionId, postedAt])
 }
 
 // Raw transcript of the intake conversation. The structured PlanIntake lives
