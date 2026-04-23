@@ -47,21 +47,65 @@ export async function GET() {
     orderBy: [{ lastCookedAt: "desc" }, { savedAt: "desc" }],
   });
 
+  // IG-imported media is recipe-level (it's the canonical hero for the recipe,
+  // not a record of a particular cook event), so it should follow the
+  // ParsedRecipe across scopes. When a SavedRecipe row has no CookLogs of its
+  // own (e.g. a family scope the importer bulk-added), fall back to the best
+  // IG-origin CookLog from any SavedRecipe pointing at the same ParsedRecipe.
+  // Scoped narrowly to IG logs — personal cook-session photos stay personal.
+  const parsedIds = rows.map((r) => r.parsedRecipeId);
+  const igFallbackLogs = parsedIds.length
+    ? await prisma.cookLog.findMany({
+        where: {
+          savedRecipe: { parsedRecipeId: { in: parsedIds } },
+          instagramPostId: { not: null },
+          photoUrl: { not: null },
+        },
+        orderBy: { photoUploadedAt: "desc" },
+        select: {
+          photoUrl: true,
+          videoUrl: true,
+          videoAspectRatio: true,
+          instagramPostId: true,
+          savedRecipe: { select: { parsedRecipeId: true } },
+        },
+      })
+    : [];
+
+  const bestIgByParsed = new Map<string, (typeof igFallbackLogs)[number]>();
+  for (const log of igFallbackLogs) {
+    const pid = log.savedRecipe.parsedRecipeId;
+    if (!bestIgByParsed.has(pid)) bestIgByParsed.set(pid, log);
+  }
+
   return NextResponse.json({
-    recipes: rows.map((r) => ({
-      id: r.id,
-      sourceUrl: r.parsedRecipe.sourceUrl,
-      title: r.parsedRecipe.title,
-      card: r.parsedRecipe.cardJson as unknown as CookCard,
-      family: r.family,
-      savedAt: r.savedAt.getTime(),
-      lastCookedAt: r.lastCookedAt?.getTime() ?? null,
-      cookCount: r.cookCount,
-      photoUrl: r.cookLogs[0]?.photoUrl ?? null,
-      videoUrl: r.cookLogs[0]?.videoUrl ?? null,
-      videoAspectRatio: r.cookLogs[0]?.videoAspectRatio ?? null,
-      fromInstagram: !!r.cookLogs[0]?.instagramPostId,
-    })),
+    recipes: rows.map((r) => {
+      const own = r.cookLogs[0];
+      const ig = bestIgByParsed.get(r.parsedRecipeId);
+      // Prefer the viewer's own cook-session media (personal, up-to-date
+      // photo of the dish they actually made); fall back to the recipe's
+      // IG-level media otherwise.
+      const photoUrl = own?.photoUrl ?? ig?.photoUrl ?? null;
+      const videoUrl = own?.videoUrl ?? ig?.videoUrl ?? null;
+      const videoAspectRatio =
+        own?.videoAspectRatio ?? ig?.videoAspectRatio ?? null;
+      const fromInstagram =
+        !!own?.instagramPostId || !!ig?.instagramPostId;
+      return {
+        id: r.id,
+        sourceUrl: r.parsedRecipe.sourceUrl,
+        title: r.parsedRecipe.title,
+        card: r.parsedRecipe.cardJson as unknown as CookCard,
+        family: r.family,
+        savedAt: r.savedAt.getTime(),
+        lastCookedAt: r.lastCookedAt?.getTime() ?? null,
+        cookCount: r.cookCount,
+        photoUrl,
+        videoUrl,
+        videoAspectRatio,
+        fromInstagram,
+      };
+    }),
   });
 }
 
