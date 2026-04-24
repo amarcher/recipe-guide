@@ -35,6 +35,7 @@ export function IntakeChat({
   const [pipelineStep, setPipelineStep] = useState<null | "extract" | "skeleton" | "candidates">(null);
   const [error, setError] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
 
   const extracting = pipelineStep !== null;
 
@@ -65,14 +66,27 @@ export function IntakeChat({
   const busy = status === "streaming" || status === "submitted";
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages]);
+
+  // Keep focus on the composer: initially, after the assistant finishes
+  // streaming, and anytime the form unmounts/remounts (completed state).
+  // Without this the browser parks focus on <body> because the input was
+  // previously disabled mid-stream.
+  useEffect(() => {
+    if (busy) return;
+    if (completed) return;
+    inputRef.current?.focus();
+  }, [busy, completed]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!input.trim() || busy) return;
     const text = input;
     setInput("");
+    // Re-focus synchronously so the caret stays in the composer while the
+    // assistant streams its reply — the user can immediately type follow-up.
+    inputRef.current?.focus();
     await sendMessage({
       role: "user",
       parts: [{ type: "text", text }],
@@ -116,7 +130,13 @@ export function IntakeChat({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex min-h-[50vh] flex-col gap-4 rounded-xl border border-stone-200 bg-white p-5 shadow-sm">
+      <div
+        role="log"
+        aria-live="polite"
+        aria-relevant="additions text"
+        aria-label="Conversation with the planner"
+        className="flex min-h-[50vh] flex-col gap-4 rounded-xl border border-stone-200 bg-white p-5 shadow-sm"
+      >
         {messages
           .filter((m) => textOf(m))
           .map((m) => (
@@ -184,17 +204,28 @@ export function IntakeChat({
         </div>
       ) : (
         <form onSubmit={onSubmit} className="flex items-center gap-2">
+          <label htmlFor="intake-composer" className="sr-only">
+            Your reply to the planner
+          </label>
           <input
+            ref={inputRef}
+            id="intake-composer"
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            disabled={busy}
+            // Don't disable during streaming — a disabled input loses focus
+            // and forces the user to click back in. The Send button handles
+            // the busy-throttle instead.
+            aria-busy={busy}
+            autoFocus
             placeholder={
-              messages.length === 0
+              busy && messages.length === 0
                 ? "Starting the conversation…"
+                : busy
+                ? "You can keep typing — the planner's thinking…"
                 : "Type a reply…"
             }
-            className="flex-1 rounded-lg border border-stone-300 bg-white px-4 py-2.5 text-sm text-stone-900 shadow-sm focus:border-stone-500 focus:outline-none disabled:opacity-60"
+            className="flex-1 rounded-lg border border-stone-300 bg-white px-4 py-2.5 text-sm text-stone-900 shadow-sm focus:border-stone-500 focus:outline-none"
           />
           <button
             type="submit"
