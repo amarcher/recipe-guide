@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from "next/server";
 export const runtime = "nodejs";
 
 const CHUNK = 180; // Translate TTS rejects strings longer than ~200 chars.
+const MAX_TEXT = 1500; // Cap inbound payload to limit upstream cost / abuse.
 
 function chunks(text: string): string[] {
   const out: string[] = [];
@@ -26,6 +27,9 @@ function chunks(text: string): string[] {
 export async function GET(req: NextRequest) {
   const q = req.nextUrl.searchParams.get("q");
   if (!q) return new NextResponse("missing q", { status: 400 });
+  if (q.length > MAX_TEXT) {
+    return new NextResponse("q too long", { status: 413 });
+  }
   const lang = req.nextUrl.searchParams.get("lang") ?? "en";
 
   // Fetch each chunk and concatenate; Cast receivers accept a single media
