@@ -6,6 +6,10 @@ const MAX_BYTES = 10 * 1024 * 1024;
 const ALLOWED_PREFIX = "image/";
 const TARGET_MAX_DIMENSION = 1600;
 const OUTPUT_QUALITY = 82;
+// Reject inputs claiming dimensions larger than this on either axis. Defense
+// in depth: libvips already imposes a pixel-count limit, but a 30000×30000
+// image will still allocate metadata buffers before that fires.
+const MAX_INPUT_DIMENSION = 12000;
 
 export async function uploadCookLogPhoto(
   cookLogId: string,
@@ -19,6 +23,15 @@ export async function uploadCookLogPhoto(
   }
 
   const raw = Buffer.from(await file.arrayBuffer());
+  const meta = await sharp(raw).metadata();
+  const w = meta.width ?? 0;
+  const h = meta.height ?? 0;
+  if (w === 0 || h === 0) {
+    throw new Error("could not read image dimensions");
+  }
+  if (w > MAX_INPUT_DIMENSION || h > MAX_INPUT_DIMENSION) {
+    throw new Error("image dimensions too large");
+  }
   const processed = await sharp(raw)
     .rotate()
     .resize({
