@@ -30,3 +30,6 @@ jobs:
 
       - name: Lint
         run: npx eslint app
+
+      - name: Test
+        run: npm test
