@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/app/lib/prisma";
 import { requireUser } from "@/app/lib/server-auth";
+import { resolveCardsForSavedRecipes } from "@/app/lib/card-resolver";
 import type { CookCard } from "@/app/types";
 
 export const runtime = "nodejs";
@@ -78,6 +79,8 @@ export async function GET() {
     if (!bestIgByParsed.has(pid)) bestIgByParsed.set(pid, log);
   }
 
+  const resolvedByRow = await resolveCardsForSavedRecipes(rows);
+
   return NextResponse.json({
     recipes: rows.map((r) => {
       const own = r.cookLogs[0];
@@ -91,11 +94,13 @@ export async function GET() {
         own?.videoAspectRatio ?? ig?.videoAspectRatio ?? null;
       const fromInstagram =
         !!own?.instagramPostId || !!ig?.instagramPostId;
+      const resolved = resolvedByRow.get(r.id);
+      const card = resolved?.card ?? (r.parsedRecipe.cardJson as unknown as CookCard);
       return {
         id: r.id,
         sourceUrl: r.parsedRecipe.sourceUrl,
-        title: r.parsedRecipe.title,
-        card: r.parsedRecipe.cardJson as unknown as CookCard,
+        title: card.title ?? r.parsedRecipe.title,
+        card,
         family: r.family,
         savedAt: r.savedAt.getTime(),
         lastCookedAt: r.lastCookedAt?.getTime() ?? null,
