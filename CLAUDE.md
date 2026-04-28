@@ -77,10 +77,41 @@ A second surface layered on top of the recipe-execution app. Answers "what are w
   - `SavedRecipe(userId, parsedRecipeId, familyId?)` — a single recipe can live in a user's personal library AND in multiple families simultaneously, each with its own `cookCount` / `lastCookedAt`. Postgres treats NULL as distinct in unique constraints, so personal-scope dedupe is hand-rolled (`findFirst` → `create`) in `app/api/recipes/route.ts`.
   - `MiseCheck(savedRecipeId, userId, entryKey)` — per-user, even inside a shared family recipe.
   - `CookLog(savedRecipeId, userId, cookedAt, photoUrl?, photoUploadedAt?, notes?)` — per-cook history; see the Cook Logs section above.
+  - `RecipeOverride(parsedRecipeId, userId? | familyId?, cardJson, forkedFromUserId?, updatedAt, updatedById)` — per-scope edits layered on top of `ParsedRecipe.cardJson`. See the Recipe editing & sharing section below.
   - Planner: `WeeklyPlan`, `IntakeMessage`, `MealCandidate`, `PlannedMeal`, `GroceryItem` — see the Weekly Planner section above.
 - **Server-persisted today**: recipes CRUD (`/api/recipes`, `/api/recipes/[id]`, `.../cooked`, `.../mise`, `.../photo`), cook log photos (`/api/cook-logs/[id]/photo`), families (`/api/families`, `/api/families/[id]`), invites (`/api/invites/[code]`), and the full planner API tree under `/api/plans`.
 - **Still localStorage-only**: per-step timers (`cookcard:v1:timer:*`) and the single active cook session (`cookcard:v1:session`). These are device-local by design — a timer running on the phone in the kitchen shouldn't follow you to the laptop.
 - **Prisma workflow**: `npx prisma migrate dev --name <slug>` for schema changes; `npx prisma generate` after pulling if the client is stale. Migrations in `prisma/migrations/`.
+
+## Recipe editing & sharing
+
+`ParsedRecipe.cardJson` is a *global* cache keyed by `sourceUrl` and is meant to be canonical / read-only at runtime — only the parser writes it. User-driven edits go into `RecipeOverride`, layered on top per scope.
+
+- **Schema**: `RecipeOverride(parsedRecipeId, userId? | familyId?, cardJson, forkedFromUserId?, updatedAt, updatedById)`. Exactly one of `(userId, familyId)` is set:
+  - **Personal-scope** save → override keyed by `(parsedRecipeId, userId, familyId=null)`. Visible only to the saver.
+  - **Family-scope** save → override keyed by `(parsedRecipeId, userId=null, familyId)`. Shared across all family members. Last write wins.
+- The unique constraint `@@unique([parsedRecipeId, userId, familyId])` is Postgres-NULL-distinct (same trap as `SavedRecipe`); upserts hand-roll `findFirst → create | update` in the PATCH/fork handlers instead of trusting it.
+
+**Resolver helpers (`app/lib/card-resolver.ts`)** — codify the "which card do I show?" decision so it's never implicit at call sites:
+- `resolveCard(saved)` — single SavedRecipe; returns `{ card, overrideUpdatedAt, overrideUpdatedById }` with override applied.
+- `resolveCardsForSavedRecipes(rows)` — batched for the library list endpoint; one Prisma query for all relevant overrides.
+- `loadCanonicalCard(parsedRecipe)` — bypasses overrides. Use this from planner/scoring/aggregation code that should reason about the recipe-as-parsed (`app/lib/planner/history.ts`, etc.).
+- `overrideScopeFor(saved)` — pure helper, lives in `app/lib/card-scope.ts` so it stays unit-testable without pulling Prisma into vitest's import graph.
+
+**Endpoints**:
+- `GET /api/recipes/[id]` — auth required, but **does not 404 for non-members**. Returns `viewerAccess: "owner" | "family" | "guest"`. Guests get a read-only, override-applied card with `cookHistory: []`, `cookCount: 0`, and `lastCookedAt: null` (scope-private fields are stripped). The `/recipe/[id]` page renders a "Save a copy" CTA for guests.
+- `PATCH /api/recipes/[id]` — owner (personal scope) or any family member (family scope). Body is a full `CookCard`; `validateCardPayload` (in `app/lib/card-validate.ts`) rejects any change to `source_url` (the canonical key into `ParsedRecipe`). Concurrency: client sends `If-Match: <overrideUpdatedAt-ms>`; server returns 409 + `currentUpdatedAt` on mismatch so the second writer can prompt for reload before clobbering.
+- `DELETE /api/recipes/[id]/override` — reset to canonical. Idempotent (deletes via `deleteMany`).
+- `POST /api/recipes/[id]/fork` — "save a copy to my library." Creates a personal-scope `SavedRecipe` for the viewer + seeds a personal `RecipeOverride` with the visible (resolved) card so the fork lands looking exactly like what the visitor was viewing. Idempotent on `(viewer, parsedRecipeId, familyId=null)` — re-forking returns the existing id with `alreadyExisted: true`.
+  - Subtle: if the source recipe has no override (canonical view), the fork starts canonical too — no override row created. Future canonical mutations would propagate; we currently never mutate `ParsedRecipe.cardJson` post-parse, so this is benign. If we ever need stronger fork-isolation, switch to "always seed an override on fork."
+
+**Mise-check orphaning on ingredient edits** is expected behavior: `entryKey` (`${slug ?? item.toLowerCase()}|${unit.toLowerCase()}`) shifts when a user renames or re-units an ingredient, so existing `MiseCheck` rows for the old key orphan and the new key starts unchecked. Same as real life — if you change the ingredient, you re-fetch it. Don't migrate.
+
+**Editor UI**: `app/components/CookCardEditor.tsx` is the inline-edit mirror of `CookCardView`. Owner/family viewers see an "Edit recipe" button on `/recipe/[id]` that flips render to the editor. Debounced autosave (~500ms) → `patchRecipe` → tri-state status pill (saving / saved / conflict). "Reset to original" calls the override DELETE. Source URL is hidden in the editor — fork to change it. Steps + ingredients reorder via up/down buttons (no drag-drop yet).
+
+**Storage helpers (`app/lib/storage.ts`)**: `patchRecipe(id, card, ifMatch?)`, `forkRecipe(id)`, `resetRecipeOverride(id)`. `SavedRecipe` gained optional `viewerAccess` and `overrideUpdatedAt` fields populated by single-fetch (the library list never returns guest rows).
+
+Token-based public links, anonymous viewing, request-edit-access, and per-user edit grants distinct from family membership are deferred to Phase 2.
 
 ## Sprites
 
@@ -118,5 +149,13 @@ Everything in `app/lib/planner/schemas.ts` has been tuned for Anthropic's `outpu
 
 - Type-check: `npx tsc --noEmit`
 - Lint: `npx eslint app`
-- Dev: `npm run dev` (already running in background during sessions; restart if env vars change)
+- Tests: `npm test` (Vitest, run mode). Watch: `npm run test:watch`. Tests are colocated as `*.test.ts` next to the module they cover. Pure-function modules only — vitest has no path-alias setup, so anything importing `@/app/lib/prisma` will fail to load. Extract testable helpers into Prisma-free modules (see `card-scope.ts` next to `card-resolver.ts` for the pattern).
+- Dev: `npm run dev` (already running in background during sessions; restart if env vars change OR after `npx prisma generate` so the running process picks up new types).
 - Sprites: `npm run sprites [-- --force] [<slug>...]`
+
+**Schema migrations against production**: `DATABASE_URL_UNPOOLED` in `.env.local` points at production Neon. The harness blocks `prisma migrate dev` and shadow-DB diffs against production for safety. To apply a schema change:
+1. Edit `prisma/schema.prisma`.
+2. Generate the SQL via `git show HEAD:prisma/schema.prisma > /tmp/prev.prisma && npx prisma migrate diff --from-schema /tmp/prev.prisma --to-schema prisma/schema.prisma --script` — pure file-to-file diff, no DB touched.
+3. Drop the SQL into a new directory `prisma/migrations/<UTC-timestamp>_<slug>/migration.sql`.
+4. Apply with `npx prisma migrate deploy` (forward-only, never resets).
+5. `npx prisma generate` and restart the dev server.

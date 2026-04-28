@@ -29,6 +29,8 @@ model User {
   weeklyPlans   WeeklyPlan[]    @relation("WeeklyPlanCreator")
   purchasedGroceryItems GroceryItem[] @relation("GroceryPurchaser")
   instagramConnection InstagramConnection?
+  recipeOverrides       RecipeOverride[] @relation("RecipeOverrideUser")
+  editedRecipeOverrides RecipeOverride[] @relation("RecipeOverrideEditor")
 }
 
 model Account {
@@ -85,6 +87,7 @@ model Family {
   invites FamilyInvite[]
   recipes SavedRecipe[]
   plans   WeeklyPlan[]
+  recipeOverrides RecipeOverride[]
 }
 
 model FamilyMember {
@@ -131,9 +134,35 @@ model ParsedRecipe {
   modelUsed    String
   modelVersion String?
 
-  saves SavedRecipe[]
+  saves     SavedRecipe[]
+  overrides RecipeOverride[]
 
   @@index([sourceUrl])
+}
+
+// Per-scope edits layered on top of the canonical ParsedRecipe.cardJson.
+// Scope is exactly one of (userId, familyId) — personal-scope edits stay
+// private to the saver; family-scope edits are visible to all members.
+// Reset-to-original = delete the row. Last-write-wins; clients pass
+// updatedAt as If-Match for optimistic concurrency.
+model RecipeOverride {
+  id               String   @id @default(cuid())
+  parsedRecipeId   String
+  userId           String?
+  familyId         String?
+  cardJson         Json
+  forkedFromUserId String?
+  updatedAt        DateTime @updatedAt
+  updatedById      String
+
+  parsedRecipe ParsedRecipe @relation(fields: [parsedRecipeId], references: [id], onDelete: Cascade)
+  user         User?        @relation("RecipeOverrideUser",   fields: [userId],      references: [id], onDelete: Cascade)
+  family       Family?      @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  updatedBy    User         @relation("RecipeOverrideEditor", fields: [updatedById], references: [id])
+
+  @@unique([parsedRecipeId, userId, familyId])
+  @@index([userId])
+  @@index([familyId])
 }
 
 // One per (user, parsedRecipe, scope). Scope = personal (familyId null) or

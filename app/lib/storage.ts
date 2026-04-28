@@ -4,6 +4,8 @@ import { useCallback, useEffect, useRef, useSyncExternalStore } from "react";
 import { useSession } from "next-auth/react";
 import type { CookCard } from "@/app/types";
 
+export type ViewerAccess = "owner" | "family" | "guest";
+
 export type SavedRecipe = {
   id: string;
   card: CookCard;
@@ -15,6 +17,10 @@ export type SavedRecipe = {
   videoUrl?: string | null;
   videoAspectRatio?: number | null;
   fromInstagram?: boolean;
+  // Populated only by single-fetch (the library list never returns guest rows
+  // because it filters to scopes the viewer is in). Undefined ⇒ owner-or-family.
+  viewerAccess?: ViewerAccess;
+  overrideUpdatedAt?: number | null;
 };
 
 // Stable hash of (sourceUrl, title). Used as the LOCAL recipe ID. The server
@@ -168,6 +174,8 @@ type ServerRecipeRow = {
   videoUrl?: string | null;
   videoAspectRatio?: number | null;
   fromInstagram?: boolean;
+  viewerAccess?: ViewerAccess;
+  overrideUpdatedAt?: number | null;
 };
 
 function serverToLocal(r: ServerRecipeRow): SavedRecipe {
@@ -182,6 +190,8 @@ function serverToLocal(r: ServerRecipeRow): SavedRecipe {
     videoUrl: r.videoUrl ?? null,
     videoAspectRatio: r.videoAspectRatio ?? null,
     fromInstagram: !!r.fromInstagram,
+    viewerAccess: r.viewerAccess,
+    overrideUpdatedAt: r.overrideUpdatedAt ?? null,
   };
 }
 
@@ -392,6 +402,81 @@ export async function saveRecipe(
       };
   writeLocal({ ...current, [id]: entry });
   return entry;
+}
+
+export type PatchResult =
+  | { ok: true; overrideUpdatedAt: number }
+  | { ok: false; conflict: true; currentUpdatedAt: number }
+  | { ok: false; error: string };
+
+// Persist edits as a per-scope override. Pass `ifMatch` (the SavedRecipe's
+// current overrideUpdatedAt) to opt into optimistic concurrency — the server
+// returns 409 if another writer landed first, surfaced here as
+// `{ ok: false, conflict: true }` so the UI can prompt the user to reload.
+export async function patchRecipe(
+  id: string,
+  card: CookCard,
+  ifMatch?: number | null
+): Promise<PatchResult> {
+  if (!isSignedInClient()) return { ok: false, error: "not signed in" };
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (ifMatch != null) headers["If-Match"] = String(ifMatch);
+  const res = await fetch(`/api/recipes/${id}`, {
+    method: "PATCH",
+    headers,
+    body: JSON.stringify(card),
+  });
+  if (res.status === 409) {
+    const body = (await res.json().catch(() => ({}))) as {
+      currentUpdatedAt?: number;
+    };
+    return {
+      ok: false,
+      conflict: true,
+      currentUpdatedAt: body.currentUpdatedAt ?? 0,
+    };
+  }
+  if (!res.ok) {
+    const body = (await res.json().catch(() => ({}))) as { error?: string };
+    return { ok: false, error: body.error ?? `${res.status}` };
+  }
+  const body = (await res.json()) as { ok: true; overrideUpdatedAt: number };
+  if (remoteMirror?.[id]) {
+    remoteMirror = {
+      ...remoteMirror,
+      [id]: { ...remoteMirror[id], card, overrideUpdatedAt: body.overrideUpdatedAt },
+    };
+    notifyRemote();
+  }
+  return { ok: true, overrideUpdatedAt: body.overrideUpdatedAt };
+}
+
+// "Save a copy to my library" for non-owner viewers. Server seeds a new
+// SavedRecipe in the viewer's personal scope, plus a personal override
+// matching what the visitor was looking at, and returns the new id. We
+// re-fetch the library list so the new row is visible immediately.
+export async function forkRecipe(
+  id: string
+): Promise<{ id: string; alreadyExisted: boolean } | { error: string }> {
+  if (!isSignedInClient()) return { error: "not signed in" };
+  const res = await fetch(`/api/recipes/${id}/fork`, { method: "POST" });
+  if (!res.ok) {
+    const body = (await res.json().catch(() => ({}))) as { error?: string };
+    return { error: body.error ?? `${res.status}` };
+  }
+  const body = (await res.json()) as { id: string; alreadyExisted: boolean };
+  await fetchRemoteList();
+  return body;
+}
+
+// Drop the scope's override row, reverting to the canonical parsed card.
+export async function resetRecipeOverride(id: string): Promise<boolean> {
+  if (!isSignedInClient()) return false;
+  const res = await fetch(`/api/recipes/${id}/override`, { method: "DELETE" });
+  if (!res.ok) return false;
+  attemptedSingleFetch.delete(id);
+  await fetchOneIntoMirror(id);
+  return true;
 }
 
 export async function deleteRecipe(id: string): Promise<void> {
