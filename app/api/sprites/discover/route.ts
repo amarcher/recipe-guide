@@ -53,6 +53,7 @@ function normalize(s: string): string {
   return s
     .toLowerCase()
     .replace(/[(),.]/g, " ")
+    .replace(/[-_]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
 }
