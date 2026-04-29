@@ -1,0 +1,1779 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Recipe Guide — what comes next</title>
+<style>
+  :root {
+    --paper: #fbf7ef;
+    --paper-2: #f4ecdc;
+    --paper-3: #ede0c4;
+    --ink: #3d2c1d;
+    --ink-2: #6b513a;
+    --ink-mute: #9a8568;
+    --ochre: #c08a3e;
+    --ochre-deep: #a06d24;
+    --ochre-soft: rgba(192, 138, 62, 0.14);
+    --emerald: #5d8a5e;
+    --amber: #e3b878;
+    --amber-wash: #f6e6c4;
+    --rose: #d27a6a;
+    --teal: #5a8780;
+    --shadow-warm: 0 8px 22px rgba(110, 70, 25, 0.16);
+    --shadow-warm-soft: 0 4px 12px rgba(110, 70, 25, 0.10);
+    --shadow-deep: 0 16px 40px rgba(60, 40, 15, 0.20);
+    --rule: #d8c8a8;
+    --rule-soft: rgba(110, 70, 25, 0.18);
+
+    --serif: "Fraunces", "Cormorant Garamond", "EB Garamond", "Iowan Old Style", Georgia, serif;
+    --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", system-ui, sans-serif;
+    --mono: "SF Mono", "JetBrains Mono", Menlo, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: #1a140d;
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px; line-height: 1.55;
+    height: 100%; overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+  .deck { position: relative; width: 100vw; height: 100vh; }
+  .slide {
+    position: absolute; inset: 0;
+    padding: 5vh 7vw;
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--paper);
+  }
+  .slide.active { display: flex; }
+  .slide.dark { background: #1a140d; color: #f3ead6; }
+  .slide.dark .eyebrow { color: var(--amber); }
+  .slide.dark h1 { color: #f6ecd3; }
+  .slide.dark .lede { color: #d6c5a4; }
+  .slide.dark .footnote { color: #b9a98a; }
+  .slide.dark .ochre-text { color: var(--amber); }
+
+  /* Subtle paper texture */
+  .slide:not(.dark)::before {
+    content: "";
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(circle at 20% 30%, rgba(160, 109, 36, 0.045) 0, transparent 50%),
+      radial-gradient(circle at 80% 70%, rgba(120, 80, 30, 0.04) 0, transparent 55%);
+    pointer-events: none;
+  }
+
+  .eyebrow {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 0.78rem;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--ochre-deep);
+    font-weight: 500;
+    margin: 0 0 1rem;
+  }
+  h1 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: 3.4rem;
+    line-height: 1.05;
+    letter-spacing: -0.015em;
+    margin: 0 0 1.2rem;
+    color: var(--ink);
+  }
+  h1 em { font-style: italic; color: var(--ochre-deep); font-weight: 400; }
+  h2 { font-family: var(--serif); font-weight: 400; font-size: 2rem; line-height: 1.15; margin: 0 0 1rem; }
+  h3 { font-family: var(--sans); font-weight: 500; font-size: 0.78rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--ochre-deep); margin: 0 0 0.5rem; }
+
+  .lede {
+    font-family: var(--serif);
+    font-size: 1.35rem;
+    line-height: 1.4;
+    color: var(--ink-2);
+    font-weight: 300;
+    margin: 0 0 1.5rem;
+    max-width: 50ch;
+  }
+  .lede em { font-style: italic; color: var(--ochre-deep); }
+  .body { font-size: 1rem; line-height: 1.55; color: var(--ink-2); max-width: 64ch; }
+  .footnote { font-size: 0.82rem; color: var(--ink-mute); margin-top: auto; padding-top: 1rem; }
+  .small-caps { font-family: var(--serif); font-weight: 500; letter-spacing: 0.22em; text-transform: uppercase; font-size: 0.72rem; color: var(--ochre-deep); }
+
+  /* Chrome */
+  .counter {
+    position: fixed; bottom: 1.4rem; right: 2rem;
+    color: rgba(120, 100, 70, 0.7); font-size: 0.78rem;
+    font-family: var(--mono); font-variant-numeric: tabular-nums;
+    z-index: 100;
+    background: rgba(251, 247, 239, 0.86);
+    padding: 0.2rem 0.6rem; border-radius: 4px;
+    backdrop-filter: blur(6px);
+  }
+  .hint {
+    position: fixed; bottom: 1.4rem; left: 2rem;
+    color: rgba(120, 100, 70, 0.7); font-size: 0.78rem;
+    font-family: var(--mono);
+    z-index: 100;
+    background: rgba(251, 247, 239, 0.86);
+    padding: 0.2rem 0.6rem; border-radius: 4px;
+    backdrop-filter: blur(6px);
+  }
+  .slide.dark ~ .counter, .slide.dark ~ .hint { /* unused, but intentional */ }
+
+  /* ---------- Title slide ---------- */
+  .title-slide {
+    justify-content: center;
+    align-items: flex-start;
+    padding-left: 8vw;
+  }
+  .title-mark {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 1.05rem;
+    color: var(--ochre);
+    letter-spacing: 0.02em;
+    margin-bottom: 2.5rem;
+  }
+  .title-mark::before {
+    content: "";
+    display: inline-block;
+    width: 2.5rem; height: 1px;
+    background: var(--ochre);
+    vertical-align: middle;
+    margin-right: 0.8rem;
+  }
+  .title-h1 {
+    font-family: var(--serif);
+    font-size: 5.5rem;
+    line-height: 1.0;
+    font-weight: 300;
+    letter-spacing: -0.02em;
+    margin: 0;
+    color: var(--ink);
+  }
+  .title-h1 em {
+    font-style: italic;
+    color: var(--ochre-deep);
+  }
+  .title-sub {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 1.6rem;
+    color: var(--ink-2);
+    margin-top: 1.5rem;
+    font-weight: 300;
+    max-width: 30ch;
+  }
+  .title-meta {
+    margin-top: 3rem;
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    color: var(--ink-mute);
+    letter-spacing: 0.08em;
+  }
+
+  /* ---------- Generic columns ---------- */
+  .row { display: grid; gap: 2rem; }
+  .row-2 { grid-template-columns: 1fr 1fr; }
+  .row-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .row-2-7-5 { grid-template-columns: 7fr 5fr; }
+  .row-fill { flex: 1; min-height: 0; }
+
+  /* ---------- The bet (arc diagram) ---------- */
+  .arc {
+    margin-top: 1.5rem;
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    flex: 1; align-items: stretch;
+  }
+  .arc-step {
+    background: var(--paper);
+    border: 1px solid var(--rule-soft);
+    border-radius: 6px;
+    padding: 1.4rem 1.2rem;
+    box-shadow: var(--shadow-warm-soft);
+    display: flex; flex-direction: column; gap: 0.8rem;
+    position: relative;
+  }
+  .arc-step::after {
+    content: "";
+    position: absolute; right: -1.4rem; top: 50%;
+    width: 1rem; height: 1px;
+    background: var(--ochre);
+  }
+  .arc-step:last-child::after { display: none; }
+  .arc-step .num {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 0.95rem;
+    color: var(--ochre);
+  }
+  .arc-step h4 {
+    font-family: var(--serif);
+    font-size: 1.4rem;
+    line-height: 1.15;
+    margin: 0;
+    font-weight: 400;
+    color: var(--ink);
+  }
+  .arc-step p {
+    font-size: 0.88rem;
+    line-height: 1.4;
+    color: var(--ink-2);
+    margin: 0;
+  }
+  .arc-step.now { background: var(--paper-2); }
+  .arc-step.future { background: var(--ochre-soft); border-color: rgba(160, 109, 36, 0.3); }
+
+  /* ---------- Household portraits ---------- */
+  .household-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+    margin-top: 2rem;
+    flex: 1;
+  }
+  .portrait {
+    background: var(--paper);
+    border: 1px solid var(--rule-soft);
+    border-radius: 8px;
+    padding: 1.4rem 1.2rem 1.2rem;
+    box-shadow: var(--shadow-warm-soft);
+    display: flex; flex-direction: column; align-items: center; text-align: center;
+    gap: 0.6rem;
+  }
+  .avatar {
+    width: 72px; height: 72px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--serif); font-style: italic; font-size: 1.8rem;
+    color: #fff;
+    box-shadow: var(--shadow-warm);
+  }
+  .portrait h4 {
+    font-family: var(--serif); font-size: 1.5rem; margin: 0; font-weight: 400; color: var(--ink);
+  }
+  .portrait .role {
+    font-family: var(--serif); font-style: italic; font-size: 0.88rem; color: var(--ochre-deep);
+    letter-spacing: 0.02em;
+  }
+  .portrait .quote {
+    font-family: var(--serif); font-style: italic; font-size: 0.92rem; line-height: 1.35;
+    color: var(--ink-2); margin-top: 0.4rem;
+  }
+  .modes {
+    margin-top: 1.5rem;
+    padding: 1.3rem 1.5rem;
+    background: var(--ochre-soft);
+    border-left: 3px solid var(--ochre);
+    border-radius: 4px;
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.4rem;
+  }
+  .mode h5 {
+    font-family: var(--serif); font-style: italic;
+    font-size: 1.1rem; margin: 0 0 0.3rem; color: var(--ochre-deep); font-weight: 500;
+  }
+  .mode p { font-size: 0.88rem; color: var(--ink-2); margin: 0; line-height: 1.4; }
+
+  /* ---------- "Broken" annotated mock ---------- */
+  .broken-stage {
+    flex: 1; display: grid; grid-template-columns: 5fr 4fr; gap: 2rem;
+    margin-top: 1rem;
+  }
+  .legacy-mock {
+    background: var(--paper);
+    border: 1px solid var(--rule-soft);
+    border-radius: 8px;
+    padding: 1.2rem;
+    font-family: var(--sans);
+    font-size: 0.85rem;
+    box-shadow: var(--shadow-warm-soft);
+    display: flex; flex-direction: column; gap: 0.6rem;
+    position: relative;
+  }
+  .legacy-mock .lm-header {
+    font-family: var(--serif); font-size: 1.2rem; font-weight: 500;
+    color: var(--ink); margin-bottom: 0.4rem; padding-bottom: 0.4rem;
+    border-bottom: 1px solid var(--rule);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .lm-header .small-caps { font-size: 0.65rem; color: var(--ochre-deep); }
+  .legacy-row {
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 0.7rem 0.8rem;
+    display: flex; flex-direction: column; gap: 0.25rem;
+    background: #fefcf6;
+    position: relative;
+  }
+  .legacy-row .title { font-weight: 600; font-size: 0.92rem; color: var(--ink); }
+  .legacy-row .summary { font-size: 0.78rem; color: var(--ink-2); }
+  .legacy-row .rationale { font-style: italic; font-size: 0.74rem; color: var(--ink-mute); }
+  .legacy-row .meta-row { display: flex; gap: 0.4rem; font-size: 0.7rem; align-items: center; margin-top: 0.2rem; }
+  .badge-pill {
+    display: inline-block; padding: 0.1rem 0.5rem;
+    border-radius: 999px; font-size: 0.66rem;
+    background: rgba(192,138,62,0.12); color: var(--ochre-deep);
+    border: 1px solid rgba(192,138,62,0.3);
+  }
+  .sprite-chips {
+    display: flex; gap: 0; margin-left: auto;
+  }
+  .sprite-chip {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: #f4ecdc; border: 1px solid var(--rule);
+    margin-left: -6px;
+  }
+  .sprite-chip:first-child { margin-left: 0; }
+  .sprite-chip img {
+    width: 100%; height: 100%; object-fit: contain;
+    border-radius: 50%;
+  }
+
+  .annotations {
+    display: flex; flex-direction: column; gap: 1.1rem;
+    justify-content: center;
+  }
+  .annotation {
+    padding: 0.9rem 1.1rem;
+    border-left: 3px solid var(--rose);
+    background: rgba(210, 122, 106, 0.08);
+    border-radius: 0 4px 4px 0;
+  }
+  .annotation .small-caps { color: var(--rose); }
+  .annotation p {
+    font-family: var(--serif); font-style: italic;
+    font-size: 1.05rem; color: var(--ink-2); margin: 0.3rem 0 0;
+    line-height: 1.35;
+  }
+
+  /* ---------- MealFace primitive ---------- */
+  .mealface {
+    background: var(--paper);
+    border-radius: 10px;
+    box-shadow: var(--shadow-deep);
+    overflow: hidden;
+    display: flex; flex-direction: column;
+    border: 1px solid rgba(110, 70, 25, 0.10);
+  }
+  .mealface .vignette {
+    height: 220px;
+    background: linear-gradient(135deg, var(--paper-2), var(--paper-3));
+    position: relative;
+    overflow: hidden;
+  }
+  .vignette.salmon { background: linear-gradient(135deg, #f5e0d3, #ecc3a8); }
+  .vignette.lemon { background: linear-gradient(135deg, #f9eecf, #ecd9a0); }
+  .vignette.greens { background: linear-gradient(135deg, #e6e3c8, #cfd0a4); }
+  .vignette.warm { background: linear-gradient(135deg, #efd9b8, #d8b884); }
+  .vignette.rose { background: linear-gradient(135deg, #f3d6cd, #e6a796); }
+  .vignette.dusk { background: linear-gradient(135deg, #d3c4a8, #b09572); }
+
+  .vignette .hero-sprite {
+    position: absolute;
+    width: 110px; height: 110px;
+    object-fit: contain;
+    filter: drop-shadow(0 8px 14px rgba(60, 40, 15, 0.22));
+  }
+  .vignette .hero-sprite.s2 { width: 76px; height: 76px; }
+  .vignette .hero-sprite.s3 { width: 60px; height: 60px; }
+  .vignette .hero-sprite.s4 { width: 50px; height: 50px; }
+
+  .mealface .body-block {
+    padding: 1.1rem 1.3rem 1.2rem;
+    display: flex; flex-direction: column; gap: 0.4rem;
+  }
+  .mealface .eyebrow-tag {
+    font-family: var(--serif); font-style: italic; font-weight: 500;
+    font-size: 0.7rem; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--ochre-deep);
+    margin-bottom: 0.2rem;
+  }
+  .mealface h4.title {
+    font-family: var(--serif); font-weight: 400; font-size: 1.55rem;
+    line-height: 1.1; color: var(--ink); margin: 0;
+    letter-spacing: -0.005em;
+  }
+  .mealface h4.title em { font-style: italic; color: var(--ochre-deep); }
+  .mealface .tagline {
+    font-family: var(--serif); font-style: italic;
+    font-size: 0.95rem; color: var(--ink-2); margin: 0.2rem 0 0;
+    line-height: 1.35;
+  }
+  .mealface .meta {
+    margin-top: 0.7rem; padding-top: 0.7rem;
+    border-top: 1px solid var(--rule);
+    display: flex; gap: 1rem; align-items: center;
+    font-size: 0.78rem; color: var(--ink-mute);
+    font-family: var(--sans);
+  }
+  .mealface .meta .glyph {
+    font-family: var(--serif); font-style: italic;
+    color: var(--ochre-deep);
+  }
+
+  /* ---------- Before / after stage ---------- */
+  .before-after-stage { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center; }
+  .ba-label {
+    font-family: var(--serif); font-style: italic; font-size: 0.95rem;
+    color: var(--ochre-deep); margin-bottom: 0.7rem;
+    letter-spacing: 0.02em;
+  }
+
+  /* ---------- Peek sheet ---------- */
+  .peek-stage { flex: 1; display: grid; grid-template-columns: 5fr 6fr; gap: 3rem; align-items: center; }
+  .peek-sheet {
+    background: var(--paper);
+    border-radius: 18px 18px 6px 6px;
+    box-shadow: var(--shadow-deep);
+    overflow: hidden;
+    max-width: 420px;
+    margin: 0 auto;
+  }
+  .peek-sheet .grabber {
+    width: 50px; height: 4px; background: var(--rule);
+    border-radius: 2px;
+    margin: 0.7rem auto 0.4rem;
+  }
+  .peek-sheet .hero-image {
+    height: 210px;
+    background: linear-gradient(135deg, #f5e0d3, #ecc3a8);
+    position: relative; overflow: hidden;
+  }
+  .peek-sheet .body-block { padding: 1.1rem 1.5rem 0.8rem; }
+  .peek-sheet h3.title {
+    font-family: var(--serif); font-weight: 400; font-size: 1.7rem;
+    line-height: 1.1; color: var(--ink); margin: 0 0 0.3rem;
+    text-transform: none; letter-spacing: -0.005em;
+  }
+  .peek-sheet .tagline { font-family: var(--serif); font-style: italic; font-size: 1.05rem; color: var(--ink-2); margin: 0; }
+  .peek-sheet .ribbon {
+    margin: 0.9rem 1.5rem;
+    display: flex; gap: 1.2rem; padding: 0.7rem 1rem;
+    background: var(--paper-2); border-radius: 6px;
+    align-items: center;
+    font-family: var(--serif); font-style: italic;
+    font-size: 0.92rem; color: var(--ink-2);
+  }
+  .ribbon .glyph { color: var(--ochre); margin-right: 0.4rem; }
+  .peek-sheet .mise-row {
+    margin: 0 1.5rem 1rem;
+    display: grid; grid-template-columns: repeat(6, 1fr);
+    gap: 0.5rem;
+  }
+  .mise-tile {
+    aspect-ratio: 1;
+    background: #f4ecdc;
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: inset 0 0 0 1px var(--rule-soft);
+  }
+  .mise-tile img { width: 70%; height: 70%; object-fit: contain; }
+  .peek-sheet .actions {
+    padding: 0.8rem 1.5rem 1.4rem;
+    display: grid; grid-template-columns: 2fr 1fr; gap: 0.7rem;
+  }
+  .btn-primary {
+    background: var(--ochre);
+    color: #fff;
+    border: none;
+    padding: 0.7rem 1rem;
+    font-family: var(--serif); font-style: italic;
+    font-size: 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    box-shadow: var(--shadow-warm);
+  }
+  .btn-ghost {
+    background: transparent;
+    color: var(--ink-2);
+    border: 1px solid var(--rule);
+    padding: 0.7rem 1rem;
+    font-family: var(--serif); font-style: italic;
+    font-size: 0.95rem;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  /* ---------- Tonight tablet ---------- */
+  .tablet-stage { flex: 1; display: flex; align-items: center; justify-content: center; padding-top: 1rem; }
+  .tablet {
+    background: #1a140d;
+    padding: 14px;
+    border-radius: 28px;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.5), 0 4px 8px rgba(0,0,0,0.3);
+    max-width: 1080px;
+    width: 100%;
+  }
+  .tablet-screen {
+    background: var(--paper);
+    border-radius: 16px;
+    overflow: hidden;
+    padding: 1.6rem 1.8rem;
+    display: flex; flex-direction: column;
+    height: 580px;
+  }
+  .tonight-header {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 1.2rem;
+  }
+  .tonight-header .greeting {
+    font-family: var(--serif); font-style: italic;
+    font-size: 1.7rem; color: var(--ink);
+  }
+  .tonight-header .greeting em { color: var(--ochre-deep); }
+  .tonight-header .date {
+    font-family: var(--serif); font-style: italic;
+    font-size: 0.95rem; color: var(--ink-mute);
+    letter-spacing: 0.04em;
+  }
+  .tonight-cols {
+    flex: 1;
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+  .tonight-col {
+    background: var(--paper);
+    border-radius: 10px;
+    border: 1px solid var(--rule-soft);
+    padding: 1.2rem 1.3rem;
+    display: flex; flex-direction: column;
+    box-shadow: var(--shadow-warm-soft);
+  }
+  .tonight-col.kids { background: var(--amber-wash); border-color: rgba(192,138,62,0.25); }
+  .tonight-col .col-eyebrow {
+    font-family: var(--serif); font-style: italic; font-size: 0.78rem;
+    letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--ochre-deep);
+    margin-bottom: 0.5rem;
+  }
+  .tonight-col h3.dish {
+    font-family: var(--serif); font-weight: 400;
+    font-size: 1.55rem; line-height: 1.1;
+    color: var(--ink); margin: 0 0 0.3rem;
+    text-transform: none; letter-spacing: -0.005em;
+  }
+  .tonight-col h3.dish em { font-style: italic; color: var(--ochre-deep); }
+  .tonight-col .tagline {
+    font-family: var(--serif); font-style: italic;
+    font-size: 0.95rem; color: var(--ink-2); margin: 0;
+  }
+  .tonight-col .hero-vignette {
+    margin-top: 0.9rem;
+    height: 130px;
+    border-radius: 6px;
+    position: relative; overflow: hidden;
+  }
+  .tonight-col.salmon .hero-vignette { background: linear-gradient(135deg, #f5e0d3, #ecc3a8); }
+  .tonight-col.kids .hero-vignette { background: linear-gradient(135deg, #f9eecf, #f0d4a0); }
+  .tonight-col .countdown {
+    margin-top: 0.9rem;
+    font-family: var(--serif); font-style: italic;
+    color: var(--ink-2); font-size: 0.95rem;
+  }
+  .tonight-col .countdown strong {
+    color: var(--ochre-deep); font-weight: 500; font-style: normal;
+  }
+  .tonight-col .cook-cta {
+    margin-top: 0.9rem;
+    background: var(--ochre);
+    color: #fff;
+    border: none;
+    padding: 0.85rem 1rem;
+    border-radius: 6px;
+    font-family: var(--serif); font-style: italic;
+    font-size: 1.05rem;
+    cursor: pointer;
+    box-shadow: var(--shadow-warm);
+  }
+  .meez-ribbon {
+    margin-top: 1.1rem;
+    background: rgba(127, 207, 154, 0.14);
+    border: 1px solid rgba(93, 138, 94, 0.35);
+    padding: 0.7rem 1rem;
+    border-radius: 6px;
+    display: flex; align-items: center; gap: 0.8rem;
+    font-family: var(--serif); font-style: italic;
+    font-size: 0.95rem;
+    color: var(--ink-2);
+  }
+  .meez-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--emerald);
+    box-shadow: 0 0 0 4px rgba(127, 207, 154, 0.25);
+    animation: pulse 1.6s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.45; }
+  }
+
+  /* ---------- Profiles ---------- */
+  .profile-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+    flex: 1;
+  }
+  .profile-card {
+    background: var(--paper);
+    border: 1px solid var(--rule-soft);
+    border-radius: 10px;
+    padding: 1.6rem;
+    box-shadow: var(--shadow-warm-soft);
+    display: flex; flex-direction: column;
+    gap: 1rem;
+  }
+  .profile-card .head {
+    display: flex; align-items: center; gap: 1rem;
+  }
+  .profile-card .head .avatar { width: 60px; height: 60px; font-size: 1.4rem; }
+  .profile-card .head h4 {
+    font-family: var(--serif); font-size: 1.4rem; font-weight: 400;
+    margin: 0; color: var(--ink);
+  }
+  .profile-card .head .role {
+    font-family: var(--serif); font-style: italic; font-size: 0.85rem;
+    color: var(--ochre-deep);
+  }
+  .pref-section h6 {
+    font-family: var(--serif); font-style: italic;
+    font-size: 0.78rem; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--ochre-deep); font-weight: 500;
+    margin: 0 0 0.4rem;
+  }
+  .pref-tags {
+    display: flex; flex-wrap: wrap; gap: 0.4rem;
+  }
+  .pref-tag {
+    padding: 0.25rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    background: var(--paper-2);
+    border: 1px solid var(--rule);
+    color: var(--ink-2);
+    display: inline-flex; align-items: center; gap: 0.4rem;
+  }
+  .pref-tag.loves { background: rgba(127, 207, 154, 0.15); border-color: rgba(93, 138, 94, 0.35); color: #3e6840; }
+  .pref-tag.no { background: rgba(210, 122, 106, 0.10); border-color: rgba(210, 122, 106, 0.35); color: #8a3a2c; }
+  .pref-tag.rotation { background: var(--ochre-soft); border-color: rgba(192,138,62,0.35); color: var(--ochre-deep); }
+  .pref-tag .tiny-sprite { width: 14px; height: 14px; object-fit: contain; }
+
+  /* ---------- Pantry ---------- */
+  .pantry-stage {
+    flex: 1; display: grid; grid-template-columns: 7fr 5fr;
+    gap: 2rem; align-items: stretch;
+  }
+  .pantry-shelf {
+    background: var(--paper);
+    border: 1px solid var(--rule-soft);
+    border-radius: 10px;
+    padding: 1.5rem;
+    display: flex; flex-direction: column; gap: 1.2rem;
+    box-shadow: var(--shadow-warm-soft);
+  }
+  .shelf-section h5 {
+    font-family: var(--serif); font-style: italic;
+    font-size: 0.78rem; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--ochre-deep); margin: 0 0 0.6rem; font-weight: 500;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 0.4rem;
+  }
+  .shelf-grid {
+    display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.6rem;
+  }
+  .shelf-item {
+    aspect-ratio: 1;
+    background: var(--paper-2);
+    border-radius: 6px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 0.3rem;
+    box-shadow: inset 0 0 0 1px var(--rule-soft);
+    position: relative;
+  }
+  .shelf-item img { width: 60%; height: 60%; object-fit: contain; }
+  .shelf-item .lbl {
+    font-size: 0.62rem;
+    color: var(--ink-mute);
+    margin-top: 0.2rem;
+    line-height: 1;
+    text-align: center;
+  }
+  .shelf-item.dim { opacity: 0.42; }
+  .shelf-item.urgent {
+    box-shadow: inset 0 0 0 1.5px var(--rose);
+    background: rgba(210, 122, 106, 0.08);
+  }
+  .shelf-item.urgent::after {
+    content: "uses by Wed";
+    position: absolute; top: -8px; right: -2px;
+    font-family: var(--serif); font-style: italic;
+    font-size: 0.6rem; color: var(--rose);
+    background: var(--paper); padding: 0.05rem 0.35rem;
+    border-radius: 3px; border: 1px solid rgba(210, 122, 106, 0.4);
+  }
+
+  .cascade {
+    display: flex; flex-direction: column; gap: 1rem;
+    padding-top: 1.2rem;
+  }
+  .cascade-step {
+    background: var(--paper);
+    border: 1px solid var(--rule-soft);
+    border-radius: 6px;
+    padding: 0.9rem 1rem;
+    box-shadow: var(--shadow-warm-soft);
+  }
+  .cascade-step h6 {
+    font-family: var(--serif); font-style: italic;
+    font-size: 0.72rem; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--ochre-deep); font-weight: 500; margin: 0 0 0.4rem;
+  }
+  .cascade-step p {
+    font-family: var(--serif);
+    font-size: 0.95rem; color: var(--ink); margin: 0;
+    line-height: 1.35;
+  }
+  .cascade-arrow {
+    text-align: center;
+    color: var(--ochre);
+    font-family: var(--serif); font-style: italic;
+    font-size: 1.2rem;
+  }
+
+  /* ---------- Hosted Menu ---------- */
+  .menu-spread {
+    flex: 1;
+    background: var(--paper);
+    border: 1px solid var(--rule-soft);
+    border-radius: 4px;
+    box-shadow: var(--shadow-deep);
+    padding: 2.4rem 3rem 2rem;
+    margin-top: 1rem;
+    display: grid; grid-template-columns: 7fr 5fr;
+    gap: 2.5rem;
+    overflow: hidden;
+  }
+  .menu-left {
+    display: flex; flex-direction: column;
+    border-right: 1px solid var(--rule);
+    padding-right: 2.5rem;
+  }
+  .menu-mark {
+    font-family: var(--serif); font-style: italic;
+    font-size: 0.78rem; letter-spacing: 0.32em; text-transform: uppercase;
+    color: var(--ochre); margin-bottom: 0.5rem;
+  }
+  .menu-mark::before {
+    content: "";
+    display: inline-block; width: 1.6rem; height: 1px;
+    background: var(--ochre);
+    vertical-align: middle; margin-right: 0.5rem;
+  }
+  .menu-title {
+    font-family: var(--serif); font-weight: 300;
+    font-size: 3.4rem; line-height: 1.0;
+    color: var(--ink); margin: 0 0 0.5rem;
+    letter-spacing: -0.015em;
+  }
+  .menu-title em { font-style: italic; color: var(--ochre-deep); }
+  .menu-occ {
+    font-family: var(--serif); font-style: italic;
+    font-size: 1.1rem; color: var(--ink-2); margin-bottom: 1.2rem;
+  }
+  .menu-host-note {
+    font-family: var(--serif);
+    font-size: 0.92rem; color: var(--ink-2);
+    line-height: 1.5;
+    border-left: 2px solid var(--ochre);
+    padding-left: 1rem;
+    font-style: italic;
+    margin-bottom: 1.2rem;
+  }
+  .menu-courses { display: flex; flex-direction: column; gap: 1rem; }
+  .menu-course .course-eyebrow {
+    font-family: var(--serif); font-style: italic;
+    font-size: 0.7rem; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--ochre-deep);
+  }
+  .menu-course h4 {
+    font-family: var(--serif); font-weight: 400;
+    font-size: 1.4rem; line-height: 1.1;
+    color: var(--ink); margin: 0.1rem 0 0.2rem;
+  }
+  .menu-course h4 em { font-style: italic; color: var(--ochre-deep); }
+  .menu-course p {
+    font-family: var(--serif); font-style: italic;
+    font-size: 0.92rem; color: var(--ink-2); margin: 0;
+  }
+  .menu-right {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center;
+  }
+  .stilllife {
+    width: 100%; aspect-ratio: 1;
+    max-width: 360px;
+    position: relative;
+    background: linear-gradient(135deg, #f5e0d3, #ecc3a8);
+    border-radius: 50%;
+    box-shadow: var(--shadow-deep);
+  }
+  .stilllife .hero-sprite {
+    position: absolute;
+    object-fit: contain;
+    filter: drop-shadow(0 8px 16px rgba(60, 40, 15, 0.22));
+  }
+  .menu-cta {
+    margin-top: 1.5rem;
+    font-family: var(--serif); font-style: italic;
+    font-size: 0.88rem; color: var(--ink-2);
+    letter-spacing: 0.04em;
+  }
+  .menu-cta strong {
+    color: var(--ochre-deep);
+    font-weight: 500; font-style: normal;
+  }
+
+  /* ---------- Cross-family shelf ---------- */
+  .shelf-stage {
+    flex: 1; display: grid; grid-template-columns: 1fr auto 1fr;
+    gap: 2rem; align-items: center;
+  }
+  .family-card {
+    background: var(--paper);
+    border: 1px solid var(--rule-soft);
+    border-radius: 10px;
+    padding: 1.4rem;
+    box-shadow: var(--shadow-warm-soft);
+    text-align: center;
+  }
+  .family-card h4 {
+    font-family: var(--serif); font-weight: 400; font-size: 1.4rem;
+    margin: 0 0 0.3rem;
+  }
+  .family-card .members { font-family: var(--serif); font-style: italic; font-size: 0.88rem; color: var(--ink-mute); }
+  .family-card .recipes {
+    margin-top: 1rem; display: flex; flex-direction: column; gap: 0.4rem;
+    font-family: var(--serif); font-size: 0.95rem; color: var(--ink-2);
+    text-align: left;
+  }
+  .recipe-line {
+    padding: 0.3rem 0.5rem;
+    border-left: 2px solid var(--rule);
+  }
+  .recipe-line.shared { border-left-color: var(--ochre); color: var(--ochre-deep); font-style: italic; }
+  .shelf-bridge {
+    text-align: center;
+    padding: 1.4rem 1rem;
+  }
+  .shelf-bridge .arrows {
+    font-family: var(--serif); color: var(--ochre);
+    font-size: 1.4rem; line-height: 1.1;
+  }
+  .shelf-bridge h5 {
+    font-family: var(--serif); font-style: italic;
+    font-size: 1.1rem; color: var(--ochre-deep);
+    margin: 0.5rem 0 0.3rem;
+    font-weight: 500;
+  }
+  .shelf-bridge p {
+    font-family: var(--serif);
+    font-size: 0.85rem; color: var(--ink-2); margin: 0;
+  }
+  .shelf-pile {
+    background: var(--ochre-soft);
+    border: 1px dashed var(--ochre);
+    border-radius: 8px;
+    padding: 0.8rem;
+    margin-top: 0.7rem;
+    display: flex; flex-direction: column; gap: 0.3rem;
+    font-family: var(--serif); font-style: italic;
+    font-size: 0.88rem; color: var(--ochre-deep);
+  }
+
+  /* ---------- Phasing ---------- */
+  .phasing-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 2rem; flex: 1;
+  }
+  .phase-card {
+    background: var(--paper);
+    border: 1px solid var(--rule-soft);
+    border-radius: 10px;
+    padding: 1.8rem 1.6rem;
+    box-shadow: var(--shadow-warm-soft);
+    display: flex; flex-direction: column; gap: 1rem;
+    position: relative;
+  }
+  .phase-card.p1 { border-left: 4px solid var(--ochre); }
+  .phase-card.p2 { border-left: 4px solid var(--emerald); }
+  .phase-card.p3 { border-left: 4px solid var(--teal); }
+  .phase-card .roman {
+    font-family: var(--serif); font-style: italic;
+    font-size: 1rem; letter-spacing: 0.15em;
+    color: var(--ochre-deep);
+  }
+  .phase-card h3.phase-title {
+    font-family: var(--serif); font-weight: 400;
+    font-size: 1.7rem; line-height: 1.1; margin: 0;
+    color: var(--ink); text-transform: none; letter-spacing: -0.005em;
+  }
+  .phase-card h3.phase-title em { font-style: italic; color: var(--ochre-deep); }
+  .phase-card .duration {
+    font-family: var(--serif); font-style: italic;
+    font-size: 0.88rem; color: var(--ink-mute);
+  }
+  .phase-card ul {
+    list-style: none; padding: 0; margin: 0;
+    display: flex; flex-direction: column; gap: 0.45rem;
+  }
+  .phase-card li {
+    font-family: var(--serif);
+    font-size: 0.92rem; color: var(--ink-2);
+    padding-left: 1rem;
+    position: relative;
+    line-height: 1.35;
+  }
+  .phase-card li::before {
+    content: "·";
+    position: absolute;
+    left: 0; top: 0;
+    color: var(--ochre);
+    font-size: 1.4rem;
+    line-height: 1;
+  }
+  .phase-card .headline {
+    margin-top: auto;
+    font-family: var(--serif); font-style: italic;
+    font-size: 0.92rem; color: var(--ochre-deep);
+    border-top: 1px solid var(--rule);
+    padding-top: 0.8rem;
+    line-height: 1.4;
+  }
+
+  /* ---------- Cuts ---------- */
+  .cuts-list {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 0.7rem 2rem;
+    flex: 1; align-content: start;
+    margin-top: 1.5rem;
+  }
+  .cut-line {
+    font-family: var(--serif);
+    font-size: 1.05rem; color: var(--ink-2);
+    line-height: 1.4;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--rule);
+    display: flex; gap: 1rem; align-items: baseline;
+  }
+  .cut-line .strike {
+    text-decoration: line-through;
+    text-decoration-color: var(--rose);
+    text-decoration-thickness: 1px;
+    color: var(--ink-mute);
+  }
+  .cut-line .reason {
+    font-style: italic;
+    color: var(--ink-mute);
+    font-size: 0.85rem;
+  }
+
+  /* ---------- Decisions ---------- */
+  .decisions {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 1.4rem;
+    flex: 1; align-content: start;
+    margin-top: 1.5rem;
+  }
+  .decision {
+    background: var(--paper);
+    border: 1px solid var(--rule-soft);
+    border-radius: 8px;
+    padding: 1.4rem 1.5rem;
+    box-shadow: var(--shadow-warm-soft);
+    display: flex; flex-direction: column; gap: 0.5rem;
+  }
+  .decision .num {
+    font-family: var(--serif); font-style: italic;
+    font-size: 0.85rem; color: var(--ochre);
+    letter-spacing: 0.04em;
+  }
+  .decision h4 {
+    font-family: var(--serif); font-weight: 400; font-size: 1.2rem;
+    line-height: 1.2; color: var(--ink); margin: 0;
+  }
+  .decision p {
+    font-family: var(--serif);
+    font-size: 0.92rem; color: var(--ink-2); margin: 0;
+    line-height: 1.4;
+  }
+  .decision .options {
+    display: flex; gap: 0.6rem; margin-top: 0.4rem;
+  }
+  .opt-pill {
+    padding: 0.3rem 0.8rem;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    font-family: var(--serif); font-style: italic;
+    font-size: 0.82rem; color: var(--ink-2);
+  }
+  .opt-pill.lean { background: var(--ochre-soft); border-color: rgba(192,138,62,0.4); color: var(--ochre-deep); }
+
+  /* ---------- Closing ---------- */
+  .closing {
+    justify-content: center; align-items: center;
+    text-align: center;
+  }
+  .pull {
+    font-family: var(--serif); font-style: italic;
+    font-weight: 300;
+    font-size: 3.2rem; line-height: 1.15;
+    color: #f6ecd3;
+    max-width: 22ch;
+    letter-spacing: -0.005em;
+  }
+  .pull .ochre-text { color: var(--amber); }
+  .closing .attribution {
+    margin-top: 2.5rem;
+    font-family: var(--serif); font-style: italic;
+    font-size: 1rem; color: #b9a98a;
+    letter-spacing: 0.08em;
+  }
+  .closing .attribution::before {
+    content: "—  ";
+  }
+
+</style>
+</head>
+<body>
+<div class="deck">
+
+<!-- 1 — TITLE -->
+<section class="slide active title-slide dark">
+  <div class="title-mark">A walkthrough · April 28, 2026</div>
+  <h1 class="title-h1">Recipe Guide<br/><em>—  what comes next</em></h1>
+  <div class="title-sub">A walkthrough of the agreed roadmap, in pictures.</div>
+  <div class="title-meta">14 slides &nbsp;·&nbsp; arrow keys to navigate</div>
+</section>
+
+<!-- 2 — THE BET -->
+<section class="slide">
+  <div class="eyebrow">The bet</div>
+  <h1>From <em>recipe-on-a-screen</em> to a household kitchen.</h1>
+  <p class="lede">The arc has four steps. We've shipped the first two. The next two are what makes the app worth living inside.</p>
+  <div class="arc">
+    <div class="arc-step">
+      <span class="num">i.</span>
+      <h4>Execution</h4>
+      <p>One recipe, one screen. Mise, timeline, timers. Andrew's sanctuary. Stays untouched.</p>
+    </div>
+    <div class="arc-step now">
+      <span class="num">ii.</span>
+      <h4>Planner</h4>
+      <p>Sunday-to-Sunday menu. Intake, skeleton, candidates, grocery. Built and live.</p>
+    </div>
+    <div class="arc-step future">
+      <span class="num">iii.</span>
+      <h4>Household</h4>
+      <p>Kids, pantry, Tonight surface, shared mise. The week stops resetting on Sunday.</p>
+    </div>
+    <div class="arc-step future">
+      <span class="num">iv.</span>
+      <h4>Network</h4>
+      <p>Hosted menus, cross-family shelves, delegate-shop. The cookbook becomes social.</p>
+    </div>
+  </div>
+  <div class="footnote">Each phase compounds the previous one. The execution layer never moves.</div>
+</section>
+
+<!-- 3 — THE HOUSEHOLD -->
+<section class="slide">
+  <div class="eyebrow">Who this is for</div>
+  <h1>One household. <em>One grocery trip.</em> Three weekly modes.</h1>
+  <div class="household-grid">
+    <div class="portrait">
+      <div class="avatar" style="background: linear-gradient(135deg, #c08a3e, #a06d24);">A</div>
+      <h4>Andrew</h4>
+      <div class="role">the principal cook</div>
+      <p class="quote">"new recipes give me anxiety; the timer line saves me."</p>
+    </div>
+    <div class="portrait">
+      <div class="avatar" style="background: linear-gradient(135deg, #d27a6a, #a8503e);">A</div>
+      <h4>Alicia</h4>
+      <div class="role">the planner</div>
+      <p class="quote">"plans Sunday with a glass of wine; ad-libs the rest."</p>
+    </div>
+    <div class="portrait">
+      <div class="avatar" style="background: linear-gradient(135deg, #e3b878, #c08a3e);">M</div>
+      <h4>Mae</h4>
+      <div class="role">growing palate</div>
+      <p class="quote">"she ate broccoli twice last month — is that a thing now?"</p>
+    </div>
+    <div class="portrait">
+      <div class="avatar" style="background: linear-gradient(135deg, #5a8780, #3d655e);">E</div>
+      <h4>Ezra</h4>
+      <div class="role">picky on principle</div>
+      <p class="quote">"plain chicken, plain pasta, that weird thing with rice."</p>
+    </div>
+  </div>
+  <div class="modes">
+    <div class="mode">
+      <h5>Use it up</h5>
+      <p>Half a bag of spinach, a pound of turkey going off Wednesday. The fridge writes the menu.</p>
+    </div>
+    <div class="mode">
+      <h5>Explore</h5>
+      <p>Curious about shakshuka. One slot for ambition; everything else stays low-effort.</p>
+    </div>
+    <div class="mode">
+      <h5>Survival</h5>
+      <p>The week is on fire. Pasta, quesadillas, eggs. Ask nothing.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 4 — WHAT'S BROKEN -->
+<section class="slide">
+  <div class="eyebrow">What's broken</div>
+  <h1>Today the menu is <em>a database admin panel.</em></h1>
+  <div class="broken-stage">
+    <div class="legacy-mock">
+      <div class="lm-header">
+        <span>Dinner · Adults + kids</span>
+        <span class="small-caps">1 / 3</span>
+      </div>
+      <div class="legacy-row">
+        <span class="title">Turkey + spinach pasta bake</span>
+        <span class="summary">A weeknight one-pan with ricotta and breadcrumbs.</span>
+        <span class="rationale"><em>Uses the turkey before Wednesday.</em></span>
+        <div class="meta-row">
+          <span class="badge-pill">Kid-reliable</span>
+          <span class="badge-pill">Under 35 min</span>
+          <span class="badge-pill">Clears the fridge</span>
+          <div class="sprite-chips">
+            <span class="sprite-chip"><img src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/ground-turkey.png" alt=""></span>
+            <span class="sprite-chip"><img src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/spinach.png" alt=""></span>
+            <span class="sprite-chip"><img src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/parmesan.png" alt=""></span>
+            <span class="sprite-chip"><img src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/spaghetti.png" alt=""></span>
+          </div>
+        </div>
+      </div>
+      <div class="legacy-row">
+        <span class="title">One-pan turkey rice bowls</span>
+        <span class="summary">Soy, ginger, scallion; serve over jasmine.</span>
+        <span class="rationale"><em>Uses the turkey, kids will eat rice plain.</em></span>
+        <div class="meta-row">
+          <span class="badge-pill">Kid-reliable</span>
+          <div class="sprite-chips">
+            <span class="sprite-chip"><img src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/ground-turkey.png" alt=""></span>
+            <span class="sprite-chip"><img src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/white-rice.png" alt=""></span>
+            <span class="sprite-chip"><img src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/scallion.png" alt=""></span>
+            <span class="sprite-chip"><img src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/ginger.png" alt=""></span>
+          </div>
+        </div>
+      </div>
+      <div class="legacy-row">
+        <span class="title">Sheet-pan harissa chicken</span>
+        <span class="summary">Roasted with carrots and red onion.</span>
+        <span class="rationale"><em>You said you wanted spice this week.</em></span>
+        <div class="meta-row">
+          <span class="badge-pill">One-pan</span>
+          <div class="sprite-chips">
+            <span class="sprite-chip"><img src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/chicken-thigh.png" alt=""></span>
+            <span class="sprite-chip"><img src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/carrot.png" alt=""></span>
+            <span class="sprite-chip"><img src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/red-onion.png" alt=""></span>
+            <span class="sprite-chip"><img src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/paprika.png" alt=""></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="annotations">
+      <div class="annotation">
+        <span class="small-caps">No preview</span>
+        <p>Choosing dinner is a desire problem. Reading three paragraphs in parallel is not how anyone picks food.</p>
+      </div>
+      <div class="annotation">
+        <span class="small-caps">Static after commit</span>
+        <p>Once you commit, the page just sits there. There is no <em>tonight</em> — only an admin list of queued rows.</p>
+      </div>
+      <div class="annotation">
+        <span class="small-caps">No memory</span>
+        <p>The kids and the pantry reboot every Sunday. The app forgets Mae ate broccoli twice. It forgets the olive oil.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 5 — MEALFACE BEFORE -->
+<section class="slide">
+  <div class="eyebrow">P0 · Candidate redesign · before</div>
+  <h1>What we have: <em>a paragraph.</em></h1>
+  <div class="before-after-stage">
+    <div>
+      <div class="ba-label">Today — text-block candidate</div>
+      <div class="legacy-mock" style="max-width: 460px;">
+        <div class="legacy-row">
+          <span class="title">Miso-glazed salmon with spinach</span>
+          <span class="summary">Sheet-pan, 22 minutes start to plate. Glaze with white miso, honey, and ginger.</span>
+          <span class="rationale"><em>Rationale: uses the salmon you flagged, plays into the ginger-soy theme this week, kids can eat the rice plain.</em></span>
+          <div class="meta-row">
+            <span class="badge-pill">Under 30 min</span>
+            <span class="badge-pill">Earned effort</span>
+            <span class="badge-pill">Adults only</span>
+            <div class="sprite-chips">
+              <span class="sprite-chip"><img src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/salmon.png" alt=""></span>
+              <span class="sprite-chip"><img src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/spinach.png" alt=""></span>
+              <span class="sprite-chip"><img src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/honey.png" alt=""></span>
+              <span class="sprite-chip"><img src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/ginger.png" alt=""></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="body">
+      <h3>Why this fails</h3>
+      <p>The eye picks food on appetite. The current tile asks you to read four cards in parallel and reason. By candidate three you've forgotten candidate one.</p>
+      <p>Sprites are too small to hold the dish. The rationale is exactly the kind of text that <em>sounds</em> useful and is instantly skimmed past.</p>
+      <p style="margin-top: 1rem;">The fix is on the next slide.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 6 — MEALFACE AFTER -->
+<section class="slide">
+  <div class="eyebrow">P0 · Candidate redesign · after</div>
+  <h1>What we want: <em>a face.</em></h1>
+  <div class="before-after-stage">
+    <div>
+      <div class="ba-label">Tomorrow — &lt;MealFace /&gt; primitive</div>
+      <div class="mealface" style="max-width: 460px;">
+        <div class="vignette salmon">
+          <img class="hero-sprite" src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/salmon.png" style="left: 18%; top: 22%; transform: rotate(-12deg);" alt="">
+          <img class="hero-sprite s2" src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/spinach.png" style="left: 48%; top: 14%; transform: rotate(8deg);" alt="">
+          <img class="hero-sprite s3" src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/ginger.png" style="left: 62%; top: 52%; transform: rotate(-5deg);" alt="">
+          <img class="hero-sprite s4" src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/honey.png" style="left: 22%; top: 60%; transform: rotate(14deg);" alt="">
+          <img class="hero-sprite s4" src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/scallion.png" style="left: 76%; top: 22%; transform: rotate(-22deg);" alt="">
+        </div>
+        <div class="body-block">
+          <span class="eyebrow-tag">earned effort · adults</span>
+          <h4 class="title">Miso-glazed <em>salmon,</em> wilted spinach</h4>
+          <p class="tagline">A 22-minute dinner that pretends to be ambitious.</p>
+          <div class="meta">
+            <span><span class="glyph">◴</span> 22 min</span>
+            <span><span class="glyph">↟</span> hot oven</span>
+            <span><span class="glyph">✻</span> hands-on 8 min</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="body">
+      <h3>What changed</h3>
+      <p>A still-life vignette of hero ingredients on a warm wash &mdash; the same algorithm that powers <em>RolodexTile</em>, promoted to a first-class compositional language.</p>
+      <p>Title in Fraunces. Tagline as one italic line in the Alison Roman voice. Three glyphs at the bottom answer time, heat, and hands-on without badge soup.</p>
+      <p>One ochre eyebrow per card. One italic phrase. One hero composition. Restraint as a feature.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 7 — PEEK SHEET -->
+<section class="slide">
+  <div class="eyebrow">P0 · Pre-cook glance card</div>
+  <h1>Tap a face. <em>The dish unfolds.</em></h1>
+  <div class="peek-stage">
+    <div class="peek-sheet">
+      <div class="grabber"></div>
+      <div class="hero-image">
+        <img class="hero-sprite" src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/salmon.png" style="position:absolute; width:130px; left: 22%; top: 22%; transform: rotate(-8deg); filter: drop-shadow(0 8px 14px rgba(60,40,15,.22));" alt="">
+        <img src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/spinach.png" style="position:absolute; width:90px; left: 52%; top: 18%; transform: rotate(12deg); filter: drop-shadow(0 8px 14px rgba(60,40,15,.22));" alt="">
+        <img src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/lemon.png" style="position:absolute; width:60px; left: 70%; top: 56%; transform: rotate(-15deg); filter: drop-shadow(0 8px 14px rgba(60,40,15,.22));" alt="">
+        <img src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/scallion.png" style="position:absolute; width:60px; left: 18%; top: 58%; transform: rotate(20deg); filter: drop-shadow(0 8px 14px rgba(60,40,15,.22));" alt="">
+      </div>
+      <div class="body-block">
+        <h3 class="title">Miso-glazed salmon</h3>
+        <p class="tagline">A 22-minute dinner that pretends to be ambitious.</p>
+      </div>
+      <div class="ribbon">
+        <span><span class="glyph">◴</span> 22 min</span>
+        <span><span class="glyph">↟</span> hot oven</span>
+        <span><span class="glyph">✻</span> 8 min hands-on</span>
+      </div>
+      <div class="mise-row">
+        <div class="mise-tile"><img src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/salmon.png" alt=""></div>
+        <div class="mise-tile"><img src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/spinach.png" alt=""></div>
+        <div class="mise-tile"><img src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/honey.png" alt=""></div>
+        <div class="mise-tile"><img src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/ginger.png" alt=""></div>
+        <div class="mise-tile"><img src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/scallion.png" alt=""></div>
+        <div class="mise-tile"><img src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/soy-sauce.png" alt=""></div>
+      </div>
+      <div class="actions">
+        <button class="btn-primary">Add to the week</button>
+        <button class="btn-ghost">Show me another</button>
+      </div>
+    </div>
+    <div class="body">
+      <h3>What this is</h3>
+      <p>A slide-up sheet, View-Transition morphed from the tile. Hero composition at top. Ingredients laid out as a <em>read-only</em> mise row &mdash; the same tile language Andrew touches on cook night.</p>
+      <p>One ribbon: time, heat, hands-on. One CTA: <em>Add to the week.</em> One escape: <em>Show me another</em> &mdash; regenerates this candidate alone, in under three seconds.</p>
+      <p>No commit until the user has seen the meal.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 8 — TONIGHT TABLET -->
+<section class="slide">
+  <div class="eyebrow">P0 · The Tonight surface · /plan/[id]/tonight</div>
+  <h1>The kitchen tablet, at <em>five o'clock.</em></h1>
+  <div class="tablet-stage">
+    <div class="tablet">
+      <div class="tablet-screen">
+        <div class="tonight-header">
+          <div class="greeting">Tonight, <em>Wednesday.</em></div>
+          <div class="date">28 April · 17:14</div>
+        </div>
+        <div class="tonight-cols">
+          <div class="tonight-col salmon">
+            <div class="col-eyebrow">For the adults</div>
+            <h3 class="dish">Miso-glazed <em>salmon,</em> spinach</h3>
+            <p class="tagline">22 min. Earned, but only a little.</p>
+            <div class="hero-vignette">
+              <img class="hero-sprite" src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/salmon.png" style="position:absolute; width:90px; left: 18%; top: 18%; transform: rotate(-10deg); filter: drop-shadow(0 8px 14px rgba(60,40,15,.22));" alt="">
+              <img src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/spinach.png" style="position:absolute; width:62px; left: 52%; top: 16%; transform: rotate(12deg); filter: drop-shadow(0 8px 14px rgba(60,40,15,.22));" alt="">
+              <img src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/scallion.png" style="position:absolute; width:46px; left: 72%; top: 50%; transform: rotate(-18deg); filter: drop-shadow(0 8px 14px rgba(60,40,15,.22));" alt="">
+              <img src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/lemon.png" style="position:absolute; width:46px; left: 28%; top: 56%; transform: rotate(20deg); filter: drop-shadow(0 8px 14px rgba(60,40,15,.22));" alt="">
+            </div>
+            <div class="countdown">starts in <strong>26 minutes</strong> &nbsp;·&nbsp; oven preheats now</div>
+            <button class="cook-cta">Cook this now</button>
+          </div>
+          <div class="tonight-col kids">
+            <div class="col-eyebrow">For the kids</div>
+            <h3 class="dish">Honey-butter chicken <em>quesadilla</em></h3>
+            <p class="tagline">The Tuesday rotation that always lands.</p>
+            <div class="hero-vignette">
+              <img class="hero-sprite" src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/chicken-thigh.png" style="position:absolute; width:84px; left: 16%; top: 22%; transform: rotate(-8deg); filter: drop-shadow(0 8px 14px rgba(60,40,15,.22));" alt="">
+              <img src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/tortilla.png" style="position:absolute; width:64px; left: 50%; top: 18%; transform: rotate(14deg); filter: drop-shadow(0 8px 14px rgba(60,40,15,.22));" alt="">
+              <img src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/butter.png" style="position:absolute; width:46px; left: 70%; top: 52%; transform: rotate(-12deg); filter: drop-shadow(0 8px 14px rgba(60,40,15,.22));" alt="">
+              <img src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/honey.png" style="position:absolute; width:42px; left: 30%; top: 56%; transform: rotate(18deg); filter: drop-shadow(0 8px 14px rgba(60,40,15,.22));" alt="">
+            </div>
+            <div class="countdown">starts in <strong>14 minutes</strong> &nbsp;·&nbsp; quick-fold</div>
+            <button class="cook-cta">Cook this now</button>
+          </div>
+        </div>
+        <div class="meez-ribbon">
+          <span class="meez-dot"></span>
+          <span><em>Alicia</em> is meezing the salmon &mdash; spinach, ginger, scallion already pulled out.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="footnote">Two Cook CTAs because we have two PlannedMeal rows when the slot is split. The ribbon is a Phase&nbsp;2 add &mdash; opt-in, not chatty.</div>
+</section>
+
+<!-- 9 — PROFILES -->
+<section class="slide">
+  <div class="eyebrow">P0 · Eaters become rows, not JSON</div>
+  <h1>The kids stop being <em>a JSON blob.</em></h1>
+  <div class="profile-grid">
+    <div class="profile-card">
+      <div class="head">
+        <div class="avatar" style="background: linear-gradient(135deg, #e3b878, #c08a3e);">M</div>
+        <div>
+          <h4>Mae</h4>
+          <div class="role">growing palate · 6 years</div>
+        </div>
+      </div>
+      <div class="pref-section">
+        <h6>Loves</h6>
+        <div class="pref-tags">
+          <span class="pref-tag loves"><img class="tiny-sprite" src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/pasta.png" alt="">pasta with butter</span>
+          <span class="pref-tag loves"><img class="tiny-sprite" src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/strawberry.png" alt="">strawberries</span>
+          <span class="pref-tag loves"><img class="tiny-sprite" src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/cheddar-cheese.png" alt="">cheddar everything</span>
+        </div>
+      </div>
+      <div class="pref-section">
+        <h6>In rotation · learning</h6>
+        <div class="pref-tags">
+          <span class="pref-tag rotation"><img class="tiny-sprite" src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/broccoli.png" alt="">broccoli &mdash; 2 of 3 last month</span>
+          <span class="pref-tag rotation"><img class="tiny-sprite" src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/salmon.png" alt="">salmon (plain)</span>
+        </div>
+      </div>
+      <div class="pref-section">
+        <h6>No, thank you</h6>
+        <div class="pref-tags">
+          <span class="pref-tag no"><img class="tiny-sprite" src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/mushroom.png" alt="">mushrooms</span>
+        </div>
+      </div>
+    </div>
+    <div class="profile-card">
+      <div class="head">
+        <div class="avatar" style="background: linear-gradient(135deg, #5a8780, #3d655e);">E</div>
+        <div>
+          <h4>Ezra</h4>
+          <div class="role">picky on principle · 4 years</div>
+        </div>
+      </div>
+      <div class="pref-section">
+        <h6>Loves</h6>
+        <div class="pref-tags">
+          <span class="pref-tag loves"><img class="tiny-sprite" src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/chicken-thigh.png" alt="">plain chicken</span>
+          <span class="pref-tag loves"><img class="tiny-sprite" src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/white-rice.png" alt="">that weird thing with rice</span>
+          <span class="pref-tag loves"><img class="tiny-sprite" src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/banana.png" alt="">bananas</span>
+        </div>
+      </div>
+      <div class="pref-section">
+        <h6>In rotation · learning</h6>
+        <div class="pref-tags">
+          <span class="pref-tag rotation"><img class="tiny-sprite" src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/carrot.png" alt="">carrot sticks (raw)</span>
+        </div>
+      </div>
+      <div class="pref-section">
+        <h6>No, thank you</h6>
+        <div class="pref-tags">
+          <span class="pref-tag no"><img class="tiny-sprite" src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/jalapeno.png" alt="">anything spicy</span>
+          <span class="pref-tag no"><img class="tiny-sprite" src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/feta.png" alt="">cheese with feelings</span>
+          <span class="pref-tag no"><img class="tiny-sprite" src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/mushroom.png" alt="">mushrooms</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="footnote">Each tag is a <code>ProfilePreference</code> row with a source and an evidence count. Three thumbs-up after cook promote a tag from <em>rotation</em> to <em>loves</em>. No editor in v1 — the kids' palate accumulates from cook outcomes.</div>
+</section>
+
+<!-- 10 — PANTRY -->
+<section class="slide">
+  <div class="eyebrow">P0 · Pantry escapes intake.json</div>
+  <h1>The fridge stops <em>resetting on Sunday.</em></h1>
+  <div class="pantry-stage">
+    <div class="pantry-shelf">
+      <div class="shelf-section">
+        <h5>Use it up · this week</h5>
+        <div class="shelf-grid">
+          <div class="shelf-item urgent"><img src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/ground-turkey.png" alt=""><span class="lbl">turkey</span></div>
+          <div class="shelf-item urgent"><img src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/spinach.png" alt=""><span class="lbl">spinach</span></div>
+          <div class="shelf-item"><img src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/cilantro.png" alt=""><span class="lbl">cilantro</span></div>
+          <div class="shelf-item"><img src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/avocado.png" alt=""><span class="lbl">avocado</span></div>
+        </div>
+      </div>
+      <div class="shelf-section">
+        <h5>Always here</h5>
+        <div class="shelf-grid">
+          <div class="shelf-item"><img src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/olive-oil.png" alt=""><span class="lbl">olive oil</span></div>
+          <div class="shelf-item"><img src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/kosher-salt.png" alt=""><span class="lbl">salt</span></div>
+          <div class="shelf-item"><img src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/garlic.png" alt=""><span class="lbl">garlic</span></div>
+          <div class="shelf-item"><img src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/butter.png" alt=""><span class="lbl">butter</span></div>
+          <div class="shelf-item"><img src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/white-rice.png" alt=""><span class="lbl">rice</span></div>
+          <div class="shelf-item"><img src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/pasta.png" alt=""><span class="lbl">pasta</span></div>
+          <div class="shelf-item"><img src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/soy-sauce.png" alt=""><span class="lbl">soy</span></div>
+        </div>
+      </div>
+      <div class="shelf-section">
+        <h5>Running low</h5>
+        <div class="shelf-grid">
+          <div class="shelf-item dim"><img src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/parmesan.png" alt=""><span class="lbl">parm</span></div>
+          <div class="shelf-item dim"><img src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/honey.png" alt=""><span class="lbl">honey</span></div>
+          <div class="shelf-item dim"><img src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/lemon.png" alt=""><span class="lbl">lemon</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="cascade">
+      <div class="cascade-step">
+        <h6>Sunday · 11:14 am</h6>
+        <p>Alicia checks <em>olive oil</em> on the grocery list at the store.</p>
+      </div>
+      <div class="cascade-arrow">↓</div>
+      <div class="cascade-step">
+        <h6>Sunday · 11:14 am · pantry</h6>
+        <p>Pantry quietly debits <em>olive oil</em> back to <em>always here</em>.</p>
+      </div>
+      <div class="cascade-arrow">↓</div>
+      <div class="cascade-step">
+        <h6>Wednesday · 5:32 pm · mise</h6>
+        <p>Andrew opens the salmon. <em>Olive oil</em> is already pre-checked, basket-glyph in the corner.</p>
+      </div>
+      <div class="cascade-arrow">↓</div>
+      <div class="cascade-step">
+        <h6>The cascade</h6>
+        <p>One purchase. Three surfaces. No re-tapping per recipe.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 11 — HOSTED MENU -->
+<section class="slide">
+  <div class="eyebrow">P1 · Hosted menu · /menu/[slug]</div>
+  <h1>The first thing in this app you'd <em>screenshot.</em></h1>
+  <div class="menu-spread">
+    <div class="menu-left">
+      <div class="menu-mark">From the kitchen of the Archers</div>
+      <h2 class="menu-title">Saturday <em>supper.</em></h2>
+      <div class="menu-occ">For Carol &amp; Joel · the second of May, eight o'clock</div>
+      <div class="menu-host-note">Most of it can be made the day before. The salmon is the only thing that needs a hot oven and a glass of wine to stand next to.</div>
+      <div class="menu-courses">
+        <div class="menu-course">
+          <div class="course-eyebrow">First</div>
+          <h4>Charred shishitos with <em>flaky salt</em> &amp; lemon</h4>
+          <p>Eight minutes and a screaming pan.</p>
+        </div>
+        <div class="menu-course">
+          <div class="course-eyebrow">Main</div>
+          <h4>Miso-glazed <em>salmon,</em> wilted spinach</h4>
+          <p>Sheet-pan, twenty-two minutes. The honey does the heavy lifting.</p>
+        </div>
+        <div class="menu-course">
+          <div class="course-eyebrow">Side</div>
+          <h4>Lemon-feta <em>orzo,</em> kalamatas, mint</h4>
+          <p>Better the next day. Make it Friday.</p>
+        </div>
+        <div class="menu-course">
+          <div class="course-eyebrow">After</div>
+          <h4>Strawberries with <em>black-pepper</em> sugar</h4>
+          <p>Mae's discovery. Trust her.</p>
+        </div>
+      </div>
+    </div>
+    <div class="menu-right">
+      <div class="stilllife">
+        <img class="hero-sprite" src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/salmon.png" style="width: 38%; left: 18%; top: 22%; transform: rotate(-10deg);" alt="">
+        <img class="hero-sprite" src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/lemon.png" style="width: 26%; left: 56%; top: 14%; transform: rotate(14deg);" alt="">
+        <img class="hero-sprite" src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/feta.png" style="width: 24%; left: 60%; top: 50%; transform: rotate(-8deg);" alt="">
+        <img class="hero-sprite" src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/spinach.png" style="width: 26%; left: 22%; top: 56%; transform: rotate(18deg);" alt="">
+        <img class="hero-sprite" src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/kalamata-olives.png" style="width: 18%; left: 42%; top: 68%; transform: rotate(-16deg);" alt="">
+        <img class="hero-sprite" src="https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/strawberry.png" style="width: 18%; left: 8%; top: 36%; transform: rotate(22deg);" alt="">
+      </div>
+      <div class="menu-cta"><strong>Save the recipes</strong> to your own kitchen &mdash; one tap.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 12 — CROSS-FAMILY SHELF -->
+<section class="slide">
+  <div class="eyebrow">P3 · Cross-family cookbook</div>
+  <h1>Two households, <em>one shared shelf.</em></h1>
+  <div class="shelf-stage">
+    <div class="family-card">
+      <h4>The Archers</h4>
+      <div class="members">Andrew · Alicia · Mae · Ezra</div>
+      <div class="recipes">
+        <div class="recipe-line">Sheet-pan harissa chicken</div>
+        <div class="recipe-line shared">Miso-glazed salmon</div>
+        <div class="recipe-line">Honey-butter chicken quesadilla</div>
+        <div class="recipe-line shared">Strawberries with black pepper</div>
+        <div class="recipe-line">Turkey + spinach pasta bake</div>
+      </div>
+    </div>
+    <div class="shelf-bridge">
+      <div class="arrows">⇄</div>
+      <h5>The Sunday Shelf</h5>
+      <p>Recipes both families have cooked.</p>
+      <div class="shelf-pile">
+        <span>· Miso-glazed salmon</span>
+        <span>· Carbonara like Joel's mom</span>
+        <span>· Strawberries, black pepper</span>
+        <span>· Pasta &amp; butter (kids)</span>
+      </div>
+    </div>
+    <div class="family-card">
+      <h4>The Petersons</h4>
+      <div class="members">Carol · Joel · Theo</div>
+      <div class="recipes">
+        <div class="recipe-line">Lasagna for fourteen</div>
+        <div class="recipe-line shared">Carbonara like Joel's mom</div>
+        <div class="recipe-line shared">Pasta &amp; butter (Theo)</div>
+        <div class="recipe-line">Sunday roast chicken</div>
+        <div class="recipe-line">Apple cake from Wednesday</div>
+      </div>
+    </div>
+  </div>
+  <div class="footnote">Not a merged family. Each side curates what they share. The shelf is a <code>RecipeShelf</code> row — schema only, no UI in Phase 1 or 2. P3 work, only after a Hosted Menu has crossed a household boundary at least once.</div>
+</section>
+
+<!-- 13 — PHASING -->
+<section class="slide">
+  <div class="eyebrow">Phasing</div>
+  <h1>Three releases. <em>Each one earns the next.</em></h1>
+  <div class="phasing-grid">
+    <div class="phase-card p1">
+      <span class="roman">PHASE I</span>
+      <h3 class="phase-title">Make planning <em>feel alive</em></h3>
+      <span class="duration">~ 2 weeks</span>
+      <ul>
+        <li>PlanEvent log + canonical-card audit</li>
+        <li>Profile + ProfilePreference (eaters as rows)</li>
+        <li>PantryItem + grocery write-back</li>
+        <li>publishCandidate(scope) refactor</li>
+        <li>MoodTag auto-tagging</li>
+        <li>&lt;MealFace /&gt; primitive · candidate redesign</li>
+        <li>Tonight surface (/plan/[id]/tonight)</li>
+        <li>Mode chooser at plan creation</li>
+        <li>Grocery → mise cascade (no SSE)</li>
+      </ul>
+      <div class="headline">"The planner remembers my kids, my pantry stops resetting, candidates have faces, and Tonight tells me what to cook in one screen."</div>
+    </div>
+    <div class="phase-card p2">
+      <span class="roman">PHASE II</span>
+      <h3 class="phase-title">Connect the <em>household</em></h3>
+      <span class="duration">~ 3–4 weeks</span>
+      <ul>
+        <li>FamilyEvent channel + SSE / LISTEN-NOTIFY</li>
+        <li>Meezing presence + shared mise</li>
+        <li>MealOutcome capture · profiles learn</li>
+        <li>Mid-week Skip / Leftovers / Swap</li>
+        <li>Promoted-plan Hosted Menu + OG</li>
+        <li>Sprite-driven grocery list</li>
+        <li>Delegate grocery share</li>
+        <li>Public recipe share token</li>
+        <li>Notification inbox (no comments)</li>
+      </ul>
+      <div class="headline">"Alicia's grocery purchases pre-check my mise. The kids' thumbs train the planner. Saturday dinner has a publishable menu my mother-in-law screenshots."</div>
+    </div>
+    <div class="phase-card p3">
+      <span class="roman">PHASE III</span>
+      <h3 class="phase-title">Compound the <em>network</em></h3>
+      <span class="duration">~ ongoing</span>
+      <ul>
+        <li>Cross-family RecipeShelf</li>
+        <li>Vendor-agnostic grocery deep-link</li>
+        <li>Real Instacart/Walmart integrations</li>
+        <li>Smart auto-reorder (after 3 mo data)</li>
+        <li>Friends graph (only on contact-import)</li>
+        <li>Step-claim "on deck" handoff</li>
+        <li>Library Rolodex carousel</li>
+      </ul>
+      <div class="headline">"The more we use it, the more it learns. The more we share, the more it grows."</div>
+    </div>
+  </div>
+</section>
+
+<!-- 14 — CUTS -->
+<section class="slide">
+  <div class="eyebrow">What we are not building</div>
+  <h1>The <em>cuts list,</em> with reasons.</h1>
+  <div class="cuts-list">
+    <div class="cut-line">
+      <span class="strike">"Just the gist" Alicia render mode</span>
+      <span class="reason">Tonight is Alicia's home. Adding a render flag invites drift.</span>
+    </div>
+    <div class="cut-line">
+      <span class="strike">Voice-driven intake / hands-free cook</span>
+      <span class="reason">Alicia plans with wine, not voice. TTS is fragile.</span>
+    </div>
+    <div class="cut-line">
+      <span class="strike">Real-time collaborative intake chat</span>
+      <span class="reason">Ninety-second flow doesn't earn presence machinery.</span>
+    </div>
+    <div class="cut-line">
+      <span class="strike">Smart auto-substitution in the editor</span>
+      <span class="reason">Insufficient evidence anyone edits pre-cook.</span>
+    </div>
+    <div class="cut-line">
+      <span class="strike">Multi-week / template plans</span>
+      <span class="reason">Violates the one-grocery-trip-per-week invariant.</span>
+    </div>
+    <div class="cut-line">
+      <span class="strike">Calendar grid view</span>
+      <span class="reason">Settled. The week is a menu, not a calendar.</span>
+    </div>
+    <div class="cut-line">
+      <span class="strike">Friends graph + activity feed</span>
+      <span class="reason">No contact-import path. Network can't start.</span>
+    </div>
+    <div class="cut-line">
+      <span class="strike">RecipeComment threads</span>
+      <span class="reason">Slack-for-cooking is a graveyard.</span>
+    </div>
+    <div class="cut-line">
+      <span class="strike">Profile editor UI in Phase 1</span>
+      <span class="reason">Accumulate first; build editor on user complaint.</span>
+    </div>
+    <div class="cut-line">
+      <span class="strike">Step-claim "on deck"</span>
+      <span class="reason">Two adults in one kitchen just talk.</span>
+    </div>
+  </div>
+</section>
+
+<!-- 15 — DECISIONS (settled) -->
+<section class="slide">
+  <div class="eyebrow">Settled · 2026-04-28</div>
+  <h1>Four decisions, <em>resolved.</em></h1>
+  <div class="decisions">
+    <div class="decision">
+      <span class="num">i.</span>
+      <h4>Post-cook share chip on the SaveBar</h4>
+      <p>Approved. Slots into the SaveBar after the photo prompt &mdash; additive, does not modify CookCardView. Phase 2 hosting builds on the carve-out.</p>
+      <div class="options"><span class="opt-pill lean">approved</span></div>
+    </div>
+    <div class="decision">
+      <span class="num">ii.</span>
+      <h4>Hosted Menu visibility</h4>
+      <p>Public-by-token. <code>/menu/[slug]</code> is anyone-with-URL; no auth wall. Slug is generated only on explicit publish; revocation invalidates it.</p>
+      <div class="options"><span class="opt-pill lean">public-by-token</span></div>
+    </div>
+    <div class="decision">
+      <span class="num">iii.</span>
+      <h4>Grocery automation partner</h4>
+      <p>AmazonFresh is the Phase 3 default. Vendor-agnostic deep-link (3.1) ships first as universal fallback; partner integration (3.2) targets AmazonFresh.</p>
+      <div class="options"><span class="opt-pill lean">AmazonFresh</span><span class="opt-pill">+ deep-link fallback</span></div>
+    </div>
+    <div class="decision">
+      <span class="num">iv.</span>
+      <h4>Family privacy stance</h4>
+      <p>Unchanged. No per-user privacy within a family. Kid <code>Profile</code> data and <code>MealOutcome</code> are family-readable; <code>MiseCheck</code> stays per-user only as in-flight execution detail.</p>
+      <div class="options"><span class="opt-pill lean">no per-user privacy</span></div>
+    </div>
+  </div>
+  <p style="margin-top:1.6rem;color:var(--ink-muted);font-style:italic;font-family:'Fraunces',Georgia,serif;font-size:1.05rem;">
+    New direction added: sprite generation pivots to OpenAI <code>gpt-image-1</code> with transparent backgrounds &mdash; ships as item 1.13, before <code>&lt;MealFace /&gt;</code>.
+  </p>
+</section>
+
+<!-- 16 — CLOSING PULL QUOTE -->
+<section class="slide closing dark">
+  <div class="eyebrow">In closing</div>
+  <div class="pull">
+    A weekly menu should feel like<br/>leafing through a beautifully-<br/>photographed menu at a <span class="ochre-text">restaurant</span><br/>&mdash; every meal has a face<br/>before you commit to it.
+  </div>
+  <div class="attribution">the visual designer · round one</div>
+</section>
+
+</div>
+
+<div class="counter" id="counter">1 / 16</div>
+<div class="hint">←  →  navigate  ·  1–9 jump</div>
+
+<script>
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const counter = document.getElementById('counter');
+  let idx = 0;
+  function show(i) {
+    idx = Math.max(0, Math.min(slides.length - 1, i));
+    slides.forEach((s, n) => s.classList.toggle('active', n === idx));
+    counter.textContent = (idx + 1) + ' / ' + slides.length;
+  }
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+      show(idx + 1); e.preventDefault();
+    } else if (e.key === 'ArrowLeft' || e.key === 'Backspace' || e.key === 'PageUp') {
+      show(idx - 1); e.preventDefault();
+    } else if (e.key === 'Home') {
+      show(0);
+    } else if (e.key === 'End') {
+      show(slides.length - 1);
+    } else if (/^[1-9]$/.test(e.key)) {
+      show(parseInt(e.key, 10) - 1);
+    }
+  });
+  document.addEventListener('click', (e) => {
+    if (e.target.tagName === 'BUTTON' || e.target.closest('button')) return;
+    const w = window.innerWidth;
+    if (e.clientX > w * 0.62) show(idx + 1);
+    else if (e.clientX < w * 0.38) show(idx - 1);
+  });
+</script>
+</body>
+</html>

@@ -6,6 +6,8 @@ import { loadPlanIfOwned } from "@/app/lib/plan-auth";
 import { plannerModel } from "@/app/lib/planner/model";
 import { PlanIntake } from "@/app/lib/planner/schemas";
 import { INTAKE_EXTRACT_SYSTEM_PROMPT } from "@/app/lib/planner/prompts";
+import { recordPlanEvent } from "@/app/lib/planner/events";
+import { upsertProfilesFromIntake } from "@/app/lib/planner/profile-backfill";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -72,6 +74,21 @@ export async function POST(
       status: "INTAKE_COMPLETE",
     },
   });
+
+  // Best-effort backfill — never fail the user-visible extract on a profile
+  // upsert hiccup. Item 1.2.
+  try {
+    await upsertProfilesFromIntake(result.object, plan.familyId);
+  } catch (err) {
+    console.error("[profile-backfill] failed", { planId, err });
+  }
+
+  await recordPlanEvent(
+    planId,
+    "intake.extracted",
+    { messageCount: messages.length, weekOf: weekOf.toISOString() },
+    user.userId,
+  );
 
   return NextResponse.json({ intake: result.object });
 }

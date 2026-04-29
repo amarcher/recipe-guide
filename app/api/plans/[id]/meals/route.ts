@@ -3,6 +3,8 @@ import { prisma } from "@/app/lib/prisma";
 import { requireUser } from "@/app/lib/server-auth";
 import { loadPlanIfOwned } from "@/app/lib/plan-auth";
 import { rebuildGroceryForPlan } from "@/app/lib/grocery-rollup";
+import { recordPlanEvent } from "@/app/lib/planner/events";
+import { recordFamilyEventForPlan } from "@/app/lib/family-events";
 
 export const runtime = "nodejs";
 
@@ -51,5 +53,30 @@ export async function POST(
   });
 
   await rebuildGroceryForPlan(planId);
+
+  await recordPlanEvent(
+    planId,
+    "meal.committed",
+    {
+      mealId: meal.id,
+      candidateId,
+      slot: candidate.slot,
+      eaters: candidate.eaters,
+      title: candidate.title,
+    },
+    user.userId,
+  );
+  await recordFamilyEventForPlan(planId, {
+    kind: "meal.committed",
+    payload: {
+      mealId: meal.id,
+      candidateId,
+      slot: candidate.slot,
+      eaters: candidate.eaters,
+      title: candidate.title,
+    },
+    actorId: user.userId,
+  });
+
   return NextResponse.json({ id: meal.id });
 }

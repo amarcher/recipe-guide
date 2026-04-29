@@ -4,14 +4,19 @@ import sharp from "sharp";
 import { neon } from "@neondatabase/serverless";
 import manifest from "@/sprites/manifest.json";
 
+const PROVIDER = (process.env.SPRITE_PROVIDER || "openai").toLowerCase();
+
 function logSpriteUsage(count: number, slugs: string[]) {
   const dbUrl = process.env.DASHBOARD_DATABASE_URL;
   if (!dbUrl) return;
   const sql = neon(dbUrl);
-  // Gemini Image bills by output tokens (~1290 per image). Approximate.
+  // Approximate output tokens (Gemini bills ~1290 per image; OpenAI bills
+  // per call). Used for our usage rollup, not exact billing.
   const tokensOut = count * 1290;
+  const model = PROVIDER === "openai" ? OPENAI_MODEL : GEMINI_MODEL;
+  const service = PROVIDER === "openai" ? "openai" : "google";
   sql`INSERT INTO api_usage (project, service, endpoint, tokens_in, tokens_out, model, metadata)
-    VALUES ('recipe-guide', 'google', 'sprite', 0, ${tokensOut}, ${MODEL}, ${JSON.stringify({ count, slugs })})`.catch(
+    VALUES ('recipe-guide', ${service}, 'sprite', 0, ${tokensOut}, ${model}, ${JSON.stringify({ count, slugs, provider: PROVIDER })})`.catch(
     (e) => console.error("[sprites/discover] usage log failed:", e)
   );
 }
@@ -19,8 +24,10 @@ function logSpriteUsage(count: number, slugs: string[]) {
 export const runtime = "nodejs";
 export const maxDuration = 120;
 
-const MODEL = process.env.GEMINI_IMAGE_MODEL || "gemini-2.5-flash-image";
-const ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
+const GEMINI_MODEL = process.env.GEMINI_IMAGE_MODEL || "gemini-2.5-flash-image";
+const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+const OPENAI_MODEL = process.env.OPENAI_IMAGE_MODEL || "gpt-image-1";
+const OPENAI_ENDPOINT = "https://api.openai.com/v1/images/generations";
 
 const MAX_PER_REQUEST = 20;
 const BLOB_DISPLAY_PREFIX = "sprites/";
@@ -29,11 +36,14 @@ const TARGET_PX = 512;
 
 type Manifest = {
   style_prompt: string;
+  style_prompt_transparent?: string;
+  compose_fragments?: Record<string, string>;
   sprites: Array<{
     slug: string;
     label: string;
     aliases: string[];
     url?: string;
+    compose?: "carafe" | "puddle";
   }>;
 };
 const M = manifest as Manifest;
@@ -68,9 +78,21 @@ function findExistingSlug(name: string): string | null {
   return null;
 }
 
-async function generateImage(label: string, apiKey: string): Promise<Buffer | null> {
-  const prompt = M.style_prompt.replace("{label}", label);
-  const res = await fetch(ENDPOINT, {
+function buildPrompt(label: string, compose?: "carafe" | "puddle"): string {
+  const isTransparent = PROVIDER === "openai";
+  const base =
+    isTransparent && M.style_prompt_transparent
+      ? M.style_prompt_transparent
+      : M.style_prompt;
+  let prompt = base.replace("{label}", label);
+  if (isTransparent && compose && M.compose_fragments?.[compose]) {
+    prompt += " " + M.compose_fragments[compose].replace("{label}", label);
+  }
+  return prompt;
+}
+
+async function generateImageGemini(prompt: string, apiKey: string): Promise<Buffer | null> {
+  const res = await fetch(GEMINI_ENDPOINT, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -92,6 +114,38 @@ async function generateImage(label: string, apiKey: string): Promise<Buffer | nu
   return b64 ? Buffer.from(b64, "base64") : null;
 }
 
+async function generateImageOpenAI(prompt: string, apiKey: string): Promise<Buffer | null> {
+  const res = await fetch(OPENAI_ENDPOINT, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: OPENAI_MODEL,
+      prompt,
+      size: "1024x1024",
+      background: "transparent",
+      n: 1,
+    }),
+  });
+  if (!res.ok) return null;
+  const data = await res.json();
+  const b64 = data?.data?.[0]?.b64_json;
+  return b64 ? Buffer.from(b64, "base64") : null;
+}
+
+async function generateImage(
+  label: string,
+  apiKey: string,
+  compose?: "carafe" | "puddle",
+): Promise<Buffer | null> {
+  const prompt = buildPrompt(label, compose);
+  return PROVIDER === "openai"
+    ? generateImageOpenAI(prompt, apiKey)
+    : generateImageGemini(prompt, apiKey);
+}
+
 // Check if a blob is already in our store. `head()` throws on 404.
 async function existingBlobUrl(
   pathname: string,
@@ -106,11 +160,13 @@ async function existingBlobUrl(
 }
 
 export async function POST(req: NextRequest) {
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey =
+    PROVIDER === "openai" ? process.env.OPENAI_API_KEY : process.env.GEMINI_API_KEY;
   const blobToken = process.env.BLOB_READ_WRITE_TOKEN;
   if (!apiKey) {
+    const want = PROVIDER === "openai" ? "OPENAI_API_KEY" : "GEMINI_API_KEY";
     return NextResponse.json(
-      { error: "GEMINI_API_KEY not set on the server." },
+      { error: `${want} not set on the server (SPRITE_PROVIDER=${PROVIDER}).` },
       { status: 500 }
     );
   }
@@ -166,9 +222,9 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      // 3) Generate via Gemini. Persist BOTH the original (high-res) and a
-      //    512px display variant so we keep the high-quality asset around for
-      //    future use.
+      // 3) Generate via the active provider. Persist BOTH the original
+      //    (high-res) and a 512px display variant so we keep the original
+      //    around for future high-res use.
       try {
         const raw = await generateImage(name, apiKey);
         if (!raw) {

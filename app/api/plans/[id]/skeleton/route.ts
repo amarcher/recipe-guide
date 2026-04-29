@@ -7,6 +7,7 @@ import { plannerModel } from "@/app/lib/planner/model";
 import { MenuSkeleton, PlanIntake } from "@/app/lib/planner/schemas";
 import { SKELETON_SYSTEM_PROMPT } from "@/app/lib/planner/prompts";
 import { loadRecentRecipes } from "@/app/lib/planner/history";
+import { recordPlanEvent } from "@/app/lib/planner/events";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -93,6 +94,13 @@ export async function POST(
     where: { id: plan.id },
     data: { skeleton: result.object, status: "SKELETON_READY" },
   });
+
+  await recordPlanEvent(
+    plan.id,
+    "skeleton.created",
+    { hasGuidance: !!guidance, regenerated: !!existingSkeleton?.success },
+    user.userId,
+  );
 
   return NextResponse.json({ skeleton: result.object });
 }

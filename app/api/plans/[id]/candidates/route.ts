@@ -15,6 +15,7 @@ import { SLOT_CANDIDATE_SYSTEM_PROMPT } from "@/app/lib/planner/prompts";
 import { loadRecentRecipes } from "@/app/lib/planner/history";
 import { scoreAndRankPlan } from "@/app/lib/planner/scoring";
 import { expandDraft } from "@/app/lib/planner/card-expand";
+import { recordPlanEvent } from "@/app/lib/planner/events";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -209,6 +210,20 @@ export async function POST(
     where: { id: planId },
     data: { status: "CANDIDATES_READY" },
   });
+
+  await recordPlanEvent(
+    planId,
+    "candidates.generated",
+    {
+      combos: targetCombos.length,
+      inserted,
+      scoped: !!(targetSlot && targetEaters),
+      slot: targetSlot ?? null,
+      eaters: targetEaters ?? null,
+      hasGuidance: !!guidance,
+    },
+    user.userId,
+  );
 
   return NextResponse.json({ combos: targetCombos.length, inserted });
 }

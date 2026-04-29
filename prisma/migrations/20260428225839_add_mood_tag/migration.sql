@@ -1,0 +1,5 @@
+-- CreateEnum
+CREATE TYPE "MoodTag" AS ENUM ('FAST_FORGIVING', 'EARNED_EFFORT', 'USE_IT_UP', 'KID_APPROVED', 'LEFTOVER_FRIENDLY', 'ONE_PAN');
+
+-- AlterTable
+ALTER TABLE "MealCandidate" ADD COLUMN "moodTags" "MoodTag"[] DEFAULT ARRAY[]::"MoodTag"[];

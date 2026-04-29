@@ -1,4 +1,7 @@
+// PLANNER: canonical-only. Reads ParsedRecipe.cardJson via loadCanonicalCard;
+// never resolveCard. See app/lib/card-resolver.ts banner.
 import { prisma } from "@/app/lib/prisma";
+import { loadCanonicalCard } from "@/app/lib/card-resolver";
 import type { CookCard } from "@/app/types";
 
 export type RecentRecipe = {
@@ -38,7 +41,9 @@ export async function loadRecentRecipes(
   const now = Date.now();
   return rows.map((r) => {
     const last = r.lastCookedAt?.getTime() ?? null;
-    const card = r.parsedRecipe.cardJson as unknown as CookCard | null;
+    const card: CookCard | null = r.parsedRecipe.cardJson
+      ? loadCanonicalCard(r.parsedRecipe)
+      : null;
     const slugs = new Set<string>();
     if (card) {
       for (const ing of card.pantry_ingredients ?? []) {

@@ -1,3 +1,6 @@
+// PLANNER: canonical-only. Reasons about candidate.composedCardDraft (the
+// LLM-generated pre-save artifact) — never resolveCard / RecipeOverride.
+// See app/lib/card-resolver.ts banner.
 import { prisma } from "@/app/lib/prisma";
 import type { PlanIntake, MenuSkeleton } from "@/app/lib/planner/schemas";
 import type { CookCard } from "@/app/types";
@@ -188,6 +191,46 @@ function scoreCandidate(
   return { dims, composite };
 }
 
+// Roadmap item 1.7 — derive a mood-based decision signal per candidate
+// from existing signals. No LLM inference; pure heuristic so a tile can
+// render `FAST · FORGIVING` etc. as a single eyebrow.
+type MoodTagValue =
+  | "FAST_FORGIVING"
+  | "EARNED_EFFORT"
+  | "USE_IT_UP"
+  | "KID_APPROVED"
+  | "LEFTOVER_FRIENDLY"
+  | "ONE_PAN";
+
+function deriveMoodTags(
+  c: CandidateRow,
+  slugs: string[],
+  intake: PlanIntake,
+  dims: Dimensions,
+): MoodTagValue[] {
+  const tags: MoodTagValue[] = [];
+  const eatersIncludeKids = c.eaters.includes("KIDS");
+
+  if (c.approxCookMinutes <= 30) tags.push("FAST_FORGIVING");
+  else if (c.approxCookMinutes >= 60) tags.push("EARNED_EFFORT");
+
+  const candidateSlugs = new Set(slugs);
+  const mustUseHits = (intake.pantry ?? []).filter(
+    (p) => p.mustUse && candidateSlugs.has(p.slug ?? p.display.toLowerCase()),
+  ).length;
+  if (mustUseHits >= 1) tags.push("USE_IT_UP");
+
+  if (eatersIncludeKids && c.kidFitTag === "RELIABLE" && dims.kidFit >= 0.85) {
+    tags.push("KID_APPROVED");
+  }
+
+  // LEFTOVER_FRIENDLY and ONE_PAN deferred — need 2.15 outcome data and an
+  // equipment-tagging story respectively. Reserved in the enum so a future
+  // pass can fill them without a migration.
+
+  return tags;
+}
+
 function badgesFor(
   c: CandidateRow,
   slugs: string[],
@@ -243,6 +286,7 @@ export async function scoreAndRankPlan(planId: string): Promise<void> {
     composite: number;
     dims: Dimensions;
     badges: string[];
+    moodTags: MoodTagValue[];
   };
   const scored: Scored[] = candidates.map((c) => {
     const row: CandidateRow = {
@@ -266,10 +310,12 @@ export async function scoreAndRankPlan(planId: string): Promise<void> {
         composite: 0,
         dims: { reuse: 0, pantry: 0, freshness: 0, kidFit: 0, moodFit: 0 },
         badges: [],
+        moodTags: [],
       };
     }
     const { dims, composite } = scoreCandidate(row, slugs, intake, skeleton, recentSlugs);
     const badges = badgesFor(row, slugs, intake, dims);
+    const moodTags = deriveMoodTags(row, slugs, intake, dims);
     return {
       id: c.id,
       combo: `${c.slot}:${[...c.eaters].sort().join("+")}`,
@@ -277,6 +323,7 @@ export async function scoreAndRankPlan(planId: string): Promise<void> {
       composite,
       dims,
       badges,
+      moodTags,
     };
   });
 
@@ -318,6 +365,7 @@ export async function scoreAndRankPlan(planId: string): Promise<void> {
         filteredOutReason: s.filtered,
         scoreBreakdownJson: s.dims as unknown as object,
         badges: s.badges,
+        moodTags: s.moodTags,
         rankedAt: now,
       },
     });

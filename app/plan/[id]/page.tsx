@@ -6,6 +6,8 @@ import { loadPlanIfOwned } from "@/app/lib/plan-auth";
 import { MenuView } from "./MenuView";
 import { GroceryList } from "./GroceryList";
 import { PipelineControls } from "./PipelineControls";
+import { PublishControls } from "./PublishControls";
+import { GroceryShareControls } from "./GroceryShareControls";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -69,18 +71,35 @@ export default async function PlanPage({
               Menu
             </h1>
           </div>
-          <Link
-            href="/library"
-            className="text-sm font-medium text-stone-700 hover:text-stone-900"
-          >
-            Library
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link
+              href={`/plan/${plan.id}/tonight`}
+              className="text-sm font-medium text-stone-700 hover:text-stone-900"
+            >
+              Tonight →
+            </Link>
+            <Link
+              href="/library"
+              className="text-sm font-medium text-stone-700 hover:text-stone-900"
+            >
+              Library
+            </Link>
+          </div>
         </div>
 
         <PipelineControls
           planId={plan.id}
           status={plan.status}
           hasSkeleton={!!plan.skeleton}
+        />
+
+        <PublishControls
+          planId={plan.id}
+          publishedSlug={plan.publishedSlug ?? null}
+          publishedAt={plan.publishedAt?.getTime() ?? null}
+          hostNote={plan.hostNote ?? null}
+          dietaryNote={plan.dietaryNote ?? null}
+          hasCommittedMeals={meals.length > 0}
         />
 
         {skeleton.rationale && (
@@ -115,6 +134,7 @@ export default async function PlanPage({
             heroIngredientSlugs: c.heroIngredientSlugs,
             approxCookMinutes: c.approxCookMinutes,
             kidFitTag: c.kidFitTag,
+            moodTags: c.moodTags,
             rank: c.rank,
             badges: c.badges,
             committed: committedCandidateIds.has(c.id),
@@ -133,6 +153,8 @@ export default async function PlanPage({
             purchased: g.purchased,
           }))}
         />
+
+        <GroceryShareControls planId={plan.id} hasItems={grocery.length > 0} />
 
         {intake.notes && (
           <p className="mt-6 text-xs italic text-stone-500">{intake.notes}</p>

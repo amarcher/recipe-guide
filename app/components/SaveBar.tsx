@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   BookmarkCheck,
   Flame,
@@ -27,6 +27,8 @@ import {
   useCookSession,
 } from "@/app/lib/cook-session";
 import { CookPhotoPrompt } from "@/app/components/CookPhotoPrompt";
+import { MeezingRibbon, type MeezingActor } from "@/app/components/MeezingRibbon";
+import { ShareCookChip } from "@/app/components/ShareCookChip";
 
 function formatRelative(ts: number): string {
   const diff = Date.now() - ts;
@@ -60,6 +62,43 @@ export function SaveBar({
   const isAnotherCooking = !!cookSession && !isCookingThis;
   const [cookingPending, setCookingPending] = useState(false);
   const [photoPromptCookLogId, setPhotoPromptCookLogId] = useState<string | null>(null);
+  const [meezing, setMeezing] = useState<{
+    enabled: boolean;
+    familyId?: string;
+    members?: MeezingActor[];
+  } | null>(null);
+  // Post-cook share chip surfaces alongside the photo prompt — Andrew
+  // approved this carve-out (decision #1, 2026-04-28).
+  const sharedSavedId = saves[0]?.id ?? null;
+
+  // Fetch Meezing config when a family-scope save exists. Cheap (one
+  // SavedRecipe + members lookup) and the API short-circuits to
+  // `{ enabled: false }` for personal-scope and sync-off cases.
+  const targetSaveId = saves.find((s) => s.family)?.id ?? null;
+  useEffect(() => {
+    if (!targetSaveId) {
+      // Defer to a microtask so this doesn't fire during render — keeps
+      // the react-hooks/set-state-in-effect rule happy on bootstrap.
+      queueMicrotask(() => setMeezing(null));
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const r = await fetch(`/api/recipes/${targetSaveId}/meezing`);
+        if (!r.ok) return;
+        const body = (await r.json()) as {
+          enabled: boolean;
+          familyId?: string;
+          members?: MeezingActor[];
+        };
+        if (!cancelled) setMeezing(body);
+      } catch {}
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [targetSaveId]);
 
   // For signed-out users, scopes is always just [Personal] (localStorage).
   const scopes: Scope[] = signedIn
@@ -185,9 +224,26 @@ export function SaveBar({
       </div>
 
       {photoPromptCookLogId && (
-        <CookPhotoPrompt
-          cookLogId={photoPromptCookLogId}
-          onDismiss={() => setPhotoPromptCookLogId(null)}
+        <>
+          <CookPhotoPrompt
+            cookLogId={photoPromptCookLogId}
+            onDismiss={() => setPhotoPromptCookLogId(null)}
+          />
+          {sharedSavedId && (
+            <ShareCookChip
+              savedRecipeId={sharedSavedId}
+              cookLogId={photoPromptCookLogId}
+              recipeTitle={card.title}
+            />
+          )}
+        </>
+      )}
+
+      {meezing?.enabled && meezing.familyId && sharedSavedId && (
+        <MeezingRibbon
+          familyId={meezing.familyId}
+          savedRecipeId={sharedSavedId}
+          members={meezing.members ?? []}
         />
       )}
 

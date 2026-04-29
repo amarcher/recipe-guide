@@ -31,6 +31,13 @@ model User {
   instagramConnection InstagramConnection?
   recipeOverrides       RecipeOverride[] @relation("RecipeOverrideUser")
   editedRecipeOverrides RecipeOverride[] @relation("RecipeOverrideEditor")
+  addedPantryItems      PantryItem[]    @relation("PantryItemAddedBy")
+  miseCheckShares       MiseCheckShared[] @relation("MiseCheckSharedActor")
+  recipeShareTokens     RecipeShareToken[] @relation("RecipeShareTokenCreator")
+  groceryListShares     GroceryListShare[] @relation("GroceryListShareCreator")
+  notifications         Notification[] @relation("NotificationRecipient")
+  emittedNotifications  Notification[] @relation("NotificationActor")
+  emittedFamilyEvents   FamilyEvent[] @relation("FamilyEventActor")
 }
 
 model Account {
@@ -88,6 +95,10 @@ model Family {
   recipes SavedRecipe[]
   plans   WeeklyPlan[]
   recipeOverrides RecipeOverride[]
+  profiles Profile[]
+  pantryItems PantryItem[]
+  miseCheckShares MiseCheckShared[]
+  events  FamilyEvent[]
 }
 
 model FamilyMember {
@@ -183,6 +194,8 @@ model SavedRecipe {
 
   miseChecks MiseCheck[]
   cookLogs   CookLog[]
+  miseCheckShares MiseCheckShared[]
+  shareTokens     RecipeShareToken[]
 
   @@unique([userId, parsedRecipeId, familyId])
   @@index([userId])
@@ -260,6 +273,10 @@ enum PlannedMealStatus {
   QUEUED
   COOKED
   SKIPPED
+  // Roadmap item 2.16 — explicit terminal state when a queued meal becomes
+  // a leftover-night and shouldn't be re-cooked. Distinct from COOKED so we
+  // can attach the leftover meal's cook photo without inflating cookCount.
+  COOKED_FROM_LEFTOVERS
 }
 
 enum KidFitTag {
@@ -268,21 +285,42 @@ enum KidFitTag {
   NEW
 }
 
+// Roadmap item 1.7. Decision signals on MealCandidate — Alicia chooses by
+// mood, not by day. Auto-derived in scoreAndRankPlan from existing
+// (approxCookMinutes, mustUseHits, kidFit) signals; never set by the LLM.
+// LEFTOVER_FRIENDLY and ONE_PAN are reserved enum values; auto-tagging for
+// them is deferred until cook outcomes (item 2.15) provide better signals.
+enum MoodTag {
+  FAST_FORGIVING
+  EARNED_EFFORT
+  USE_IT_UP
+  KID_APPROVED
+  LEFTOVER_FRIENDLY
+  ONE_PAN
+}
+
 enum IntakeRole {
   USER
   ASSISTANT
 }
 
 model WeeklyPlan {
-  id          String     @id @default(cuid())
-  familyId    String?
-  createdById String
-  weekOf      DateTime
-  status      PlanStatus @default(DRAFT)
-  intake      Json?
-  skeleton    Json?
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  id             String     @id @default(cuid())
+  familyId       String?
+  createdById    String
+  weekOf         DateTime
+  status         PlanStatus @default(DRAFT)
+  intake         Json?
+  skeleton       Json?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  // Roadmap item 2.17 — Hosted Menu (promoted plan, public-by-token).
+  // publishedSlug is generated only on explicit publish action; revoked
+  // slugs are never reused (see decision #2 / 2026-04-28).
+  publishedSlug  String?    @unique
+  publishedAt    DateTime?
+  hostNote       String?
+  dietaryNote    String?
 
   family     Family?         @relation(fields: [familyId], references: [id], onDelete: Cascade)
   createdBy  User            @relation("WeeklyPlanCreator", fields: [createdById], references: [id], onDelete: Cascade)
@@ -290,6 +328,9 @@ model WeeklyPlan {
   candidates MealCandidate[]
   groceries  GroceryItem[]
   messages   IntakeMessage[]
+  events     PlanEvent[]
+  menuItems  WeeklyPlanMenuItem[]
+  groceryShares GroceryListShare[]
 
   @@index([familyId])
   @@index([createdById])
@@ -316,6 +357,7 @@ model MealCandidate {
   filteredOutReason   String?
   scoreBreakdownJson  Json?
   badges              String[]     @default([])
+  moodTags            MoodTag[]    @default([])
   rankedAt            DateTime?
   discardedAt         DateTime?
   createdAt           DateTime     @default(now())
@@ -341,10 +383,16 @@ model PlannedMeal {
   cookedAt          DateTime?
   skippedAt         DateTime?
   notes             String?
+  // Roadmap item 2.16 — when status is COOKED or COOKED_FROM_LEFTOVERS we
+  // optionally pin the CookLog this meal cooked into. Lets the leftover
+  // photo prompt point at the same row.
+  cookLogId         String?
   createdAt         DateTime          @default(now())
 
   plan      WeeklyPlan    @relation(fields: [planId], references: [id], onDelete: Cascade)
   candidate MealCandidate @relation(fields: [chosenCandidateId], references: [id], onDelete: Restrict)
+  outcomes  MealOutcome[]
+  menuItems WeeklyPlanMenuItem[]
 
   @@index([planId, status])
   @@index([chosenCandidateId])
@@ -363,11 +411,45 @@ model GroceryItem {
   purchasedAt   DateTime?
   purchasedById String?
 
-  plan        WeeklyPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
-  purchasedBy User?      @relation("GroceryPurchaser", fields: [purchasedById], references: [id])
+  plan        WeeklyPlan  @relation(fields: [planId], references: [id], onDelete: Cascade)
+  purchasedBy User?       @relation("GroceryPurchaser", fields: [purchasedById], references: [id])
+  pantryItem  PantryItem?
 
   @@index([planId, purchased])
   @@index([planId, slug])
+}
+
+// ─── Pantry (family inventory, longitudinal) ────────────────────────────────
+// Roadmap item 1.3. Persisted family pantry — escapes the per-week
+// `WeeklyPlan.intake.pantry` JSON so "use up what's in the kitchen" works
+// across plans. Append-only: when grocery items are purchased we add a row;
+// no consumption tracking yet (item 1.12 mise cascade reads the pantry,
+// item 2.x adds proper depletion semantics).
+//
+// `groceryItemId` is a back-reference so toggling `purchased` on/off within
+// one plan is idempotent (delete on uncheck). Across weeks we intentionally
+// allow duplicates — same SKU bought twice = two rows. The "current
+// quantity" reconciliation is a v2 concern.
+model PantryItem {
+  id            String    @id @default(cuid())
+  familyId      String
+  slug          String?
+  display       String
+  unit          String?
+  quantity      String?
+  mustUseBy     DateTime?
+  addedAt       DateTime  @default(now())
+  addedById     String?
+  source        String    @default("grocery")
+  groceryItemId String?   @unique
+
+  family      Family       @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  addedBy     User?        @relation("PantryItemAddedBy", fields: [addedById], references: [id])
+  groceryItem GroceryItem? @relation(fields: [groceryItemId], references: [id], onDelete: SetNull)
+
+  @@index([familyId])
+  @@index([familyId, slug])
+  @@index([familyId, addedAt])
 }
 
 // ─── Instagram ingestion ───────────────────────────────────────────────────
@@ -433,4 +515,251 @@ model IntakeMessage {
   plan WeeklyPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
 
   @@index([planId, createdAt])
+}
+
+// ─── Family eater profiles (kid prefs, longitudinal) ───────────────────────
+// Roadmap item 1.2. Per privacy decision (2026-04-28), profiles are
+// family-scoped — no userId on Profile or ProfilePreference. V1: one "Adults"
+// + one "Kids" Profile per family, populated by upsertProfilesFromIntake on
+// every intake.extracted. Read-side wiring lands in item 2.15 (MealOutcome
+// capture). No editor UI in Phase 1 — preferences accumulate from intake +
+// outcomes only.
+
+enum ProfileKind {
+  ADULT
+  KID
+}
+
+enum ProfilePreferenceKind {
+  RELIABLE_HIT
+  HARD_NO
+  ASPIRATION
+  EXPERIMENTING
+}
+
+model Profile {
+  id          String      @id @default(cuid())
+  familyId    String
+  name        String
+  kind        ProfileKind @default(KID)
+  ageBand     String?
+  avatarColor String?
+  createdAt   DateTime    @default(now())
+
+  family      Family              @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  preferences ProfilePreference[]
+  outcomes    MealOutcome[]
+
+  @@index([familyId])
+  @@index([familyId, kind])
+}
+
+// Lookup is hand-rolled by (profileId, kind, slug ?? display.toLowerCase())
+// in upsertProfilePreference — Postgres NULL-distinct rules out a clean
+// composite unique on slug. evidenceCount accumulates on re-confirmation;
+// lastConfirmedAt resets to now on every observation.
+model ProfilePreference {
+  id              String                @id @default(cuid())
+  profileId       String
+  kind            ProfilePreferenceKind
+  slug            String?
+  display         String
+  source          String                @default("intake")
+  lastConfirmedAt DateTime              @default(now())
+  evidenceCount   Int                   @default(1)
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId, kind])
+  @@index([profileId, slug])
+}
+
+// Append-only log of every planner mutation. Foundational for observability,
+// undo, and downstream reasoning UI. PlanEvent is a *log*, not source of
+// truth — PlannedMeal.status etc. remain authoritative. Dotted kind strings
+// (e.g., "skeleton.created", "grocery.purchased") namespace cleanly without
+// requiring an enum migration per new event type. No FK on actorId so the
+// audit trail survives user deletion.
+model PlanEvent {
+  id        String   @id @default(cuid())
+  planId    String
+  kind      String
+  payload   Json     @default("{}")
+  actorId   String?
+  createdAt DateTime @default(now())
+
+  plan WeeklyPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  @@index([planId, createdAt])
+  @@index([planId, kind])
+}
+
+// ─── Family event channel (Phase 2) ────────────────────────────────────────
+// Roadmap item 2.13. The household-wide pubsub primitive — one table, one
+// SSE channel. Plan events, mise checks, gift acceptances, kid outcomes,
+// presence pings all fan out from here. Dotted kind strings same as
+// PlanEvent. Sibling to PlanEvent: PlanEvent is plan-scoped (one plan's
+// pipeline log), FamilyEvent is family-scoped (live ribbon for everyone in
+// the household). PlanEvents that need to be live also surface here.
+model FamilyEvent {
+  id            String   @id @default(cuid())
+  familyId      String
+  kind          String
+  planId        String?
+  savedRecipeId String?
+  payload       Json     @default("{}")
+  actorId       String?
+  createdAt     DateTime @default(now())
+
+  family Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  actor  User?  @relation("FamilyEventActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([familyId, createdAt])
+  @@index([familyId, kind])
+}
+
+// ─── Shared mise checks (Phase 2 / 2.14) ───────────────────────────────────
+// Sibling to MiseCheck (per the convergence call — don't migrate the
+// per-user table). Per-family, broadcast via FamilyEvent when
+// `Family.syncExecution = true`. `source` distinguishes manual checks
+// (actor-avatar pulse) from grocery cascade (basket glyph) at render time;
+// the existing 1.12 cascade stays read-time, this table is for explicit
+// shared writes only.
+model MiseCheckShared {
+  id            String   @id @default(cuid())
+  savedRecipeId String
+  familyId      String
+  entryKey      String
+  checkedById   String
+  checkedAt     DateTime @default(now())
+  source        String   @default("manual")
+
+  savedRecipe SavedRecipe @relation(fields: [savedRecipeId], references: [id], onDelete: Cascade)
+  family      Family      @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  checkedBy   User        @relation("MiseCheckSharedActor", fields: [checkedById], references: [id], onDelete: Cascade)
+
+  @@unique([savedRecipeId, familyId, entryKey])
+  @@index([savedRecipeId, familyId])
+  @@index([familyId, checkedAt])
+}
+
+// ─── Meal outcome (Phase 2 / 2.15) ─────────────────────────────────────────
+// Post-cook 5-second per-eater thumbs prompt. Feeds
+// ProfilePreference.evidenceCount via promote/demote rules in
+// app/lib/planner/outcome-learning.ts. Family-readable per privacy decision
+// #4 (2026-04-28); no per-user scope columns.
+enum MealVerdict {
+  ATE
+  PICKED
+  REFUSED
+}
+
+enum EaterRole {
+  ADULT
+  KID
+}
+
+model MealOutcome {
+  plannedMealId String
+  profileId     String?
+  eaterRole     EaterRole
+  verdict       MealVerdict
+  notes         String?
+  createdAt     DateTime    @default(now())
+  id            String      @id @default(cuid())
+
+  plannedMeal PlannedMeal @relation(fields: [plannedMealId], references: [id], onDelete: Cascade)
+  profile     Profile?    @relation(fields: [profileId], references: [id], onDelete: SetNull)
+
+  @@index([plannedMealId])
+  @@index([profileId, createdAt])
+}
+
+// ─── Hosted Menu (Phase 2 / 2.17) ──────────────────────────────────────────
+// Promoted-plan model — no separate HostedMenu table; visibility lives on
+// WeeklyPlan via publishedSlug + publishedAt. WeeklyPlanMenuItem is the
+// thin per-meal snapshot (ordering + course label + frozen card JSON so
+// public visitors see the menu the host published, not whatever a later
+// override changed).
+model WeeklyPlanMenuItem {
+  id                String   @id @default(cuid())
+  planId            String
+  plannedMealId     String?
+  courseLabel       String?
+  displayBlurb      String?
+  position          Int      @default(0)
+  snapshotCardJson  Json
+  createdAt         DateTime @default(now())
+
+  plan        WeeklyPlan   @relation(fields: [planId], references: [id], onDelete: Cascade)
+  plannedMeal PlannedMeal? @relation(fields: [plannedMealId], references: [id], onDelete: SetNull)
+
+  @@index([planId, position])
+}
+
+// ─── Public recipe share (Phase 2 / 2.20) ──────────────────────────────────
+// Token-share for "send a friend a read-only recipe." `/r/[token]` resolves
+// to the existing guest-branch payload of /api/recipes/[id] (override-applied
+// card, no cookHistory). Token leakage mitigated by optional expiry +
+// revoked timestamp. View count is a soft counter for owner-side
+// observability.
+model RecipeShareToken {
+  id            String    @id @default(cuid())
+  savedRecipeId String
+  token         String    @unique
+  createdById   String
+  createdAt     DateTime  @default(now())
+  expiresAt     DateTime?
+  revokedAt     DateTime?
+  viewCount     Int       @default(0)
+
+  savedRecipe SavedRecipe @relation(fields: [savedRecipeId], references: [id], onDelete: Cascade)
+  createdBy   User        @relation("RecipeShareTokenCreator", fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@index([savedRecipeId])
+  @@index([createdById])
+}
+
+// ─── Delegate grocery share (Phase 2 / 2.19) ──────────────────────────────
+// Token-share the grocery list. Recipient (Alicia at Costco) sees the
+// sprite-driven shopping list and marks items purchased on a tokenized
+// public URL; writes flow back through the same logic as PATCH
+// /api/plans/[id]/grocery/[id] (idempotent on entryKey, pantry write-through
+// when family-scoped).
+model GroceryListShare {
+  id              String    @id @default(cuid())
+  planId          String
+  token           String    @unique
+  createdById     String
+  sharedWithEmail String?
+  createdAt       DateTime  @default(now())
+  expiresAt       DateTime?
+  revokedAt       DateTime?
+
+  plan      WeeklyPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  createdBy User       @relation("GroceryListShareCreator", fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@index([planId])
+  @@index([createdById])
+}
+
+// ─── Notification inbox (Phase 2 / 2.21) ──────────────────────────────────
+// Per-user notification rows. NO comments table per convergence call —
+// inbox surfaces gifts, hosted-menu RSVPs, "Alicia tuned the planner," kid
+// outcomes, photo notifications. Dotted kind strings; payload Json carries
+// type-specific shape (target ids, snippets, etc).
+model Notification {
+  id            String    @id @default(cuid())
+  userId        String
+  type          String
+  payload       Json      @default("{}")
+  readAt        DateTime?
+  actorUserId   String?
+  createdAt     DateTime  @default(now())
+
+  user        User  @relation("NotificationRecipient", fields: [userId], references: [id], onDelete: Cascade)
+  actorUser   User? @relation("NotificationActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([userId, readAt, createdAt])
+  @@index([userId, createdAt])
 }

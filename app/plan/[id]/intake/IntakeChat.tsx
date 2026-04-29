@@ -23,12 +23,28 @@ function hasIntakeCompleteSignal(m: UIMessage): boolean {
   );
 }
 
+type SeedMode = "USE_UP" | "EXPLORE" | "SURVIVAL";
+
+const MODE_OPENERS: Record<SeedMode, string> = {
+  USE_UP:
+    "Heavy use-up week, got it. What's in the fridge that needs to go this week? Throw out a few names and I'll build around them.",
+  EXPLORE:
+    "Exploration mode, love that. Any cuisines, techniques, or specific dishes you've been wanting to try — or should I surprise you with something the family hasn't seen yet?",
+  SURVIVAL:
+    "Just-survive week, understood. How many quick weeknight dinners do you need, and is there anything that's a guaranteed yes for the kids when you've got nothing left?",
+};
+
+const DEFAULT_OPENER =
+  "Hey — let's figure out this week. Before we get specific, what's the vibe? Heavy use-up week because the fridge is stacked, trying something new, or just surviving until Friday?";
+
 export function IntakeChat({
   planId,
   initialMessages,
+  seedMode = null,
 }: {
   planId: string;
   initialMessages: UIMessage[];
+  seedMode?: SeedMode | null;
 }) {
   const router = useRouter();
   const [input, setInput] = useState("");
@@ -48,7 +64,7 @@ export function IntakeChat({
             parts: [
               {
                 type: "text",
-                text: "Hey — let's figure out this week. Before we get specific, what's the vibe? Heavy use-up week because the fridge is stacked, trying something new, or just surviving until Friday?",
+                text: seedMode ? MODE_OPENERS[seedMode] : DEFAULT_OPENER,
               },
             ],
           },
