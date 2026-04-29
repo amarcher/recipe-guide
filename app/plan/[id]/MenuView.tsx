@@ -300,7 +300,7 @@ function QueueRow({
   }
 
   return (
-    <li className="relative rounded-lg border border-emerald-200 bg-white p-3">
+    <li className="relative min-w-0 rounded-lg border border-emerald-200 bg-white p-3">
       <div className="flex items-center gap-2">
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-semibold text-stone-900">
