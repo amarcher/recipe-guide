@@ -147,6 +147,17 @@ async function generateImage(
     : generateImageGemini(prompt, apiKey);
 }
 
+// We overwrite blobs in place (`addRandomSuffix: false`, `allowOverwrite: true`),
+// so the URL stays stable across regenerations. Vercel's image optimizer keys
+// its cache off the upstream URL alone, which means a regenerated blob keeps
+// serving the prior optimized variant. Tag the URL with the upload timestamp
+// so each regeneration is a distinct optimizer cache key while remaining
+// stable for unchanged content.
+function withVersion(url: string, uploadedAt: Date): string {
+  const sep = url.includes("?") ? "&" : "?";
+  return `${url}${sep}v=${uploadedAt.getTime()}`;
+}
+
 // Check if a blob is already in our store. `head()` throws on 404.
 async function existingBlobUrl(
   pathname: string,
@@ -154,7 +165,7 @@ async function existingBlobUrl(
 ): Promise<string | null> {
   try {
     const meta = await head(pathname, { token });
-    return meta.url;
+    return withVersion(meta.url, meta.uploadedAt);
   } catch {
     return null;
   }
@@ -254,7 +265,7 @@ export async function POST(req: NextRequest) {
               allowOverwrite: true,
             }),
           ]);
-          results[name] = { url: displayBlob.url, slug };
+          results[name] = { url: withVersion(displayBlob.url, new Date()), slug };
         } else {
           results[name] = {
             url: `data:image/png;base64,${display.toString("base64")}`,
