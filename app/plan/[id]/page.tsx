@@ -8,6 +8,7 @@ import { GroceryList } from "./GroceryList";
 import { PipelineControls } from "./PipelineControls";
 import { PublishControls } from "./PublishControls";
 import { GroceryShareControls } from "./GroceryShareControls";
+import { GroceryExportButton } from "./GroceryExportButton";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -155,6 +156,16 @@ export default async function PlanPage({
         />
 
         <GroceryShareControls planId={plan.id} hasItems={grocery.length > 0} />
+
+        <GroceryExportButton
+          planId={plan.id}
+          items={grocery.map((g) => ({
+            display: g.display,
+            slug: g.slug,
+            unit: g.unit,
+            quantity: g.quantity,
+          }))}
+        />
 
         {intake.notes && (
           <p className="mt-6 text-xs italic text-stone-500">{intake.notes}</p>

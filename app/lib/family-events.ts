@@ -24,6 +24,7 @@ export const FAMILY_EVENT_KINDS = [
   "meal.leftovers",
   "grocery.purchased",
   "grocery.unpurchased",
+  "grocery.exported",
   // Shared mise / Meezing (item 2.14).
   "mise.checked",
   "mise.unchecked",
