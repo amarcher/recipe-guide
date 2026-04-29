@@ -11,7 +11,8 @@
         "evoo"
       ],
       "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/olive-oil.png",
-      "aisle": "oils-vinegars"
+      "aisle": "oils-vinegars",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/olive-oil.png"
     },
     {
       "slug": "ground-beef",
@@ -22,7 +23,8 @@
         "minced beef"
       ],
       "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/ground-beef.png",
-      "aisle": "meat"
+      "aisle": "meat",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/ground-beef.png"
     },
     {
       "slug": "ground-pork",
@@ -33,7 +35,8 @@
         "minced pork"
       ],
       "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/ground-pork.png",
-      "aisle": "meat"
+      "aisle": "meat",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/ground-pork.png"
     },
     {
       "slug": "kosher-salt",
@@ -45,7 +48,8 @@
         "flaky salt"
       ],
       "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/kosher-salt.png",
-      "aisle": "spices"
+      "aisle": "spices",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/kosher-salt.png"
     },
     {
       "slug": "black-pepper",
@@ -57,7 +61,8 @@
         "ground pepper"
       ],
       "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/black-pepper.png",
-      "aisle": "spices"
+      "aisle": "spices",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/black-pepper.png"
     },
     {
       "slug": "garlic",
@@ -69,7 +74,8 @@
         "cloves garlic"
       ],
       "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/garlic.png",
-      "aisle": "produce"
+      "aisle": "produce",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/garlic.png"
     },
     {
       "slug": "yellow-onion",
@@ -81,7 +87,8 @@
         "onions"
       ],
       "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/yellow-onion.png",
-      "aisle": "produce"
+      "aisle": "produce",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/yellow-onion.png"
     },
     {
       "slug": "fennel-bulb",
@@ -92,7 +99,8 @@
         "fennel bulbs"
       ],
       "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/fennel-bulb.png",
-      "aisle": "produce"
+      "aisle": "produce",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/fennel-bulb.png"
     },
     {
       "slug": "fennel-seed",
@@ -102,7 +110,8 @@
         "fennel seeds"
       ],
       "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/fennel-seed.png",
-      "aisle": "spices"
+      "aisle": "spices",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/fennel-seed.png"
     },
     {
       "slug": "red-pepper-flakes",
@@ -114,7 +123,8 @@
         "crushed red pepper"
       ],
       "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/red-pepper-flakes.png",
-      "aisle": "spices"
+      "aisle": "spices",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/red-pepper-flakes.png"
     },
     {
       "slug": "white-wine",
@@ -125,7 +135,8 @@
         "wine"
       ],
       "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/white-wine.png",
-      "aisle": "wine-spirits"
+      "aisle": "wine-spirits",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/white-wine.png"
     },
     {
       "slug": "crushed-tomatoes",
@@ -137,7 +148,8 @@
         "tomatoes"
       ],
       "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/crushed-tomatoes.png",
-      "aisle": "canned-jarred"
+      "aisle": "canned-jarred",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/crushed-tomatoes.png"
     },
     {
       "slug": "broth",
@@ -150,7 +162,8 @@
         "stock"
       ],
       "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/broth.png",
-      "aisle": "canned-jarred"
+      "aisle": "canned-jarred",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/broth.png"
     },
     {
       "slug": "whole-milk",
@@ -160,7 +173,8 @@
         "milk"
       ],
       "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/whole-milk.png",
-      "aisle": "dairy"
+      "aisle": "dairy",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/whole-milk.png"
     },
     {
       "slug": "butter",
@@ -170,7 +184,8 @@
         "butter"
       ],
       "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/butter.png",
-      "aisle": "dairy"
+      "aisle": "dairy",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/butter.png"
     },
     {
       "slug": "parmesan",
@@ -182,7 +197,8 @@
         "parmesan cheese"
       ],
       "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/parmesan.png",
-      "aisle": "dairy"
+      "aisle": "dairy",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/parmesan.png"
     },
     {
       "slug": "pasta",
@@ -195,7 +211,8 @@
         "spaghetti"
       ],
       "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/pasta.png",
-      "aisle": "bread-grains"
+      "aisle": "bread-grains",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/pasta.png"
     },
     {
       "slug": "water",
@@ -204,7 +221,8 @@
         "water"
       ],
       "url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/water.png",
-      "aisle": "other"
+      "aisle": "other",
+      "original_url": "https://wf7r6btphmuqjmmj.public.blob.vercel-storage.com/sprites/originals/water.png"
     },
     {
       "slug": "whole-chicken",
