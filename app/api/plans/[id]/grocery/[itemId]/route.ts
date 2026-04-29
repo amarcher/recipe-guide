@@ -3,6 +3,7 @@ import { prisma } from "@/app/lib/prisma";
 import { requireUser } from "@/app/lib/server-auth";
 import { loadPlanIfOwned } from "@/app/lib/plan-auth";
 import { recordPlanEvent } from "@/app/lib/planner/events";
+import { recordFamilyEventForPlan } from "@/app/lib/family-events";
 
 export const runtime = "nodejs";
 
@@ -89,6 +90,16 @@ export async function PATCH(
     },
     user.userId,
   );
+  await recordFamilyEventForPlan(planId, {
+    kind: purchased ? "grocery.purchased" : "grocery.unpurchased",
+    payload: {
+      itemId,
+      slug: item.slug,
+      display: item.display,
+      unit: item.unit,
+    },
+    actorId: user.userId,
+  });
 
   return NextResponse.json({ ok: true });
 }

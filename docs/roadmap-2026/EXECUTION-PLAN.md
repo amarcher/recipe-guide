@@ -60,6 +60,25 @@ Order: 2.13 first (everything else uses the channel), then 2.14 + 2.15 in parall
 
 Decision-blocked: 2.17 (open #2), share-related UX in 2.17/2.20 (open #1).
 
+**Status (2026-04-29):** all nine items shipped in skeleton form pending
+production migration deploy. Migration `prisma/migrations/20260429002752_phase2`
+covers every schema addition (FamilyEvent, MiseCheckShared, MealOutcome +
+EaterRole + MealVerdict enums, WeeklyPlan publish columns,
+WeeklyPlanMenuItem, RecipeShareToken, GroceryListShare, Notification, plus
+PlannedMealStatus enum value `COOKED_FROM_LEFTOVERS` and PlannedMeal.cookLogId).
+
+| # | Item | Status |
+|---|------|--------|
+| 2.13 | FamilyEvent + SSE + polling fallback + `recordFamilyEvent` helper | shipped (build-time only; deploy migration to enable) |
+| 2.14 | Meezing presence + `MiseCheckShared` + SaveBar ribbon | shipped |
+| 2.15 | MealOutcome capture + post-cook prompt + ProfilePreference learning | shipped |
+| 2.16 | Mid-week pivots (Skip / Leftovers / Swap) + PATCH meal route | shipped |
+| 2.17 | Hosted Menu publish + `/menu/[slug]` + ICS + OG | shipped |
+| 2.18 | Sprite-driven aisle grocery grid + Shop/List toggle | shipped |
+| 2.19 | Delegate grocery share + `/grocery/[token]` + share controls | shipped |
+| 2.20 | Recipe share token + `/r/[token]` + post-cook ShareCookChip | shipped |
+| 2.21 | Notification table + `/inbox` + header badge + fan-out helpers | shipped |
+
 ## Phase 3 (parked, do not start without explicit user signal)
 
 Vendor-agnostic deep-link, partner API, smart re-orders, cross-family shelves, cross-family gifts, friends graph. Each requires evidence — usage data from Phase 2, or an explicit ask. Don't speculate.

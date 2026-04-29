@@ -568,6 +568,14 @@ async function fetchRemoteMise(recipeId: string) {
   } catch {}
 }
 
+// Roadmap item 2.14 — invalidate the per-recipe fetch flag so the next
+// caller re-fetches. Used by the family-event consumer when another member
+// checks an ingredient: drop the cache, refetch, paint.
+export async function refreshRemoteMise(recipeId: string): Promise<void> {
+  remoteMiseFetched.delete(recipeId);
+  await fetchRemoteMise(recipeId);
+}
+
 export async function toggleMiseCheck(recipeId: string, entryKey: string) {
   const cur = readMiseLocal(recipeId);
   const next = new Set(cur);

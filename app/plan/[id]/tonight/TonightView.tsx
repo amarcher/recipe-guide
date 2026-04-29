@@ -205,7 +205,9 @@ function TonightTile({
       }
       const body = (await r.json()) as { savedRecipeId: string };
       await refreshSavedRecipes();
-      router.push(`/recipe/${body.savedRecipeId}`);
+      router.push(
+        `/recipe/${body.savedRecipeId}?fromPlan=${planId}&fromPlanMeal=${meal.mealId}`,
+      );
     } catch (e) {
       setError(e instanceof Error ? e.message : "failed");
       setBusy(false);

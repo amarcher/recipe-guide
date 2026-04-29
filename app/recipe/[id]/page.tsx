@@ -2,7 +2,7 @@
 
 import { use, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Loader2, Pencil } from "lucide-react";
 import { forkRecipe, useSavedRecipe } from "@/app/lib/storage";
@@ -10,6 +10,7 @@ import { CookCardView } from "@/app/components/CookCardView";
 import { CookCardEditor } from "@/app/components/CookCardEditor";
 import { SaveBar } from "@/app/components/SaveBar";
 import { CookHistory } from "@/app/components/CookHistory";
+import { MealOutcomePrompt } from "@/app/components/MealOutcomePrompt";
 
 export default function RecipePage({
   params,
@@ -21,6 +22,14 @@ export default function RecipePage({
   const session = useSession();
   const signedIn = session.status === "authenticated";
   const [editMode, setEditMode] = useState(false);
+
+  // Roadmap item 2.15 — when we land here from a planner Cook tap, the
+  // query string carries the plan + meal ids so the post-cook outcome
+  // prompt can attribute the verdicts. Sticky until dismissed.
+  const search = useSearchParams();
+  const fromPlan = search.get("fromPlan");
+  const fromPlanMeal = search.get("fromPlanMeal");
+  const [outcomeDismissed, setOutcomeDismissed] = useState(false);
 
   return (
     <main className="flex flex-1 flex-col px-4 py-6 sm:py-10">
@@ -55,6 +64,14 @@ export default function RecipePage({
       ) : (
         <div className="mx-auto w-full max-w-3xl space-y-4">
           <SaveBar card={recipe.card} variant="detail" />
+          {fromPlan && fromPlanMeal && !outcomeDismissed && (
+            <MealOutcomePrompt
+              planId={fromPlan}
+              mealId={fromPlanMeal}
+              onDismiss={() => setOutcomeDismissed(true)}
+              onComplete={() => setOutcomeDismissed(true)}
+            />
+          )}
           {signedIn && (
             <div className="flex justify-end">
               <button

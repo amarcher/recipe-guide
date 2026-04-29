@@ -2,7 +2,21 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Plus, Clock, Users, Baby, Wand2, RefreshCw, X, Flame } from "lucide-react";
+import {
+  Check,
+  Plus,
+  Clock,
+  Users,
+  Baby,
+  Wand2,
+  RefreshCw,
+  X,
+  Flame,
+  MoreHorizontal,
+  SkipForward,
+  Repeat2,
+  UtensilsCrossed,
+} from "lucide-react";
 import { discoverSprites } from "@/app/lib/sprites";
 import { refreshSavedRecipes } from "@/app/lib/storage";
 import { MealFace, type MealFaceSubject } from "@/app/components/MealFace";
@@ -116,7 +130,11 @@ export function MenuView({
   return (
     <div>
       {committed.length > 0 && (
-        <QueueView planId={planId} committed={committed} />
+        <QueueView
+          planId={planId}
+          committed={committed}
+          allCandidates={candidates}
+        />
       )}
 
       <div className="mb-5 flex items-baseline justify-between text-sm text-stone-600">
@@ -140,10 +158,23 @@ export function MenuView({
 function QueueView({
   planId,
   committed,
+  allCandidates,
 }: {
   planId: string;
   committed: Candidate[];
+  allCandidates: Candidate[];
 }) {
+  // Map (slot, eaters-key) → siblings for swap.
+  function siblingsFor(c: Candidate): Candidate[] {
+    const k = [...c.eaters].sort().join("+");
+    return allCandidates.filter(
+      (other) =>
+        other.id !== c.id &&
+        other.slot === c.slot &&
+        [...other.eaters].sort().join("+") === k &&
+        !other.committed,
+    );
+  }
   return (
     <section className="mb-8 rounded-2xl border border-emerald-200 bg-emerald-50/40 p-4">
       <header className="mb-3 flex items-baseline justify-between">
@@ -157,7 +188,12 @@ function QueueView({
       </header>
       <ul className="grid gap-2 sm:grid-cols-2">
         {committed.map((c) => (
-          <QueueRow key={c.id} planId={planId} candidate={c} />
+          <QueueRow
+            key={c.id}
+            planId={planId}
+            candidate={c}
+            siblings={siblingsFor(c)}
+          />
         ))}
       </ul>
       <p className="mt-3 text-[11px] text-emerald-800/80">
@@ -170,13 +206,18 @@ function QueueView({
 function QueueRow({
   planId,
   candidate,
+  siblings,
 }: {
   planId: string;
   candidate: Candidate;
+  siblings: Candidate[];
 }) {
   const router = useRouter();
+  const [, startTransition] = useTransition();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [overflowOpen, setOverflowOpen] = useState(false);
+  const [swapOpen, setSwapOpen] = useState(false);
 
   async function onCook() {
     if (!candidate.plannedMealId) return;
@@ -193,44 +234,199 @@ function QueueRow({
       }
       const body = (await r.json()) as { savedRecipeId: string };
       await refreshSavedRecipes();
-      router.push(`/recipe/${body.savedRecipeId}`);
+      router.push(
+        `/recipe/${body.savedRecipeId}?fromPlan=${planId}&fromPlanMeal=${candidate.plannedMealId}`,
+      );
     } catch (e) {
       setError(e instanceof Error ? e.message : "failed");
       setBusy(false);
     }
   }
 
+  // Roadmap item 2.16 — mid-week pivots.
+  async function patchStatus(
+    status: "SKIPPED" | "COOKED_FROM_LEFTOVERS",
+  ) {
+    if (!candidate.plannedMealId) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const r = await fetch(
+        `/api/plans/${planId}/meals/${candidate.plannedMealId}`,
+        {
+          method: "PATCH",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ status }),
+        },
+      );
+      if (!r.ok) {
+        const body = await r.json().catch(() => ({}));
+        throw new Error(body.error ?? r.statusText);
+      }
+      setOverflowOpen(false);
+      startTransition(() => router.refresh());
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function swapTo(swapToCandidateId: string) {
+    if (!candidate.plannedMealId) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const r = await fetch(
+        `/api/plans/${planId}/meals/${candidate.plannedMealId}`,
+        {
+          method: "PATCH",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ swapToCandidateId }),
+        },
+      );
+      if (!r.ok) {
+        const body = await r.json().catch(() => ({}));
+        throw new Error(body.error ?? r.statusText);
+      }
+      setSwapOpen(false);
+      setOverflowOpen(false);
+      startTransition(() => router.refresh());
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
-    <li className="flex items-center gap-3 rounded-lg border border-emerald-200 bg-white p-3">
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-semibold text-stone-900">
-          {candidate.title}
-        </p>
-        <p className="flex items-center gap-2 text-xs text-stone-500">
-          <span className="inline-flex items-center gap-1">
-            <EaterIcon eaters={candidate.eaters} />
-            {eaterLabel(candidate.eaters)}
-          </span>
-          <span>·</span>
-          <span className="inline-flex items-center gap-1">
-            <Clock className="h-3 w-3" />
-            {candidate.approxCookMinutes} min
-          </span>
-        </p>
-        {error && (
-          <p className="mt-1 text-[11px] text-rose-700">{error}</p>
-        )}
+    <li className="relative rounded-lg border border-emerald-200 bg-white p-3">
+      <div className="flex items-center gap-2">
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-semibold text-stone-900">
+            {candidate.title}
+          </p>
+          <p className="flex items-center gap-2 text-xs text-stone-500">
+            <span className="inline-flex items-center gap-1">
+              <EaterIcon eaters={candidate.eaters} />
+              {eaterLabel(candidate.eaters)}
+            </span>
+            <span>·</span>
+            <span className="inline-flex items-center gap-1">
+              <Clock className="h-3 w-3" />
+              {candidate.approxCookMinutes} min
+            </span>
+          </p>
+          {error && (
+            <p className="mt-1 text-[11px] text-rose-700">{error}</p>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={onCook}
+          disabled={busy}
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-emerald-700 disabled:opacity-60"
+        >
+          {busy ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Flame className="h-3 w-3" />}
+          {busy ? "Opening…" : "Cook"}
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setOverflowOpen((v) => !v);
+            setSwapOpen(false);
+          }}
+          aria-label="More actions"
+          className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-stone-300 bg-white text-stone-500 hover:text-stone-900"
+        >
+          <MoreHorizontal className="h-4 w-4" />
+        </button>
       </div>
-      <button
-        type="button"
-        onClick={onCook}
-        disabled={busy}
-        className="inline-flex shrink-0 items-center gap-1.5 rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-emerald-700 disabled:opacity-60"
-      >
-        {busy ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Flame className="h-3 w-3" />}
-        {busy ? "Opening…" : "Cook"}
-      </button>
+
+      {overflowOpen && !swapOpen && (
+        <div className="mt-2 flex flex-wrap gap-1.5 rounded-md border border-stone-200 bg-stone-50 p-2">
+          <PivotButton
+            onClick={() => patchStatus("SKIPPED")}
+            disabled={busy}
+            icon={<SkipForward className="h-3 w-3" />}
+            label="Skip"
+          />
+          <PivotButton
+            onClick={() => patchStatus("COOKED_FROM_LEFTOVERS")}
+            disabled={busy}
+            icon={<UtensilsCrossed className="h-3 w-3" />}
+            label="Cooked from leftovers"
+          />
+          {siblings.length > 0 && (
+            <PivotButton
+              onClick={() => setSwapOpen(true)}
+              disabled={busy}
+              icon={<Repeat2 className="h-3 w-3" />}
+              label="Swap"
+            />
+          )}
+        </div>
+      )}
+
+      {swapOpen && (
+        <div className="mt-2 rounded-md border border-stone-200 bg-stone-50 p-2">
+          <div className="mb-1 flex items-center justify-between">
+            <span className="text-[11px] font-medium uppercase tracking-wide text-stone-500">
+              Swap for
+            </span>
+            <button
+              type="button"
+              onClick={() => setSwapOpen(false)}
+              className="text-stone-500 hover:text-stone-900"
+              aria-label="Close swap"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </div>
+          <ul className="space-y-1">
+            {siblings.map((s) => (
+              <li key={s.id}>
+                <button
+                  type="button"
+                  onClick={() => swapTo(s.id)}
+                  disabled={busy}
+                  className="w-full rounded-md border border-stone-200 bg-white px-2 py-1.5 text-left text-xs text-stone-800 transition hover:border-stone-400 disabled:opacity-50"
+                >
+                  <span className="font-medium">{s.title}</span>
+                  <span className="ml-2 text-[11px] text-stone-500">
+                    · {s.approxCookMinutes} min
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </li>
+  );
+}
+
+function PivotButton({
+  onClick,
+  disabled,
+  icon,
+  label,
+}: {
+  onClick: () => void;
+  disabled?: boolean;
+  icon: React.ReactNode;
+  label: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className="inline-flex items-center gap-1 rounded-md border border-stone-300 bg-white px-2 py-1 text-[11px] font-medium text-stone-700 transition hover:border-stone-500 disabled:opacity-50"
+    >
+      {icon}
+      {label}
+    </button>
   );
 }
 

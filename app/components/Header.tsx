@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { CalendarRange, Library, Users } from "lucide-react";
+import { Bell, CalendarRange, Library, Users } from "lucide-react";
 import { AvatarMenu } from "./AvatarMenu";
+import { InboxBadge } from "./InboxBadge";
 
 export function Header() {
   return (
@@ -22,6 +23,14 @@ export function Header() {
           <HeaderTab href="/plan" label="Plan" Icon={CalendarRange} />
           <HeaderTab href="/library" label="Library" Icon={Library} />
           <HeaderTab href="/settings" label="Families" Icon={Users} />
+          <Link
+            href="/inbox"
+            aria-label="Inbox"
+            className="relative inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[13px] font-medium text-stone-600 transition hover:bg-stone-100 hover:text-stone-900"
+          >
+            <Bell className="h-3.5 w-3.5" />
+            <InboxBadge />
+          </Link>
           <AvatarMenu />
         </nav>
       </div>

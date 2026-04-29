@@ -3,6 +3,7 @@ import { prisma } from "@/app/lib/prisma";
 import { requireUser } from "@/app/lib/server-auth";
 import { loadPlanIfOwned } from "@/app/lib/plan-auth";
 import { recordPlanEvent } from "@/app/lib/planner/events";
+import { recordFamilyEventForPlan } from "@/app/lib/family-events";
 import {
   publishCandidate,
   PublishCandidateError,
@@ -60,6 +61,15 @@ export async function POST(
     },
     user.userId,
   );
+  await recordFamilyEventForPlan(planId, {
+    kind: "meal.cooked",
+    savedRecipeId: result.savedRecipeId,
+    payload: {
+      mealId,
+      title: (meal.candidate as { title?: string }).title ?? null,
+    },
+    actorId: user.userId,
+  });
 
   return NextResponse.json({ savedRecipeId: result.savedRecipeId });
 }

@@ -6,6 +6,8 @@ import { loadPlanIfOwned } from "@/app/lib/plan-auth";
 import { MenuView } from "./MenuView";
 import { GroceryList } from "./GroceryList";
 import { PipelineControls } from "./PipelineControls";
+import { PublishControls } from "./PublishControls";
+import { GroceryShareControls } from "./GroceryShareControls";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -91,6 +93,15 @@ export default async function PlanPage({
           hasSkeleton={!!plan.skeleton}
         />
 
+        <PublishControls
+          planId={plan.id}
+          publishedSlug={plan.publishedSlug ?? null}
+          publishedAt={plan.publishedAt?.getTime() ?? null}
+          hostNote={plan.hostNote ?? null}
+          dietaryNote={plan.dietaryNote ?? null}
+          hasCommittedMeals={meals.length > 0}
+        />
+
         {skeleton.rationale && (
           <section className="mb-6 rounded-xl border border-amber-200 bg-amber-50/60 p-4">
             <p className="text-sm leading-relaxed text-stone-800">
@@ -142,6 +153,8 @@ export default async function PlanPage({
             purchased: g.purchased,
           }))}
         />
+
+        <GroceryShareControls planId={plan.id} hasItems={grocery.length > 0} />
 
         {intake.notes && (
           <p className="mt-6 text-xs italic text-stone-500">{intake.notes}</p>

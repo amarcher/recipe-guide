@@ -11,8 +11,13 @@ export const PLAN_EVENT_KINDS = [
   "meal.committed",
   "meal.uncommitted",
   "meal.cooked",
+  "meal.skipped",
+  "meal.swapped",
+  "meal.leftovers",
   "grocery.purchased",
   "grocery.unpurchased",
+  "menu.published",
+  "menu.revoked",
 ] as const;
 
 export type PlanEventKind = (typeof PLAN_EVENT_KINDS)[number];

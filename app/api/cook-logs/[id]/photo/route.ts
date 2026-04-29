@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/app/lib/prisma";
 import { requireUser } from "@/app/lib/server-auth";
 import { uploadCookLogPhoto } from "@/app/lib/cook-log-photo";
+import { recordFamilyEvent } from "@/app/lib/family-events";
+import { notifyFamily } from "@/app/lib/notifications";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -45,6 +47,28 @@ export async function POST(
 
   try {
     const url = await uploadCookLogPhoto(id, file);
+    // Roadmap items 2.13 + 2.21 — fan out the photo upload to family
+    // members. Best-effort; failures don't block the response.
+    if (log.savedRecipe.familyId) {
+      const payload = {
+        cookLogId: id,
+        savedRecipeId: log.savedRecipeId,
+        photoUrl: url,
+      };
+      await recordFamilyEvent({
+        familyId: log.savedRecipe.familyId,
+        kind: "cook.photo.uploaded",
+        savedRecipeId: log.savedRecipeId,
+        payload,
+        actorId: user.userId,
+      });
+      await notifyFamily(
+        log.savedRecipe.familyId,
+        "cook.photo.uploaded",
+        payload,
+        user.userId,
+      );
+    }
     return NextResponse.json({ photoUrl: url });
   } catch (e) {
     return NextResponse.json(
