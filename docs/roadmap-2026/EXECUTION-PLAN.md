@@ -79,9 +79,24 @@ PlannedMealStatus enum value `COOKED_FROM_LEFTOVERS` and PlannedMeal.cookLogId).
 | 2.20 | Recipe share token + `/r/[token]` + post-cook ShareCookChip | shipped |
 | 2.21 | Notification table + `/inbox` + header badge + fan-out helpers | shipped |
 
-## Phase 3 (parked, do not start without explicit user signal)
+## Phase 3 — partial (deeplink groundwork shipped 2026-04-28)
 
-Vendor-agnostic deep-link, partner API, smart re-orders, cross-family shelves, cross-family gifts, friends graph. Each requires evidence — usage data from Phase 2, or an explicit ask. Don't speculate.
+| # | Item | Status |
+|---|------|--------|
+| 3.1 | Vendor-agnostic deep-link grocery export | shipped (adapter + UI button + event log) |
+| 3.2 | Real partner API integration (AmazonFresh) | shipped (deeplink only; partner API deferred) |
+| 3.3 | Smart re-ordering | parked (needs 3+ months of MealOutcome history) |
+| 3.4 | Cross-family `RecipeShelf` | parked (no second family yet) |
+| 3.5 | Cross-family `RecipeGift` with lineage | parked (defer until 2.20 friction observed) |
+| 3.6 | Friends graph + activity feed | parked (zero documented friends) |
+
+**3.1 + 3.2 implementation notes:**
+
+- Vendor adapter at `app/lib/grocery-vendors.ts` — pure, Prisma-free, vitest-loadable. Three adapters (AmazonFresh, Instacart, Walmart); only AmazonFresh wired into the UI per the 2026-04-28 decision. Promoting another vendor is a one-line UI change once we have a real preference signal.
+- AmazonFresh URL shape: `https://www.amazon.com/s?k=<top-N items>&i=amazonfresh`. Single deeplink primes the first ~5 items (search relevance handles the rest); the full list lands on the clipboard so the user can paste-add the remainder. URL-length guardrail caps the encoded query at ~1500 chars.
+- UI: `<GroceryExportButton />` in `app/plan/[id]/GroceryExportButton.tsx`, slotted below `GroceryShareControls` on `/plan/[id]`. Reuses the inline-section styling from delegate-share so it doesn't fork a new visual idiom.
+- Events: `grocery.exported` added to `PLAN_EVENT_KINDS` and `FAMILY_EVENT_KINDS`. The thin route `POST /api/plans/[id]/grocery/export` records both. Family fan-out lets item 2.21 surface the export in the inbox once the inbox is connected to this kind.
+- Out of scope (explicitly): OAuth / partner API integration, schema changes, per-family vendor preference, multi-vendor toggles in the UI, mobile share-sheet integration. All deferred until we have evidence.
 
 ## What we cut — do not propose these without new evidence
 

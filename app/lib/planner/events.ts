@@ -16,6 +16,7 @@ export const PLAN_EVENT_KINDS = [
   "meal.leftovers",
   "grocery.purchased",
   "grocery.unpurchased",
+  "grocery.exported",
   "menu.published",
   "menu.revoked",
 ] as const;
