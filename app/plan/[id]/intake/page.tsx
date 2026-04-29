@@ -8,14 +8,25 @@ import { IntakeChat } from "./IntakeChat";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+type SeedMode = "USE_UP" | "EXPLORE" | "SURVIVAL";
+
+function parseSeedMode(raw: string | string[] | undefined): SeedMode | null {
+  const v = Array.isArray(raw) ? raw[0] : raw;
+  return v === "USE_UP" || v === "EXPLORE" || v === "SURVIVAL" ? v : null;
+}
+
 export default async function IntakePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ mode?: string | string[] }>;
 }) {
   const user = await requireUser();
   if (!user) redirect("/");
   const { id } = await params;
+  const sp = await searchParams;
+  const seedMode = parseSeedMode(sp.mode);
 
   const plan = await loadPlanIfOwned(user.userId, id);
   if (!plan) notFound();
@@ -51,6 +62,7 @@ export default async function IntakePage({
 
         <IntakeChat
           planId={id}
+          seedMode={seedMode}
           initialMessages={priorMessages.map((m) => ({
             id: m.id,
             role: m.role === "USER" ? ("user" as const) : ("assistant" as const),

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/app/lib/prisma";
 import { requireUser } from "@/app/lib/server-auth";
 import { loadPlanIfOwned } from "@/app/lib/plan-auth";
+import { recordPlanEvent } from "@/app/lib/planner/events";
 
 export const runtime = "nodejs";
 
@@ -46,6 +47,48 @@ export async function PATCH(
           purchasedById: null,
         },
   });
+
+  // Roadmap item 1.3 — write through to PantryItem on family-scoped plans.
+  // Idempotent on (groceryItemId): toggling purchased on/off within a plan
+  // is reversible; cross-plan duplicates are intentional (don't reconcile).
+  if (plan.familyId) {
+    if (purchased) {
+      const existing = await prisma.pantryItem.findUnique({
+        where: { groceryItemId: itemId },
+      });
+      if (!existing) {
+        await prisma.pantryItem.create({
+          data: {
+            familyId: plan.familyId,
+            slug: item.slug,
+            display: item.display,
+            unit: item.unit,
+            quantity: item.quantity,
+            addedById: user.userId,
+            source: "grocery",
+            groceryItemId: itemId,
+          },
+        });
+      }
+    } else {
+      await prisma.pantryItem.deleteMany({
+        where: { groceryItemId: itemId },
+      });
+    }
+  }
+
+  await recordPlanEvent(
+    planId,
+    purchased ? "grocery.purchased" : "grocery.unpurchased",
+    {
+      itemId,
+      slug: item.slug,
+      display: item.display,
+      unit: item.unit,
+      pantryWriteThrough: !!plan.familyId,
+    },
+    user.userId,
+  );
 
   return NextResponse.json({ ok: true });
 }

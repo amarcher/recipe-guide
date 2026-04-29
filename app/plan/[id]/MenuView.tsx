@@ -3,9 +3,9 @@
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Check, Plus, Clock, Users, Baby, Wand2, RefreshCw, X, Flame } from "lucide-react";
-import { Sprite } from "@/app/components/Sprite";
 import { discoverSprites } from "@/app/lib/sprites";
 import { refreshSavedRecipes } from "@/app/lib/storage";
+import { MealFace, type MealFaceSubject } from "@/app/components/MealFace";
 
 type Candidate = {
   id: string;
@@ -17,6 +17,7 @@ type Candidate = {
   heroIngredientSlugs: string[];
   approxCookMinutes: number;
   kidFitTag: "RELIABLE" | "STRETCH" | "NEW";
+  moodTags: string[];
   rank: number | null;
   badges: string[];
   committed: boolean;
@@ -44,16 +45,13 @@ const SLOT_LABEL: Record<Candidate["slot"], string> = {
   SNACK: "Snacks",
 };
 
-const BADGE_LABEL: Record<string, string> = {
-  "clears-the-fridge": "Clears the fridge",
-  "kid-reliable": "Kid-reliable",
-  "under-30-min": "Under 30 min",
-  "under-40-min": "Under 40 min",
-  "honors-aspiration": "Honors an aspiration",
-  "uses-pantry-x3": "Uses 3 pantry items",
-  "never-tried": "Never tried",
-  "revisit": "Time to revisit",
-};
+// Mood tags are the single eyebrow signal per the visual-design lens.
+// Candidate.moodTags is a ranked list (computed in scoring.ts); we render
+// only the first. Badges remain in the data but no longer paint the tile —
+// they may resurface in a peek sheet later (item 1.9 follow-up).
+function pickMoodTag(c: Candidate): string | null {
+  return c.moodTags?.[0] ?? null;
+}
 
 function groupCandidates(candidates: Candidate[]): Group[] {
   const byKey = new Map<string, Group>();
@@ -395,24 +393,45 @@ function CandidateCard({
   }
 
   const cardClass = committed
-    ? "border-emerald-300 bg-emerald-50/60"
+    ? "border-emerald-300 ring-1 ring-emerald-300/50"
     : kidOnly
-    ? "border-amber-200 bg-white/80 hover:border-amber-400"
-    : "border-stone-200 bg-white hover:border-stone-300";
+    ? "border-amber-200 hover:border-amber-400"
+    : "border-stone-200 hover:border-stone-300";
+
+  // Roadmap item 1.9 — every candidate gets a face. Vignette mode (rotated
+  // hero sprites on a colored wash) is the default; once item 1.13's
+  // transparent sprites land the same composition reads as ingredients on
+  // cream paper. Summary is repurposed as the tagline (one evocative line);
+  // moodTag is the single eyebrow signal. Rationale and the badge soup
+  // recede — they may resurface in a peek sheet later.
+  const subject: MealFaceSubject = {
+    id: c.id,
+    title: c.title,
+    tagline: c.summary,
+    heroIngredientSlugs: c.heroIngredientSlugs,
+    moodTag: pickMoodTag(c),
+  };
 
   return (
     <article
-      className={`group relative flex flex-col rounded-xl border p-4 shadow-sm transition ${cardClass}`}
+      className={`group relative flex flex-col overflow-hidden rounded-xl border bg-stone-50 shadow-sm transition ${cardClass}`}
     >
-      <div className="flex items-start justify-between gap-2">
-        <h3 className="text-base font-semibold leading-snug text-stone-900">
-          {c.title}
-        </h3>
+      <MealFace subject={subject} size="tile" className="rounded-none" />
+
+      <div className="flex items-center justify-between gap-3 border-t border-stone-100 px-4 py-2.5 text-xs text-stone-500">
+        <span className="inline-flex shrink-0 items-center gap-1">
+          <Clock className="h-3 w-3" />
+          {c.approxCookMinutes} min
+        </span>
+        <span className="inline-flex items-center gap-1">
+          <EaterIcon eaters={c.eaters} />
+          {eaterLabel(c.eaters)}
+        </span>
         <button
           type="button"
           onClick={toggle}
           disabled={pending}
-          aria-label={committed ? "Uncommit" : "Commit"}
+          aria-label={committed ? "Remove from menu" : "Add to menu"}
           className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition disabled:opacity-60 ${
             committed
               ? "bg-emerald-600 text-white hover:bg-emerald-700"
@@ -421,42 +440,6 @@ function CandidateCard({
         >
           {committed ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
         </button>
-      </div>
-
-      <p className="mt-1 text-sm text-stone-700">{c.summary}</p>
-      <p className="mt-2 text-xs italic text-stone-500">{c.rationale}</p>
-
-      <div className="mt-3 flex flex-wrap gap-1.5">
-        {c.badges.map((b) => (
-          <span
-            key={b}
-            className="inline-flex items-center gap-1 rounded-full bg-stone-100 px-2 py-0.5 text-[11px] text-stone-700"
-          >
-            {BADGE_LABEL[b] ?? b}
-          </span>
-        ))}
-      </div>
-
-      <div className="mt-3 flex items-center justify-between gap-3 border-t border-stone-100 pt-3 text-xs text-stone-500">
-        <span className="inline-flex shrink-0 items-center gap-1">
-          <Clock className="h-3 w-3" />
-          {c.approxCookMinutes} min
-        </span>
-        {c.heroIngredientSlugs.length > 0 && (
-          <span
-            className="flex -space-x-1 overflow-hidden"
-            aria-label={`key ingredients: ${c.heroIngredientSlugs.slice(0, 4).join(", ")}`}
-          >
-            {c.heroIngredientSlugs.slice(0, 4).map((slug) => (
-              <Sprite
-                key={slug}
-                name={slug.replace(/-/g, " ")}
-                size={24}
-                className="rounded-full bg-white ring-2 ring-white"
-              />
-            ))}
-          </span>
-        )}
       </div>
     </article>
   );

@@ -1,41 +1,22 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import Image from "next/image";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Clock, ImagePlus, Loader2, Trash2, Users } from "lucide-react";
 import type { CookCard } from "@/app/types";
-import { Sprite } from "@/app/components/Sprite";
 import { deleteRecipe } from "@/app/lib/storage";
 import { useConfirm } from "@/app/components/ConfirmDialog";
+import {
+  MealFace,
+  resolveMealFaceKind,
+  type MealFaceSubject,
+} from "@/app/components/MealFace";
 
-export type WashKey = "rose" | "ochre" | "emerald" | "amber";
-
-const WASH: Record<WashKey, { bg: string; ink: string; hint: string }> = {
-  rose: {
-    bg: "linear-gradient(160deg, #fbe2d9 0%, #f3c2b3 100%)",
-    ink: "#5a2a1e",
-    hint: "rgba(90,42,30,.55)",
-  },
-  ochre: {
-    bg: "linear-gradient(160deg, #f7e2b8 0%, #ead09a 100%)",
-    ink: "#4a3312",
-    hint: "rgba(74,51,18,.55)",
-  },
-  emerald: {
-    bg: "linear-gradient(160deg, #d4e4c9 0%, #b8d1a9 100%)",
-    ink: "#243d1c",
-    hint: "rgba(36,61,28,.55)",
-  },
-  amber: {
-    bg: "linear-gradient(160deg, #f4d99a 0%, #e6bf6e 100%)",
-    ink: "#553612",
-    hint: "rgba(85,54,18,.55)",
-  },
-};
-
-export type TileKind = "video" | "photo" | "vignette" | "swatch";
+// Re-exports for backwards compatibility — call sites that imported from
+// here can keep doing so. New code should import from @/app/components/MealFace.
+export type { WashKey } from "@/app/components/MealFace";
+export { WASH, pickWash } from "@/app/components/MealFace";
 
 export type TileData = {
   id: string;
@@ -62,18 +43,6 @@ function formatRelative(ts: number, now: number): string {
   if (days < 14) return `${days}d ago`;
   if (days < 60) return `${Math.floor(days / 7)}w ago`;
   return new Date(ts).toLocaleDateString();
-}
-
-function hashToIdx(s: string, mod: number): number {
-  let h = 0;
-  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
-  return h % mod;
-}
-
-const WASH_KEYS: WashKey[] = ["rose", "ochre", "emerald", "amber"];
-
-export function pickWash(id: string): WashKey {
-  return WASH_KEYS[hashToIdx(id, WASH_KEYS.length)];
 }
 
 export function heroesFromCard(card: CookCard, limit = 3): string[] {
@@ -114,19 +83,20 @@ export function RolodexTile({
   const [uploadError, setUploadError] = useState<string | null>(null);
 
   const shownPhoto = localUrl ?? tile.photoUrl;
-  // Prefer video when we have one AND no user-uploaded photo override.
-  // A locally uploaded photo (via the corner button) takes precedence so the
-  // user always has a way to replace the Instagram video with their own shot.
-  const kind: TileKind =
-    !localUrl && tile.videoUrl
-      ? "video"
-      : shownPhoto
-      ? "photo"
-      : tile.heroes.length > 0
-      ? "vignette"
-      : "swatch";
-  const wash = WASH[pickWash(tile.id)];
   const visualHeight = tall ? 220 : 160;
+
+  // Subject for the shared visual primitive. Photo override comes from
+  // pending uploads; vignette/swatch fall through automatically when there's
+  // no photo or video.
+  const subject: MealFaceSubject = {
+    id: tile.id,
+    title: tile.title,
+    tagline: tile.tagline,
+    photoUrl: shownPhoto,
+    videoUrl: !localUrl ? tile.videoUrl : null,
+    heroIngredientSlugs: tile.heroes,
+  };
+  const kind = resolveMealFaceKind(subject);
 
   async function upload(file: File) {
     if (!file.type.startsWith("image/")) {
@@ -244,51 +214,17 @@ export function RolodexTile({
       className={articleClass}
       style={{ transitionDuration: "180ms" }}
     >
-      <Link
-        href={tileHref}
-        onClick={onSelectClick}
-        className="block"
-      >
-        {/* Visual */}
-        <div
-          className="relative overflow-hidden"
-          style={{
-            height: visualHeight,
-            background:
-              kind === "photo" || kind === "video" ? "#efe5d0" : wash.bg,
-          }}
-        >
-          {kind === "video" && tile.videoUrl && (
-            <InViewVideo
-              src={tile.videoUrl}
-              poster={tile.photoUrl ?? undefined}
-              title={tile.title}
-            />
-          )}
+      <Link href={tileHref} onClick={onSelectClick} className="block">
+        <div className="relative">
+          {/* MealFace visual + caption — shared with menu/tonight/hosted-menu */}
+          <MealFace
+            subject={subject}
+            visualHeight={visualHeight}
+            showCaption={false}
+            className="rounded-none"
+          />
 
-          {kind === "photo" && shownPhoto && (
-            <Image
-              src={shownPhoto}
-              alt={tile.title}
-              fill
-              sizes="(min-width: 820px) 33vw, (min-width: 520px) 50vw, 100vw"
-              className="object-cover"
-              unoptimized={shownPhoto.startsWith("blob:")}
-            />
-          )}
-
-          {kind === "vignette" && (
-            <VignetteArea heroes={tile.heroes} height={visualHeight} />
-          )}
-
-          {kind === "swatch" && (
-            <SwatchCopy
-              ink={wash.ink}
-              tagline={tile.tagline}
-              title={tile.title}
-            />
-          )}
-
+          {/* Library-specific overlay chrome */}
           {(dragOver || uploading) && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/30 text-white">
               {uploading ? (
@@ -343,13 +279,13 @@ export function RolodexTile({
           )}
         </div>
 
-        {/* Caption */}
+        {/* Library-specific caption — title + scope chips + cook count.
+            Different from MealFace's default caption, so we render it ourselves. */}
         <div className="flex flex-col gap-2 bg-stone-50 px-4 py-3">
           <h2 className="font-serif text-[18px] font-medium leading-tight tracking-tight text-stone-900 line-clamp-2">
             {tile.title}
           </h2>
 
-          {/* Tagline only shows on non-swatch tiles; swatch already leads with it. */}
           {tile.tagline && kind !== "swatch" && (
             <p className="font-serif italic text-[13px] leading-snug text-stone-600 line-clamp-2">
               {tile.tagline}
@@ -405,129 +341,5 @@ export function RolodexTile({
         }}
       />
     </article>
-  );
-}
-
-// Autoplay muted loops are gorgeous in a grid but expensive if they all run
-// at once. IntersectionObserver gates playback to tiles actually in view.
-// Safari also refuses to autoplay a video that isn't muted AND playsInline.
-function InViewVideo({
-  src,
-  poster,
-  title,
-}: {
-  src: string;
-  poster: string | undefined;
-  title: string;
-}) {
-  const ref = useRef<HTMLVideoElement>(null);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    if (typeof IntersectionObserver === "undefined") {
-      el.play().catch(() => {});
-      return;
-    }
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const e of entries) {
-          if (e.isIntersecting) el.play().catch(() => {});
-          else el.pause();
-        }
-      },
-      { threshold: 0.2 }
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
-
-  return (
-    <video
-      ref={ref}
-      src={src}
-      poster={poster}
-      muted
-      loop
-      playsInline
-      preload="metadata"
-      aria-label={title}
-      className="absolute inset-0 h-full w-full object-cover"
-    />
-  );
-}
-
-function VignetteArea({
-  heroes,
-  height,
-}: {
-  heroes: string[];
-  height: number;
-}) {
-  return (
-    <div className="absolute inset-0">
-      {heroes.map((name, i) => {
-        const size = i === 0 ? height * 0.82 : height * (0.5 - i * 0.08);
-        const left = i === 0 ? "8%" : `${20 + i * 22}%`;
-        const bottom = i === 0 ? "-14%" : `${8 + (i % 2) * 18}%`;
-        const rot = i === 0 ? -6 : i % 2 === 0 ? 8 : -12;
-        return (
-          <div
-            key={`${name}-${i}`}
-            className="absolute"
-            style={{
-              left,
-              bottom,
-              width: size,
-              height: size,
-              transform: `rotate(${rot}deg)`,
-              filter: "drop-shadow(0 8px 14px rgba(60,40,15,.2))",
-              zIndex: heroes.length - i,
-            }}
-          >
-            <Sprite name={name} size={Math.round(size)} />
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-function SwatchCopy({
-  ink,
-  tagline,
-  title,
-}: {
-  ink: string;
-  tagline: string | null;
-  title: string;
-}) {
-  const pull = tagline ?? title;
-  return (
-    <div className="flex h-full flex-col items-start justify-end p-5">
-      <span
-        className="font-serif italic"
-        style={{
-          color: ink,
-          opacity: 0.55,
-          fontSize: "11px",
-          letterSpacing: "0.16em",
-          textTransform: "uppercase",
-        }}
-      >
-        — from the archive
-      </span>
-      <span
-        className="mt-2 font-serif italic"
-        style={{
-          color: ink,
-          fontSize: tagline ? "20px" : "24px",
-          lineHeight: 1.2,
-          letterSpacing: "-0.01em",
-          textWrap: "pretty",
-        }}
-      >
-        &ldquo;{pull}&rdquo;
-      </span>
-    </div>
   );
 }

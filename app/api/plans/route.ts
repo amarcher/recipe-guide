@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/app/lib/prisma";
 import { requireUser } from "@/app/lib/server-auth";
+import { recordPlanEvent } from "@/app/lib/planner/events";
 
 export const runtime = "nodejs";
 
@@ -64,6 +65,13 @@ export async function POST(req: NextRequest) {
       status: "DRAFT",
     },
   });
+
+  await recordPlanEvent(
+    plan.id,
+    "plan.created",
+    { familyId, weekOf: plan.weekOf.toISOString() },
+    user.userId,
+  );
 
   return NextResponse.json({ id: plan.id });
 }

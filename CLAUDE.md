@@ -155,7 +155,7 @@ Everything in `app/lib/planner/schemas.ts` has been tuned for Anthropic's `outpu
 
 **Schema migrations against production**: `DATABASE_URL_UNPOOLED` in `.env.local` points at production Neon. The harness blocks `prisma migrate dev` and shadow-DB diffs against production for safety. To apply a schema change:
 1. Edit `prisma/schema.prisma`.
-2. Generate the SQL via `git show HEAD:prisma/schema.prisma > /tmp/prev.prisma && npx prisma migrate diff --from-schema /tmp/prev.prisma --to-schema prisma/schema.prisma --script` — pure file-to-file diff, no DB touched.
-3. Drop the SQL into a new directory `prisma/migrations/<UTC-timestamp>_<slug>/migration.sql`.
+2. Generate the SQL via `git show HEAD:prisma/schema.prisma > /tmp/prev.prisma && mkdir -p prisma/migrations/<UTC-timestamp>_<slug> && npx prisma migrate diff --from-schema /tmp/prev.prisma --to-schema prisma/schema.prisma --script --output prisma/migrations/<UTC-timestamp>_<slug>/migration.sql` — pure file-to-file diff, no DB touched. **Use `--output`, not stdout redirection** — Prisma emits a log line (`◇ injected env …`) to stdout that contaminates the SQL file and breaks `migrate deploy` with a `42601` syntax error.
+3. (skip — step 2's `--output` already wrote the file)
 4. Apply with `npx prisma migrate deploy` (forward-only, never resets).
 5. `npx prisma generate` and restart the dev server.

@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/app/lib/prisma";
 import { requireUser } from "@/app/lib/server-auth";
+import { cascadeEntryKeys } from "@/app/lib/planner/mise-cascade";
+import { findSprite } from "@/app/lib/sprites-core";
+import type { CookCard } from "@/app/types";
 
 export const runtime = "nodejs";
 
@@ -34,11 +37,39 @@ export async function GET(
   if (!(await ensureAccess(user.userId, id)))
     return NextResponse.json({ error: "not found" }, { status: 404 });
 
-  const checks = await prisma.miseCheck.findMany({
+  // Personal checks (the user's own MiseCheck rows).
+  const personal = await prisma.miseCheck.findMany({
     where: { savedRecipeId: id, userId: user.userId },
     select: { entryKey: true },
   });
-  return NextResponse.json({ checked: checks.map((c) => c.entryKey) });
+  const checked = new Set(personal.map((c) => c.entryKey));
+
+  // Roadmap item 1.12 — pantry → mise cascade. For family-scoped recipes,
+  // any ingredient whose slug matches a PantryItem in the family's pantry
+  // appears pre-checked. Pure read-time compute; no row writes. The cascade
+  // is indistinct from manual checks at the UI layer per the
+  // execution-layer-untouchable rule.
+  const saved = await prisma.savedRecipe.findUnique({
+    where: { id },
+    select: { familyId: true, parsedRecipe: { select: { cardJson: true } } },
+  });
+  if (saved?.familyId && saved.parsedRecipe) {
+    const pantry = await prisma.pantryItem.findMany({
+      where: { familyId: saved.familyId, slug: { not: null } },
+      select: { slug: true },
+    });
+    const pantrySlugs = new Set(
+      pantry.map((p) => p.slug).filter((s): s is string => !!s),
+    );
+    if (pantrySlugs.size > 0) {
+      const card = saved.parsedRecipe.cardJson as unknown as CookCard;
+      for (const k of cascadeEntryKeys(card, pantrySlugs, findSprite)) {
+        checked.add(k);
+      }
+    }
+  }
+
+  return NextResponse.json({ checked: [...checked] });
 }
 
 // Body: { entryKey: string, checked: boolean }

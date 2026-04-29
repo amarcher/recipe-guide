@@ -1,3 +1,19 @@
+// Two read modes for a recipe card. Pick the right one for your surface:
+//
+//   resolveCard / resolveCardsForSavedRecipes
+//     → VIEWER surfaces (recipe page, library list, fork). Applies the
+//       per-scope RecipeOverride on top of the canonical ParsedRecipe.cardJson.
+//
+//   loadCanonicalCard
+//     → PLANNER surfaces (skeleton / candidates / scoring / aggregation /
+//       recent-history). Reasoning about a recipe must use the parsed card,
+//       NEVER an applied override — otherwise the same dish scores differently
+//       in family A vs family B because of a renamed ingredient (silent
+//       correctness bug). See roadmap item 1.4.
+//
+// Anything in app/lib/planner/** or app/api/plans/** is a planner read and
+// must NOT import resolveCard / resolveCardsForSavedRecipes — enforced by
+// app/lib/planner/canonical-only.test.ts.
 import type { Prisma } from "@/app/generated/prisma/client";
 import { prisma } from "@/app/lib/prisma";
 import type { CookCard } from "@/app/types";

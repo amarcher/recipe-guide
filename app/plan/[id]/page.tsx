@@ -69,12 +69,20 @@ export default async function PlanPage({
               Menu
             </h1>
           </div>
-          <Link
-            href="/library"
-            className="text-sm font-medium text-stone-700 hover:text-stone-900"
-          >
-            Library
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link
+              href={`/plan/${plan.id}/tonight`}
+              className="text-sm font-medium text-stone-700 hover:text-stone-900"
+            >
+              Tonight →
+            </Link>
+            <Link
+              href="/library"
+              className="text-sm font-medium text-stone-700 hover:text-stone-900"
+            >
+              Library
+            </Link>
+          </div>
         </div>
 
         <PipelineControls
@@ -115,6 +123,7 @@ export default async function PlanPage({
             heroIngredientSlugs: c.heroIngredientSlugs,
             approxCookMinutes: c.approxCookMinutes,
             kidFitTag: c.kidFitTag,
+            moodTags: c.moodTags,
             rank: c.rank,
             badges: c.badges,
             committed: committedCandidateIds.has(c.id),
