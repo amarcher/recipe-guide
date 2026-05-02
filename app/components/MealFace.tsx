@@ -61,7 +61,7 @@ export function pickWash(id: string): WashKey {
   return WASH_KEYS[hashToIdx(id, WASH_KEYS.length)];
 }
 
-export type MealFaceKind = "video" | "photo" | "vignette" | "swatch";
+export type MealFaceKind = "video" | "photo" | "generated" | "vignette" | "swatch";
 
 export type MealFaceSubject = {
   // Stable id — drives deterministic wash pick. Caller must provide.
@@ -70,6 +70,10 @@ export type MealFaceSubject = {
   tagline?: string | null;
   photoUrl?: string | null;
   videoUrl?: string | null;
+  // AI-generated dish mockup. Slots between user photo and vignette in the
+  // resolution ladder — only shown when no real photo or video exists. Renders
+  // identically to a photo but with a subtle ✨ badge.
+  generatedDishImageUrl?: string | null;
   heroIngredientSlugs?: string[];
   // Single mood eyebrow above the title (e.g. "FAST_FORGIVING" → "FAST · FORGIVING").
   // Caller picks one — MealFace renders at most one.
@@ -87,6 +91,7 @@ const SIZE_HEIGHT: Record<MealFaceSize, number> = {
 export function resolveMealFaceKind(subject: MealFaceSubject): MealFaceKind {
   if (subject.videoUrl) return "video";
   if (subject.photoUrl) return "photo";
+  if (subject.generatedDishImageUrl) return "generated";
   if (subject.heroIngredientSlugs && subject.heroIngredientSlugs.length > 0) {
     return "vignette";
   }
@@ -133,7 +138,10 @@ export function MealFace({
         className="relative overflow-hidden"
         style={{
           height,
-          background: kind === "photo" || kind === "video" ? "#efe5d0" : wash.bg,
+          background:
+            kind === "photo" || kind === "video" || kind === "generated"
+              ? "#efe5d0"
+              : wash.bg,
         }}
       >
         {kind === "video" && subject.videoUrl && (
@@ -152,6 +160,27 @@ export function MealFace({
             className="object-cover"
             unoptimized={subject.photoUrl.startsWith("blob:")}
           />
+        )}
+        {kind === "generated" && subject.generatedDishImageUrl && (
+          <>
+            <Image
+              src={subject.generatedDishImageUrl}
+              alt={subject.title}
+              fill
+              sizes="(min-width: 820px) 33vw, (min-width: 520px) 50vw, 100vw"
+              className="object-cover"
+            />
+            {/* Subtle "this is a mockup" affordance. Disappears the moment a
+                real cook photo or video takes over (those branches never
+                reach this code). */}
+            <span
+              aria-label="AI-generated mockup"
+              title="AI-generated mockup of the dish"
+              className="absolute bottom-2 right-2 inline-flex items-center justify-center rounded-full bg-stone-50/85 px-1.5 py-0.5 text-[11px] leading-none text-stone-700 backdrop-blur"
+            >
+              ✨
+            </span>
+          </>
         )}
         {kind === "vignette" && (
           <VignetteArea

@@ -45,6 +45,11 @@ export type CookCard = {
   // parser as one evocative sentence; surfaced in the library rolodex swatch
   // tile and under the title on photo/vignette tiles.
   tagline?: string | null;
+  // AI-generated dish photo URL (Vercel Blob). Backfilled by
+  // scripts/generate-dish-photos.ts using the local image-gen server. Renders
+  // as a fourth MealFace kind ("generated") between real photos and the
+  // sprite vignette, with a subtle ✨ badge so users know it's a mockup.
+  generated_dish_image_url?: string | null;
   provenance?: Provenance;
   servings: string | null;
   total_time: string | null;

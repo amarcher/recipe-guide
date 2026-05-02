@@ -9,6 +9,7 @@ import { PipelineControls } from "./PipelineControls";
 import { PublishControls } from "./PublishControls";
 import { GroceryShareControls } from "./GroceryShareControls";
 import { GroceryExportButton } from "./GroceryExportButton";
+import type { CookCard } from "@/app/types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -133,6 +134,8 @@ export default async function PlanPage({
             summary: c.summary,
             rationale: c.rationale,
             heroIngredientSlugs: c.heroIngredientSlugs,
+            generatedDishImageUrl:
+              (c.composedCardDraft as CookCard | null)?.generated_dish_image_url ?? null,
             approxCookMinutes: c.approxCookMinutes,
             kidFitTag: c.kidFitTag,
             moodTags: c.moodTags,
