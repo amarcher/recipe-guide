@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { generateObject } from "ai";
 import { prisma } from "@/app/lib/prisma";
 import { requireUser } from "@/app/lib/server-auth";
@@ -16,6 +16,7 @@ import { loadRecentRecipes } from "@/app/lib/planner/history";
 import { scoreAndRankPlan } from "@/app/lib/planner/scoring";
 import { expandDraft } from "@/app/lib/planner/card-expand";
 import { recordPlanEvent } from "@/app/lib/planner/events";
+import { backfillCandidateDishPhotos } from "@/app/lib/planner/candidate-dish-photo";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -181,9 +182,10 @@ export async function POST(
   );
 
   let inserted = 0;
+  const newCandidateIds: string[] = [];
   for (const { combo, candidates } of results) {
     for (const c of candidates) {
-      await prisma.mealCandidate.create({
+      const created = await prisma.mealCandidate.create({
         data: {
           planId,
           slot: combo.slot,
@@ -199,7 +201,9 @@ export async function POST(
             `generated://plan/${planId}/${crypto.randomUUID()}`
           ) as unknown as object,
         },
+        select: { id: true },
       });
+      newCandidateIds.push(created.id);
       inserted++;
     }
   }
@@ -224,6 +228,11 @@ export async function POST(
     },
     user.userId,
   );
+
+  // No-op unless IMAGE_GEN_URL is set (typically only in dev with the local
+  // MLX server running). Production deployments skip cleanly. The response
+  // returns before this finishes; the user refreshes to see photos arrive.
+  after(() => backfillCandidateDishPhotos(newCandidateIds));
 
   return NextResponse.json({ combos: targetCombos.length, inserted });
 }
