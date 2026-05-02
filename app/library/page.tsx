@@ -63,6 +63,7 @@ export default function LibraryPage() {
           photoUrl: r.photoUrl ?? null,
           videoUrl: r.videoUrl ?? null,
           videoAspectRatio: r.videoAspectRatio ?? null,
+          generatedDishImageUrl: r.card.generated_dish_image_url ?? null,
           heroes: heroesFromCard(r.card),
           totalCookCount: r.cookCount,
           latestLastCookedAt: r.lastCookedAt,
@@ -82,6 +83,12 @@ export default function LibraryPage() {
         if (!existing.videoUrl && r.videoUrl) {
           existing.videoUrl = r.videoUrl;
           existing.videoAspectRatio = r.videoAspectRatio ?? null;
+        }
+        if (
+          !existing.generatedDishImageUrl &&
+          r.card.generated_dish_image_url
+        ) {
+          existing.generatedDishImageUrl = r.card.generated_dish_image_url;
         }
         if (r.fromInstagram) existing.fromInstagram = true;
       }

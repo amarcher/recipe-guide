@@ -29,6 +29,7 @@ type Candidate = {
   summary: string;
   rationale: string;
   heroIngredientSlugs: string[];
+  generatedDishImageUrl: string | null;
   approxCookMinutes: number;
   kidFitTag: "RELIABLE" | "STRETCH" | "NEW";
   moodTags: string[];
@@ -604,6 +605,7 @@ function CandidateCard({
     id: c.id,
     title: c.title,
     tagline: c.summary,
+    generatedDishImageUrl: c.generatedDishImageUrl,
     heroIngredientSlugs: c.heroIngredientSlugs,
     moodTag: pickMoodTag(c),
   };

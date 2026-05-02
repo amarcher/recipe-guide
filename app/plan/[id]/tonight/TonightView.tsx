@@ -18,6 +18,7 @@ export type TonightMeal = {
   title: string;
   tagline: string;
   heroIngredientSlugs: string[];
+  generatedDishImageUrl: string | null;
   approxCookMinutes: number;
   kidFitTag: "RELIABLE" | "STRETCH" | "NEW";
   moodTag: string | null;
@@ -218,6 +219,7 @@ function TonightTile({
     id: meal.candidateId,
     title: meal.title,
     tagline: meal.tagline,
+    generatedDishImageUrl: meal.generatedDishImageUrl,
     heroIngredientSlugs: meal.heroIngredientSlugs,
     moodTag: meal.moodTag,
   };

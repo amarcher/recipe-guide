@@ -91,6 +91,7 @@ export default async function HostedMenuPage({
               id: item.id,
               title: card.title,
               tagline: item.displayBlurb ?? card.tagline ?? null,
+              generatedDishImageUrl: card.generated_dish_image_url ?? null,
               heroIngredientSlugs: collectHeroSlugs(card),
             };
             return (

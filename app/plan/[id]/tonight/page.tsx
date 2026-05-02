@@ -4,6 +4,7 @@ import { prisma } from "@/app/lib/prisma";
 import { requireUser } from "@/app/lib/server-auth";
 import { loadPlanIfOwned } from "@/app/lib/plan-auth";
 import { TonightView, type TonightMeal } from "./TonightView";
+import type { CookCard } from "@/app/types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -63,6 +64,9 @@ export default async function TonightPage({
       kidFitTag: m.candidate.kidFitTag,
       moodTags: m.candidate.moodTags,
     };
+    const generatedDishImageUrl =
+      (m.candidate.composedCardDraft as CookCard | null)
+        ?.generated_dish_image_url ?? null;
     return {
       mealId: m.id,
       candidateId: c.id,
@@ -71,6 +75,7 @@ export default async function TonightPage({
       title: c.title,
       tagline: c.summary,
       heroIngredientSlugs: c.heroIngredientSlugs,
+      generatedDishImageUrl,
       approxCookMinutes: c.approxCookMinutes,
       kidFitTag: c.kidFitTag,
       moodTag: c.moodTags[0] ?? null,

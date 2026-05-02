@@ -26,6 +26,7 @@ export type TileData = {
   photoUrl: string | null;
   videoUrl: string | null;
   videoAspectRatio: number | null;
+  generatedDishImageUrl: string | null;
   heroes: string[];
   totalCookCount: number;
   latestLastCookedAt: number | null;
@@ -94,6 +95,7 @@ export function RolodexTile({
     tagline: tile.tagline,
     photoUrl: shownPhoto,
     videoUrl: !localUrl ? tile.videoUrl : null,
+    generatedDishImageUrl: tile.generatedDishImageUrl,
     heroIngredientSlugs: tile.heroes,
   };
   const kind = resolveMealFaceKind(subject);
