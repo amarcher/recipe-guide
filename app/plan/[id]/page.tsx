@@ -1,8 +1,10 @@
+import { after } from "next/server";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/app/lib/prisma";
 import { requireUser } from "@/app/lib/server-auth";
 import { loadPlanIfOwned } from "@/app/lib/plan-auth";
+import { backfillCandidateDishPhotos } from "@/app/lib/planner/candidate-dish-photo";
 import { MenuView } from "./MenuView";
 import { GroceryList } from "./GroceryList";
 import { PipelineControls } from "./PipelineControls";
@@ -56,6 +58,21 @@ export default async function PlanPage({
 
   const intake = (plan.intake as PlanIntake | null) ?? {};
   const skeleton = (plan.skeleton as MenuSkeleton | null) ?? {};
+
+  // Repair-on-view: any candidate missing a generated photo gets pushed to the
+  // local image-gen server (via IMAGE_GEN_URL) after the response ships. The
+  // helper no-ops when IMAGE_GEN_URL is unset or /health fails, so this is
+  // free in environments without the tunnel. Photos appear on the *next*
+  // render — the page itself is server-rendered with no live refresh.
+  const missingPhotoIds = candidates
+    .filter(
+      (c) =>
+        !((c.composedCardDraft as CookCard | null)?.generated_dish_image_url),
+    )
+    .map((c) => c.id);
+  if (missingPhotoIds.length > 0) {
+    after(() => backfillCandidateDishPhotos(missingPhotoIds));
+  }
 
   return (
     <main className="flex flex-1 flex-col px-4 py-10 sm:py-14">
