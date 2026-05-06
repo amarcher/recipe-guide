@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import Firecrawl from "@mendable/firecrawl-js";
 import { neon } from "@neondatabase/serverless";
 import type { CookCard } from "@/app/types";
 import { prisma } from "@/app/lib/prisma";
@@ -53,7 +54,38 @@ Ingredient = {
   "note": string | null
 }`;
 
-async function fetchPageText(url: string): Promise<string> {
+type FetchOutcome = { text: string; via: "direct" | "firecrawl" };
+
+async function fetchPageText(url: string): Promise<FetchOutcome> {
+  const direct = await tryDirectFetch(url);
+  if (direct.ok) return { text: direct.text, via: "direct" };
+
+  // 403/429 means the origin blocked our fetch (Akamai, Cloudflare bot fight,
+  // Datadome, etc.). Fall back to Firecrawl when we have a key — it runs a
+  // headless browser through residential proxies and reliably gets through.
+  const isBotBlock = direct.status === 403 || direct.status === 429;
+  const firecrawlKey = process.env.FIRECRAWL_API_KEY;
+  if (isBotBlock && firecrawlKey) {
+    const text = await fetchViaFirecrawl(url, firecrawlKey);
+    return { text, via: "firecrawl" };
+  }
+
+  if (isBotBlock) {
+    const host = hostnameFor(url);
+    throw new Error(
+      `${host} blocks automated fetches (HTTP ${direct.status}). Set FIRECRAWL_API_KEY to enable scraping fallback, or paste the recipe text manually.`
+    );
+  }
+  throw new Error(
+    `Failed to fetch recipe page: ${direct.status} ${direct.statusText}`
+  );
+}
+
+type DirectFetchResult =
+  | { ok: true; text: string }
+  | { ok: false; status: number; statusText: string };
+
+async function tryDirectFetch(url: string): Promise<DirectFetchResult> {
   const res = await safeFetch(url, {
     headers: {
       "User-Agent":
@@ -62,12 +94,35 @@ async function fetchPageText(url: string): Promise<string> {
     },
   });
   if (!res.ok) {
-    throw new Error(
-      `Failed to fetch recipe page: ${res.status} ${res.statusText}`
-    );
+    return { ok: false, status: res.status, statusText: res.statusText };
   }
   const html = await res.text();
-  return stripHtml(html);
+  return { ok: true, text: stripHtml(html) };
+}
+
+async function fetchViaFirecrawl(
+  url: string,
+  apiKey: string
+): Promise<string> {
+  const client = new Firecrawl({ apiKey });
+  const doc = await client.scrape(url, {
+    formats: ["markdown"],
+    onlyMainContent: true,
+  });
+  const md = doc?.markdown;
+  if (!md || typeof md !== "string") {
+    throw new Error("Firecrawl returned no markdown for this URL.");
+  }
+  const MAX = 60_000;
+  return md.length > MAX ? md.slice(0, MAX) : md;
+}
+
+function hostnameFor(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return "this site";
+  }
 }
 
 function stripHtml(html: string): string {
@@ -139,10 +194,11 @@ export async function parseRecipeUrl(url: string): Promise<ParseResult> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) throw new Error("ANTHROPIC_API_KEY not set");
 
-  const pageText = await fetchPageText(url);
+  const { text: pageText, via } = await fetchPageText(url);
   if (pageText.length < 200) {
     throw new Error("Could not extract enough text from that page.");
   }
+  console.log(`[parser] fetched ${pageText.length} chars via ${via} for ${url}`);
 
   const client = new Anthropic({ apiKey });
   const userMessage = `Source URL: ${url}
