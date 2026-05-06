@@ -39,13 +39,23 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url: target.trim() }),
       });
-      const data = await res.json();
+      // Some edge layers (Cloudflare, Vercel platform) replace 5xx bodies
+      // with HTML error pages, so we can't assume the body is JSON.
+      const ct = res.headers.get("content-type") ?? "";
+      const data = ct.includes("application/json") ? await res.json() : null;
       if (!res.ok) {
-        setError(data?.error ?? `Request failed (${res.status})`);
-      } else {
+        setError(
+          data?.error ??
+            (res.status >= 500
+              ? "Server hiccup — try again in a moment."
+              : `Request failed (${res.status})`)
+        );
+      } else if (data) {
         const parsed = data as CookCard;
         setCard(parsed);
         pushRecent({ url: parsed.source_url, title: parsed.title });
+      } else {
+        setError("Unexpected response from server.");
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Network error");
