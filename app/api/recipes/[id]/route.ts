@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/app/lib/prisma";
 import { requireUser } from "@/app/lib/server-auth";
 import { resolveCard, overrideScopeFor } from "@/app/lib/card-resolver";
+import { slimPivotMetaForClient } from "@/app/lib/pivot/meta";
 import { validateCardPayload } from "@/app/lib/card-validate";
 
 export const runtime = "nodejs";
@@ -89,6 +90,9 @@ export async function GET(
     cookHistory,
     viewerAccess: access,
     overrideUpdatedAt: resolved.overrideUpdatedAt?.getTime() ?? null,
+    pivotMeta: access === "guest" ? null : slimPivotMetaForClient(r.pivotMeta),
+    pivotKept: access === "guest" ? false : r.pivotKept,
+    pivotedFromSavedRecipeId: access === "guest" ? null : r.pivotedFromSavedRecipeId,
   });
 }
 

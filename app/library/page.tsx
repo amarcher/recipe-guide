@@ -48,11 +48,15 @@ export default function LibraryPage() {
 
   // Dedupe the "All" view by source URL so a recipe saved to multiple scopes
   // shows as a single tile with combined scope pills + summed cook count.
+  // Pivot rows are keyed by their own id instead — a pivot has the same
+  // source_url as its origin but represents a different cook with a
+  // different revised card, so it earns its own tile.
   const tiles: TileData[] = useMemo(() => {
     type Accum = TileData & { card: import("@/app/types").CookCard };
     const byUrl = new Map<string, Accum>();
     for (const r of allRecipes) {
-      const key = r.card.source_url;
+      const isPivot = !!r.pivotMeta;
+      const key = isPivot ? `pivot:${r.id}` : r.card.source_url;
       const existing = byUrl.get(key);
       if (!existing) {
         byUrl.set(key, {
@@ -70,6 +74,10 @@ export default function LibraryPage() {
           savedAt: r.savedAt,
           scopes: [r.family ?? null],
           fromInstagram: !!r.fromInstagram,
+          pivotInProgress:
+            r.pivotMeta && !r.pivotKept
+              ? { problemText: r.pivotMeta.problemText }
+              : null,
           card: r.card,
         });
       } else {

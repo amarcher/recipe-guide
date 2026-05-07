@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useSyncExternalStore } from "react";
 import { useSession } from "next-auth/react";
 import type { CookCard } from "@/app/types";
+import type { PivotMetaClient } from "@/app/lib/pivot/meta";
 
 export type ViewerAccess = "owner" | "family" | "guest";
 
@@ -21,6 +22,12 @@ export type SavedRecipe = {
   // because it filters to scopes the viewer is in). Undefined ⇒ owner-or-family.
   viewerAccess?: ViewerAccess;
   overrideUpdatedAt?: number | null;
+  // Pivot fork tracking — set on rows created via the "Stuck? Adapt the
+  // recipe" mid-cook flow. pivotMeta is null on non-pivot rows; pivotKept
+  // flips to true at end-of-cook when the user keeps the pivot.
+  pivotMeta?: PivotMetaClient | null;
+  pivotKept?: boolean;
+  pivotedFromSavedRecipeId?: string | null;
 };
 
 // Stable hash of (sourceUrl, title). Used as the LOCAL recipe ID. The server
@@ -176,6 +183,9 @@ type ServerRecipeRow = {
   fromInstagram?: boolean;
   viewerAccess?: ViewerAccess;
   overrideUpdatedAt?: number | null;
+  pivotMeta?: PivotMetaClient | null;
+  pivotKept?: boolean;
+  pivotedFromSavedRecipeId?: string | null;
 };
 
 function serverToLocal(r: ServerRecipeRow): SavedRecipe {
@@ -192,6 +202,9 @@ function serverToLocal(r: ServerRecipeRow): SavedRecipe {
     fromInstagram: !!r.fromInstagram,
     viewerAccess: r.viewerAccess,
     overrideUpdatedAt: r.overrideUpdatedAt ?? null,
+    pivotMeta: r.pivotMeta ?? null,
+    pivotKept: r.pivotKept ?? false,
+    pivotedFromSavedRecipeId: r.pivotedFromSavedRecipeId ?? null,
   };
 }
 
@@ -310,6 +323,12 @@ export function useSavedRecipe(id: string | null): {
 // Look up every save matching this card's sourceUrl across all scopes the
 // current viewer has access to. Bridges the local-hash / server-cuid id
 // mismatch — pass the raw card and we figure out where it lives.
+//
+// Pivot rows are excluded — the SaveBar consumer treats this as "which of
+// my libraries is this recipe in?" and a pivot is a separate, ephemeral
+// fork rather than a saved-here scope. Pivot rendering happens through
+// the rolodex (which iterates useSavedRecipes) and through the badge on
+// the pivot's own recipe page.
 export function useSavesForCard(card: { source_url: string }): SavedRecipe[] {
   const mode = useMode();
   useEffect(() => {
@@ -317,11 +336,11 @@ export function useSavesForCard(card: { source_url: string }): SavedRecipe[] {
   }, [mode]);
 
   const localSnapshot = useCallback(
-    () => localSavesByUrl(card.source_url),
+    () => filterOutPivots(localSavesByUrl(card.source_url)),
     [card.source_url]
   );
   const remoteSnapshot = useCallback(
-    () => remoteSavesByUrl(card.source_url),
+    () => filterOutPivots(remoteSavesByUrl(card.source_url)),
     [card.source_url]
   );
 
@@ -336,6 +355,24 @@ export function useSavesForCard(card: { source_url: string }): SavedRecipe[] {
     () => EMPTY_LIST
   );
   return mode === "remote" ? remoteValue : localValue;
+}
+
+const filterOutPivotsCache = new WeakMap<SavedRecipe[], SavedRecipe[]>();
+function filterOutPivots(arr: SavedRecipe[]): SavedRecipe[] {
+  // useSyncExternalStore demands a stable snapshot reference between calls
+  // when nothing changed. Fast path: when the input has no pivots, return
+  // the input reference itself. Slow path: cache the filtered copy keyed
+  // by the input array so repeated reads hand back the same reference.
+  let hasPivot = false;
+  for (const r of arr) {
+    if (r.pivotMeta) { hasPivot = true; break; }
+  }
+  if (!hasPivot) return arr;
+  const cached = filterOutPivotsCache.get(arr);
+  if (cached) return cached;
+  const next = arr.filter((r) => !r.pivotMeta);
+  filterOutPivotsCache.set(arr, next);
+  return next;
 }
 
 // ─── Imperative writes ──────────────────────────────────────────────────────
@@ -467,6 +504,37 @@ export async function forkRecipe(
   const body = (await res.json()) as { id: string; alreadyExisted: boolean };
   await fetchRemoteList();
   return body;
+}
+
+// Resolve an in-progress pivot fork. "keep" promotes it to a permanent
+// personal recipe (pivotKept = true); "discard" deletes it. Returns true
+// on success so callers can drive their own UI state machines.
+export async function decidePivot(
+  id: string,
+  action: "keep" | "discard"
+): Promise<boolean> {
+  if (!isSignedInClient()) return false;
+  const res = await fetch(`/api/recipes/${id}/pivot/decision`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action }),
+  });
+  if (!res.ok) return false;
+  if (action === "discard") {
+    // Mirror the server: drop the row from the local mirror so the rolodex
+    // reflects the deletion immediately without waiting for a refetch.
+    if (remoteMirror?.[id]) {
+      const { [id]: _removed, ...rest } = remoteMirror;
+      void _removed;
+      remoteMirror = rest;
+      notifyRemote();
+    }
+  } else {
+    // keep: refresh just this row so pivotKept flips and the badge clears.
+    attemptedSingleFetch.delete(id);
+    await fetchOneIntoMirror(id);
+  }
+  return true;
 }
 
 // Drop the scope's override row, reverting to the canonical parsed card.

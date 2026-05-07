@@ -8,12 +8,14 @@ import {
   Timer,
   Users,
   Hourglass,
+  Sparkles,
 } from "lucide-react";
 import type { CookCard, Ingredient } from "@/app/types";
 import { scaleQty, scaleServings } from "@/app/lib/scale";
 import { parseMinutesRange } from "@/app/lib/duration";
 import { discoverSprites } from "@/app/lib/sprites";
-import { recipeIdFor } from "@/app/lib/storage";
+import { recipeIdFor, useMiseChecks } from "@/app/lib/storage";
+import { useCookSession } from "@/app/lib/cook-session";
 import { Scaler } from "./Scaler";
 import { Timeline } from "./Timeline";
 import { StepIcon } from "./StepIcon";
@@ -21,6 +23,26 @@ import { StepTimer } from "./StepTimer";
 import { MisePlace } from "./MisePlace";
 import { Sprite } from "./Sprite";
 import { CastButton } from "./CastButton";
+import { PivotSheet } from "./PivotSheet";
+
+// One-shot read of the pivot handoff sessionStorage key written by
+// PivotSheet just before navigating to /recipe/<newId>. The cook's
+// progress on the original maps onto the revised recipe's step
+// numbering — we seed doneSteps so the new view picks up where they
+// were instead of resetting to step 1.
+function readPivotHandoffDoneSteps(savedRecipeId: string | undefined): Set<number> {
+  if (!savedRecipeId || typeof window === "undefined") return new Set();
+  const key = "cookcard:v1:pivot-handoff:" + savedRecipeId;
+  try {
+    const raw = window.sessionStorage.getItem(key);
+    if (!raw) return new Set();
+    window.sessionStorage.removeItem(key);
+    const parsed = JSON.parse(raw) as { doneSteps?: number[] };
+    return new Set((parsed.doneSteps ?? []).filter((n) => typeof n === "number"));
+  } catch {
+    return new Set();
+  }
+}
 
 function IngredientLine({ ing, factor }: { ing: Ingredient; factor: number }) {
   const qty = scaleQty(ing.quantity, factor);
@@ -66,11 +88,24 @@ function MetaPill({
   );
 }
 
-export function CookCardView({ card }: { card: CookCard }) {
+export function CookCardView({
+  card,
+  savedRecipeId,
+}: {
+  card: CookCard;
+  savedRecipeId?: string;
+}) {
   const [factor, setFactor] = useState(1);
-  const [doneSteps, setDoneSteps] = useState<Set<number>>(new Set());
+  const [doneSteps, setDoneSteps] = useState<Set<number>>(() =>
+    readPivotHandoffDoneSteps(savedRecipeId)
+  );
+  const [pivotOpen, setPivotOpen] = useState(false);
   const servings = scaleServings(card.servings, factor);
   const localId = recipeIdFor(card);
+  const cookSession = useCookSession();
+  const isCookingThis =
+    !!savedRecipeId && cookSession?.savedId === savedRecipeId;
+  const miseChecks = useMiseChecks(localId);
 
   const toggleDone = useCallback((n: number) => {
     setDoneSteps((prev) => {
@@ -183,6 +218,19 @@ export function CookCardView({ card }: { card: CookCard }) {
 
       <Timeline steps={card.steps} />
 
+      {isCookingThis && (
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={() => setPivotOpen(true)}
+            className="inline-flex items-center gap-1.5 rounded-full border border-amber-300 bg-amber-50/80 px-3 py-1.5 text-xs font-medium text-amber-900 hover:border-amber-500 hover:bg-amber-100"
+          >
+            <Sparkles className="h-3.5 w-3.5" />
+            Stuck? Adapt the recipe
+          </button>
+        </div>
+      )}
+
       <ol className="space-y-3">
         {card.steps.map((step) => {
           const isDone = doneSteps.has(step.number);
@@ -288,6 +336,15 @@ export function CookCardView({ card }: { card: CookCard }) {
           );
         })}
       </ol>
+
+      {pivotOpen && savedRecipeId && (
+        <PivotSheet
+          savedRecipeId={savedRecipeId}
+          doneSteps={[...doneSteps]}
+          miseEntryKeys={[...miseChecks]}
+          onClose={() => setPivotOpen(false)}
+        />
+      )}
     </article>
   );
 }

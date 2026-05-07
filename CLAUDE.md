@@ -113,6 +113,41 @@ A second surface layered on top of the recipe-execution app. Answers "what are w
 
 Token-based public links, anonymous viewing, request-edit-access, and per-user edit grants distinct from family membership are deferred to Phase 2.
 
+## Mid-cook Pivot
+
+The "Stuck? Adapt the recipe" mid-cook escape hatch. The cook is mid-execution, something's gone wrong (added too much paste, missing an ingredient, missed a step), and an executive-chef AI rewrites the rest of the recipe to absorb the misstep with minimum deviation. Forks into a personal-scope SavedRecipe marked as a pivot-in-progress until the cook decides at end-of-cook whether to keep or discard it.
+
+**Trigger surface**: `app/components/PivotSheet.tsx` opens from a small amber "Stuck? Adapt the recipe" chip in `CookCardView` that's only visible when `useCookSession()` matches the current recipe. Sheet phases: input (textarea + Cmd-Enter submit) → loading → result (chef's narrative + bullet diff + Discard / Use this version) → error.
+
+**Two-pass LLM** (Claude Opus 4.7 via the existing `plannerModel`):
+1. **Revise** — `app/lib/pivot/{schemas,prompts}.ts` define a `PivotedCard` slim shape (planner-style, dodges Anthropic's complexity budget) and the system prompt that pushes hard on "preserve original > be clever". Server expands the draft to a full `CookCard` via `expandPivotedCard`, copying through `source_url`, `provenance`, `tagline`, top-level dish image, and per-step `equipment` from the original.
+2. **Re-state** — same model, separate call. Given the original card, revised card, and the cook's progress markers (doneSteps + checked mise entryKeys), produce `{ newDoneSteps, newCheckedEntryKeys, aiNotes, changes }`. Two passes (instead of one combined) keeps each schema under the complexity ceiling.
+
+Orchestrated by `app/lib/pivot/run.ts:runPivot`.
+
+**Schema additions** (`SavedRecipe`):
+- `pivotedFromSavedRecipeId: String?` — back-pointer to the SavedRecipe the cook was on when they tapped the trigger.
+- `pivotMeta: Json?` — `{ problemText, aiNotes, changes, revisedCard, createdAt }`. The revised card lives **inside pivotMeta**, not a `RecipeOverride` row, because RecipeOverride is keyed by `(parsedRecipeId, scope)` and a pivot fork would otherwise share its override with the user's other personal save of the same canonical recipe — destroying pivot isolation. `card-resolver.resolveCard` and `resolveCardsForSavedRecipes` short-circuit on `pivotMeta.revisedCard` when present.
+- `pivotKept: Boolean @default(false)` — flips true when the user keeps the pivot at end-of-cook. Library tile shows the "Pivot in progress" badge only when `pivotKept = false`.
+
+Pivot rows are **always personal-scope**, even when forked from a family-scope original — pivots are private mid-cook decisions, not auto-published to the family.
+
+**Endpoints**:
+- `POST /api/recipes/[id]/pivot` — auth + viewer-access check (owner/family member only, no guests), runs both LLM passes, creates the personal-scope fork with `pivotMeta` set, migrates `MiseCheck` rows for the new entry keys, returns `{ newSavedRecipeId, aiNotes, changes, newDoneSteps }`. The sheet stashes `newDoneSteps` in sessionStorage keyed by the new id; `CookCardView`'s `useState` lazy initializer picks it up on mount and seeds the doneSteps Set so the cook resumes at the right place.
+- `POST /api/recipes/[id]/pivot/decision` with `{ action: "keep" | "discard" }` — `keep` flips `pivotKept = true`; `discard` deletes the SavedRecipe (cascades MiseCheck and CookLog). 404 if the row isn't a pivot, 403 if the caller isn't the saver. Surfaced via `app/components/PivotInProgressBanner.tsx` on `/recipe/[id]` whenever `pivotMeta && !pivotKept`.
+
+**Library + SaveBar interactions**:
+- `useSavesForCard` filters out pivot rows (WeakMap-cached for snapshot stability) so SaveBar's scope chips don't double-count.
+- `POST /api/recipes` dedupe adds `pivotedFromSavedRecipeId: null` to the `findFirst` so saving the original after a pivot exists creates a fresh row instead of returning the pivot's id.
+- `library/page.tsx` keys pivot rows as `pivot:${r.id}` instead of `source_url`, so they bypass the cross-scope tile collapse and earn their own tile.
+- `RolodexTile` renders an amber `✨ Pivot in progress` pill (top-left) plus a `Pivot fix: <problemText>` subtitle replacing the tagline, when `tile.pivotInProgress` is set. Kept pivots (`pivotKept = true`) still get their own tile but read as ordinary recipes — no badge, no subtitle.
+
+**`PivotMeta` shape**: server-side type in `app/lib/pivot/meta.ts`. The list and single-fetch endpoints ship `slimPivotMetaForClient(value)` which strips `revisedCard` (the resolver already merged it into the response's `card` field, no need to round-trip).
+
+**Storage helpers**: `pivotRecipe` is implicit (the sheet calls `fetch` directly), but `decidePivot(id, "keep" | "discard")` lives in `app/lib/storage.ts` and updates the local mirror after the server call.
+
+**Open follow-ups**: abandoned-pivot sweeper for rows older than N hours where `pivotKept = false`; "Replace original" action that promotes a kept pivot's revised card onto the parent's RecipeOverride; family-scope pivots if the workflow demands shared cook-rescues.
+
 ## Sprites
 
 - **Single source of truth: Vercel Blob.** `public/sprites/` no longer exists. Each manifest entry carries a `url` (512px display variant) and an `original_url` (high-res 1024 from Gemini, kept for future use).
