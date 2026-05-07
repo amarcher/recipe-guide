@@ -11,6 +11,7 @@ import { CookCardEditor } from "@/app/components/CookCardEditor";
 import { SaveBar } from "@/app/components/SaveBar";
 import { CookHistory } from "@/app/components/CookHistory";
 import { MealOutcomePrompt } from "@/app/components/MealOutcomePrompt";
+import { PivotInProgressBanner } from "@/app/components/PivotInProgressBanner";
 
 export default function RecipePage({
   params,
@@ -63,6 +64,12 @@ export default function RecipePage({
         />
       ) : (
         <div className="mx-auto w-full max-w-3xl space-y-4">
+          {recipe.pivotMeta && !recipe.pivotKept && (
+            <PivotInProgressBanner
+              savedRecipeId={recipe.id}
+              pivotMeta={recipe.pivotMeta}
+            />
+          )}
           <SaveBar card={recipe.card} variant="detail" />
           {fromPlan && fromPlanMeal && !outcomeDismissed && (
             <MealOutcomePrompt
@@ -85,7 +92,7 @@ export default function RecipePage({
             </div>
           )}
           {signedIn && <CookHistory recipeId={recipe.id} />}
-          <CookCardView card={recipe.card} />
+          <CookCardView card={recipe.card} savedRecipeId={recipe.id} />
         </div>
       )}
     </main>

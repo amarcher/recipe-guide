@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Clock, ImagePlus, Loader2, Trash2, Users } from "lucide-react";
+import { Clock, ImagePlus, Loader2, Sparkles, Trash2, Users } from "lucide-react";
 import type { CookCard } from "@/app/types";
 import { deleteRecipe } from "@/app/lib/storage";
 import { useConfirm } from "@/app/components/ConfirmDialog";
@@ -33,6 +33,9 @@ export type TileData = {
   savedAt: number;
   scopes: Array<{ id: string; name: string } | null>;
   fromInstagram: boolean;
+  // Set on tiles that represent an unfinished pivot fork. The badge UI
+  // reads from this — we don't recompute from pivotMeta in the tile.
+  pivotInProgress?: { problemText: string } | null;
 };
 
 function formatRelative(ts: number, now: number): string {
@@ -250,7 +253,15 @@ export function RolodexTile({
             </span>
           )}
 
-          {cookChip && (
+          {tile.pivotInProgress ? (
+            <span
+              className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-amber-50/90 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-900 ring-1 ring-amber-200 backdrop-blur"
+              title={`Pivot in progress — "${tile.pivotInProgress.problemText}"`}
+            >
+              <Sparkles className="h-2.5 w-2.5" />
+              Pivot in progress
+            </span>
+          ) : cookChip ? (
             <span
               className={`absolute left-3 top-3 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
                 cookChip.tone === "dark"
@@ -260,7 +271,7 @@ export function RolodexTile({
             >
               {cookChip.label}
             </span>
-          )}
+          ) : null}
 
           {!selectable && (
             <button
@@ -288,11 +299,16 @@ export function RolodexTile({
             {tile.title}
           </h2>
 
-          {tile.tagline && kind !== "swatch" && (
+          {tile.pivotInProgress ? (
+            <p className="text-[12px] leading-snug text-amber-900 line-clamp-2">
+              <span className="font-semibold">Pivot fix:</span>{" "}
+              {tile.pivotInProgress.problemText}
+            </p>
+          ) : tile.tagline && kind !== "swatch" ? (
             <p className="font-serif italic text-[13px] leading-snug text-stone-600 line-clamp-2">
               {tile.tagline}
             </p>
-          )}
+          ) : null}
 
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-stone-500">
             {host && <span>{host}</span>}

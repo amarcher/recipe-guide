@@ -188,6 +188,19 @@ model SavedRecipe {
   lastCookedAt   DateTime?
   cookCount      Int       @default(0)
 
+  // Pivot fork tracking. When the cook taps "Stuck? Adapt the recipe" mid-
+  // cook, the LLM produces a minimally-deviated revised card and we create
+  // a personal-scope fork with these fields set:
+  //   - pivotedFromSavedRecipeId: the original SavedRecipe the cook was on
+  //   - pivotMeta: { problemText, aiNotes, createdAt } for the in-progress
+  //     badge + the keep/discard prompt at end-of-cook
+  //   - pivotKept: false until the user keeps it post-cook; rolodex hides or
+  //     fades non-kept pivots, and an abandoned-pivot sweeper can target
+  //     non-kept rows older than N hours.
+  pivotedFromSavedRecipeId String?
+  pivotMeta                Json?
+  pivotKept                Boolean @default(false)
+
   parsedRecipe ParsedRecipe @relation(fields: [parsedRecipeId], references: [id], onDelete: Cascade)
   user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   family       Family?      @relation(fields: [familyId], references: [id], onDelete: Cascade)
@@ -200,6 +213,7 @@ model SavedRecipe {
   @@unique([userId, parsedRecipeId, familyId])
   @@index([userId])
   @@index([familyId])
+  @@index([pivotedFromSavedRecipeId])
 }
 
 // Per-user mise-en-place checks within a saved recipe. Even in a shared

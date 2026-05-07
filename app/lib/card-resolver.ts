@@ -26,6 +26,7 @@ type SavedWithParsed = {
   parsedRecipeId: string;
   userId: string;
   familyId: string | null;
+  pivotMeta?: Prisma.JsonValue | null;
   parsedRecipe: { cardJson: Prisma.JsonValue };
 };
 
@@ -35,11 +36,26 @@ export type ResolvedCard = {
   overrideUpdatedById: string | null;
 };
 
+// Pivot SavedRecipes carry their visible card inside pivotMeta.revisedCard
+// rather than a per-(parsedRecipe, scope) RecipeOverride row, because the
+// pivot's edits should NOT bleed onto the user's other personal-scope save
+// of the same canonical recipe. Treat pivotMeta as the authoritative card
+// when present and short-circuit the override lookup.
+type PivotMetaShape = { revisedCard?: CookCard };
+function pivotCard(saved: SavedWithParsed): CookCard | null {
+  const meta = saved.pivotMeta as PivotMetaShape | null | undefined;
+  return meta?.revisedCard ?? null;
+}
+
 // Given a SavedRecipe row, return the CookCard the user should see — its
 // scope's RecipeOverride applied on top of the canonical ParsedRecipe.cardJson.
 // Personal-scope saves resolve against (parsedRecipeId, userId, familyId=null).
 // Family-scope saves resolve against (parsedRecipeId, userId=null, familyId).
 export async function resolveCard(saved: SavedWithParsed): Promise<ResolvedCard> {
+  const pivot = pivotCard(saved);
+  if (pivot) {
+    return { card: pivot, overrideUpdatedAt: null, overrideUpdatedById: null };
+  }
   const override = await prisma.recipeOverride.findFirst({
     where: {
       parsedRecipeId: saved.parsedRecipeId,
@@ -61,7 +77,19 @@ export async function resolveCardsForSavedRecipes(
   const result = new Map<string, ResolvedCard>();
   if (rows.length === 0) return result;
 
-  const conditions = rows.map((r) =>
+  // Resolve pivot rows first — they bypass RecipeOverride entirely.
+  const nonPivotRows: SavedWithParsed[] = [];
+  for (const r of rows) {
+    const pivot = pivotCard(r);
+    if (pivot) {
+      result.set(r.id, { card: pivot, overrideUpdatedAt: null, overrideUpdatedById: null });
+    } else {
+      nonPivotRows.push(r);
+    }
+  }
+  if (nonPivotRows.length === 0) return result;
+
+  const conditions = nonPivotRows.map((r) =>
     r.familyId === null
       ? { parsedRecipeId: r.parsedRecipeId, userId: r.userId, familyId: null }
       : { parsedRecipeId: r.parsedRecipeId, userId: null, familyId: r.familyId }
@@ -77,7 +105,7 @@ export async function resolveCardsForSavedRecipes(
     overrideByKey.set(keyOf(o.parsedRecipeId, o.userId, o.familyId), o);
   }
 
-  for (const r of rows) {
+  for (const r of nonPivotRows) {
     const k =
       r.familyId === null
         ? keyOf(r.parsedRecipeId, r.userId, null)

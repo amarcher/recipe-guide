@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/app/lib/prisma";
 import { requireUser } from "@/app/lib/server-auth";
 import { resolveCardsForSavedRecipes } from "@/app/lib/card-resolver";
+import { slimPivotMetaForClient } from "@/app/lib/pivot/meta";
 import type { CookCard } from "@/app/types";
 
 export const runtime = "nodejs";
@@ -109,6 +110,9 @@ export async function GET() {
         videoUrl,
         videoAspectRatio,
         fromInstagram,
+        pivotMeta: slimPivotMetaForClient(r.pivotMeta),
+        pivotKept: r.pivotKept,
+        pivotedFromSavedRecipeId: r.pivotedFromSavedRecipeId,
       };
     }),
   });
@@ -156,8 +160,16 @@ export async function POST(req: NextRequest) {
 
   // Postgres treats NULLs as distinct in unique constraints, so we can't rely
   // on the @@unique to dedupe personal-scope saves. Hand-roll the upsert.
+  // Also exclude pivot rows — a kept pivot of this recipe is a separate save
+  // from the canonical original; "Save to library" on the original should
+  // create a fresh non-pivot row, not return the pivot's id.
   const existing = await prisma.savedRecipe.findFirst({
-    where: { userId: user.userId, parsedRecipeId: parsed.id, familyId },
+    where: {
+      userId: user.userId,
+      parsedRecipeId: parsed.id,
+      familyId,
+      pivotedFromSavedRecipeId: null,
+    },
   });
   const saved =
     existing ??
