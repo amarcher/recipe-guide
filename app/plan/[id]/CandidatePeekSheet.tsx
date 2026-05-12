@@ -76,25 +76,27 @@ export function CandidatePeekSheet({
         className="relative flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-2xl bg-stone-50 shadow-2xl sm:max-h-[88vh] sm:max-w-xl sm:rounded-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="relative shrink-0">
-          <MealFace
-            subject={subject}
-            size="peek"
-            showCaption={false}
-            className="rounded-none"
-          />
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close"
-            className="absolute right-3 top-3 inline-flex h-9 w-9 items-center justify-center rounded-full bg-stone-900/55 text-white backdrop-blur transition hover:bg-stone-900/75"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
+        <div className="flex-1 overflow-y-auto">
+          <div className="relative">
+            <MealFace
+              subject={subject}
+              size="tile"
+              visualHeight={220}
+              showCaption={false}
+              className="rounded-none"
+            />
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close"
+              className="absolute right-3 top-3 inline-flex h-9 w-9 items-center justify-center rounded-full bg-stone-900/55 text-white backdrop-blur transition hover:bg-stone-900/75"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
 
-        <div className="flex-1 overflow-y-auto px-5 py-5 sm:px-6">
-          <header className="mb-4">
+          <div className="px-5 py-5 sm:px-6">
+            <header className="mb-4">
             {candidate.moodTag && (
               <span
                 className="font-serif italic"
@@ -215,6 +217,7 @@ export function CandidatePeekSheet({
               Recipe details aren&apos;t available for this candidate yet.
             </p>
           )}
+          </div>
         </div>
 
         <div className="shrink-0 border-t border-stone-200 bg-stone-50 px-5 py-3 sm:px-6">
