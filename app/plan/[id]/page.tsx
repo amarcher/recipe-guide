@@ -143,24 +143,27 @@ export default async function PlanPage({
 
         <MenuView
           planId={plan.id}
-          candidates={candidates.map((c) => ({
-            id: c.id,
-            slot: c.slot,
-            eaters: c.eaters,
-            title: c.title,
-            summary: c.summary,
-            rationale: c.rationale,
-            heroIngredientSlugs: c.heroIngredientSlugs,
-            generatedDishImageUrl:
-              (c.composedCardDraft as CookCard | null)?.generated_dish_image_url ?? null,
-            approxCookMinutes: c.approxCookMinutes,
-            kidFitTag: c.kidFitTag,
-            moodTags: c.moodTags,
-            rank: c.rank,
-            badges: c.badges,
-            committed: committedCandidateIds.has(c.id),
-            plannedMealId: mealByCandidateId.get(c.id) ?? null,
-          }))}
+          candidates={candidates.map((c) => {
+            const card = c.composedCardDraft as CookCard | null;
+            return {
+              id: c.id,
+              slot: c.slot,
+              eaters: c.eaters,
+              title: c.title,
+              summary: c.summary,
+              rationale: c.rationale,
+              heroIngredientSlugs: c.heroIngredientSlugs,
+              generatedDishImageUrl: card?.generated_dish_image_url ?? null,
+              card,
+              approxCookMinutes: c.approxCookMinutes,
+              kidFitTag: c.kidFitTag,
+              moodTags: c.moodTags,
+              rank: c.rank,
+              badges: c.badges,
+              committed: committedCandidateIds.has(c.id),
+              plannedMealId: mealByCandidateId.get(c.id) ?? null,
+            };
+          })}
         />
 
         <GroceryList

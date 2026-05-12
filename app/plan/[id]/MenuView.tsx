@@ -20,6 +20,8 @@ import {
 import { discoverSprites } from "@/app/lib/sprites";
 import { refreshSavedRecipes } from "@/app/lib/storage";
 import { MealFace, type MealFaceSubject } from "@/app/components/MealFace";
+import { CandidatePeekSheet } from "./CandidatePeekSheet";
+import type { CookCard } from "@/app/types";
 
 type Candidate = {
   id: string;
@@ -30,6 +32,7 @@ type Candidate = {
   rationale: string;
   heroIngredientSlugs: string[];
   generatedDishImageUrl: string | null;
+  card: CookCard | null;
   approxCookMinutes: number;
   kidFitTag: "RELIABLE" | "STRETCH" | "NEW";
   moodTags: string[];
@@ -560,6 +563,7 @@ function CandidateCard({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [optimisticCommitted, setOptimisticCommitted] = useState<boolean | null>(null);
+  const [peeking, setPeeking] = useState(false);
   const committed = optimisticCommitted ?? c.committed;
 
   async function toggle() {
@@ -599,46 +603,83 @@ function CandidateCard({
   // hero sprites on a colored wash) is the default; once item 1.13's
   // transparent sprites land the same composition reads as ingredients on
   // cream paper. Summary is repurposed as the tagline (one evocative line);
-  // moodTag is the single eyebrow signal. Rationale and the badge soup
-  // recede — they may resurface in a peek sheet later.
+  // moodTag is the single eyebrow signal. Tapping the face opens a peek
+  // sheet with rationale + ingredients + step outline.
+  const moodTag = pickMoodTag(c);
   const subject: MealFaceSubject = {
     id: c.id,
     title: c.title,
     tagline: c.summary,
     generatedDishImageUrl: c.generatedDishImageUrl,
     heroIngredientSlugs: c.heroIngredientSlugs,
-    moodTag: pickMoodTag(c),
+    moodTag,
   };
 
   return (
-    <article
-      className={`group relative flex flex-col overflow-hidden rounded-xl border bg-stone-50 shadow-sm transition ${cardClass}`}
-    >
-      <MealFace subject={subject} size="tile" className="rounded-none" />
-
-      <div className="flex items-center justify-between gap-3 border-t border-stone-100 px-4 py-2.5 text-xs text-stone-500">
-        <span className="inline-flex shrink-0 items-center gap-1">
-          <Clock className="h-3 w-3" />
-          {c.approxCookMinutes} min
-        </span>
-        <span className="inline-flex items-center gap-1">
-          <EaterIcon eaters={c.eaters} />
-          {eaterLabel(c.eaters)}
-        </span>
+    <>
+      <article
+        className={`group relative flex flex-col overflow-hidden rounded-xl border bg-stone-50 shadow-sm transition ${cardClass}`}
+      >
         <button
           type="button"
-          onClick={toggle}
-          disabled={pending}
-          aria-label={committed ? "Remove from menu" : "Add to menu"}
-          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition disabled:opacity-60 ${
-            committed
-              ? "bg-emerald-600 text-white hover:bg-emerald-700"
-              : "border border-stone-300 bg-white text-stone-600 hover:border-stone-900 hover:text-stone-900"
-          }`}
+          onClick={() => setPeeking(true)}
+          aria-label={`Preview ${c.title}`}
+          className="block w-full cursor-pointer text-left"
         >
-          {committed ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+          <MealFace subject={subject} size="tile" className="rounded-none" />
         </button>
-      </div>
-    </article>
+
+        <div className="flex items-center justify-between gap-3 border-t border-stone-100 px-4 py-2.5 text-xs text-stone-500">
+          <button
+            type="button"
+            onClick={() => setPeeking(true)}
+            className="inline-flex items-center gap-1 text-stone-500 hover:text-stone-900"
+          >
+            <Clock className="h-3 w-3" />
+            {c.approxCookMinutes} min
+          </button>
+          <span className="inline-flex items-center gap-1">
+            <EaterIcon eaters={c.eaters} />
+            {eaterLabel(c.eaters)}
+          </span>
+          <button
+            type="button"
+            onClick={toggle}
+            disabled={pending}
+            aria-label={committed ? "Remove from menu" : "Add to menu"}
+            className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition disabled:opacity-60 ${
+              committed
+                ? "bg-emerald-600 text-white hover:bg-emerald-700"
+                : "border border-stone-300 bg-white text-stone-600 hover:border-stone-900 hover:text-stone-900"
+            }`}
+          >
+            {committed ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+          </button>
+        </div>
+      </article>
+
+      {peeking && (
+        <CandidatePeekSheet
+          candidate={{
+            id: c.id,
+            title: c.title,
+            summary: c.summary,
+            rationale: c.rationale,
+            heroIngredientSlugs: c.heroIngredientSlugs,
+            generatedDishImageUrl: c.generatedDishImageUrl,
+            card: c.card,
+            approxCookMinutes: c.approxCookMinutes,
+            eaters: c.eaters,
+            moodTag,
+            committed,
+            pending,
+          }}
+          onClose={() => setPeeking(false)}
+          onToggle={() => {
+            void toggle();
+          }}
+        />
+      )}
+    </>
   );
 }
