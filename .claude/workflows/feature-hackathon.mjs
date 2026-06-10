@@ -13,9 +13,11 @@ export const meta = {
 //   n?: number,     // builders to run; default 5, floor 2, capped at the 5 lenses
 //   salt?: number,  // rotates the blind label mapping so persistent judges can't learn "A = caretaker"
 // }
-const feature = args && args.feature
+// args may arrive as a real object or as a JSON-encoded string (harness-dependent) — coerce.
+const A = typeof args === 'string' ? JSON.parse(args) : (args || {})
+const feature = A.feature
 if (!feature || !feature.id || !feature.title) {
-  throw new Error('feature-hackathon: args.feature with { id, title, outcome, doneWhen, slug } is required')
+  throw new Error('feature-hackathon: args.feature with { id, title, outcome, doneWhen, slug } is required (got: ' + (typeof args) + ')')
 }
 
 const LENSES = [
@@ -26,8 +28,8 @@ const LENSES = [
   { lens: 'architect',       file: 'docs/roadmap-2026/positions/05-architect.md',       essence: 'schema and reliability — is it sound, tested, gotcha-safe, the smallest clean diff?' },
 ]
 
-const N = Math.max(2, Math.min(LENSES.length, Math.round((args && args.n) || 5)))
-const salt = Math.round((args && args.salt) || 0)
+const N = Math.max(2, Math.min(LENSES.length, Math.round(A.n || 5)))
+const salt = Math.round(A.salt || 0)
 const builders = LENSES.slice(0, N)
 
 const CONSTRAINTS = [
@@ -81,11 +83,12 @@ const built = await parallel(builders.map((b) => () =>
     `  done-when: ${feature.doneWhen || 'tsc + eslint + tests green; outcome demonstrably met'}\n\n` +
     CONSTRAINTS + '\n\n' +
     `WORK\n` +
-    `1. You are in your own isolated git worktree off main. Create branch hack/${feature.id}/${b.lens}.\n` +
-    `2. Implement the feature fully and coherently — real, working code, not a sketch. Let your lens shape the design choices.\n` +
-    `3. Verify: \`npx tsc --noEmit\`; \`npx eslint app\`; \`npm test\`; and the verify-ui skill if you touched UI.\n` +
-    `4. Commit everything on your branch (end the message with the Co-Authored-By: Claude trailer).\n` +
-    `5. Return the structured result; set diff to the output of \`git diff main...HEAD\`.\n\n` +
+    `1. You start in an isolated git worktree. Create your branch BASED ON MAIN so your diff stays clean: \`git checkout -b hack/${feature.id}/${b.lens} main\`.\n` +
+    `2. Run \`npx prisma generate\` FIRST — the generated Prisma client (app/generated/prisma) is gitignored and absent in a fresh worktree, so tsc and tests fail without it.\n` +
+    `3. Implement the feature fully and coherently — real, working code, not a sketch. Let your lens shape the design choices.\n` +
+    `4. Verify: \`npx tsc --noEmit\`; \`npx eslint app\`; \`npm test\`; and the verify-ui skill if you touched UI.\n` +
+    `5. Commit everything on your branch (end the message with the Co-Authored-By: Claude trailer).\n` +
+    `6. Return the structured result; set diff to the output of \`git diff main...HEAD\`.\n\n` +
     `Do NOT open a PR and do NOT touch main. Build, verify, commit, report.`,
     { label: `build:${b.lens}`, phase: 'Build', isolation: 'worktree', schema: BUILD_RESULT },
   )
