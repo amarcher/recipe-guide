@@ -67,7 +67,7 @@ Each lens also brings its own concern (sharing-network checks family/scope seman
 
 ## Coordination — the agent bus
 
-The team shares work as it goes over a cheap flat-file message bus (see `AGENT-BUS.md`): each agent has an inbox at `.agents/bus/<name>.inbox.md` and reads *its* unread `[ ]` lines, flipping them `[x]`. The loop uses it to drop a feature's context for the judges, leave the chair a pointer to the candidate payloads, and pick up async cross-feature notes the judges leave; the judges use it to flag concerns the loop should act on later. It complements `SendMessage` (live hand-offs) with durable, async, cross-session signaling — and stays cheap because inbox lines are short and big bodies live in `payloads/`.
+The team shares work as it goes over a cheap flat-file message bus (see `AGENT-BUS.md`): each agent has an inbox at `.agents/bus/<name>.inbox.md` and reads *its* unread `[ ]` lines, **signing** each one it considers (`[ ]` → `[seen:<name> <ts>]`) so the trail shows who handled what. The loop uses it to drop a feature's context for the judges, leave the chair a pointer to the candidate payloads, and pick up async cross-feature notes the judges leave; the judges use it to flag concerns the loop should act on later. It complements `SendMessage` (live hand-offs) with durable, async, cross-session signaling — and stays cheap because inbox lines are short and big bodies live in `payloads/`.
 
 ## Channel binding
 
