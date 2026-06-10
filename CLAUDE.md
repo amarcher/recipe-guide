@@ -146,7 +146,18 @@ Pivot rows are **always personal-scope**, even when forked from a family-scope o
 
 **Storage helpers**: `pivotRecipe` is implicit (the sheet calls `fetch` directly), but `decidePivot(id, "keep" | "discard")` lives in `app/lib/storage.ts` and updates the local mirror after the server call.
 
-**Open follow-ups**: abandoned-pivot sweeper for rows older than N hours where `pivotKept = false`; "Replace original" action that promotes a kept pivot's revised card onto the parent's RecipeOverride; family-scope pivots if the workflow demands shared cook-rescues.
+**Abandoned-pivot sweep** (shipped): stale in-progress pivot forks (`pivotMeta != null` AND `pivotKept = false` AND `savedAt` older than 48h) are auto-discarded so the library doesn't accumulate forgotten "Pivot in progress" rows. The sweep predicate lives Prisma-free in `app/lib/pivot/sweep.ts` (`isAbandonedPivot`, `pivotSweepCutoff`, `abandonedPivotScalarWhere`) so vitest covers it (`sweep.test.ts`). `deleteMany` cascades MiseCheck/CookLog. Triggered by the project's first scheduled cron (see Cron jobs below) or manually via `npm run pivot-sweep` (dry-run; `--apply` to delete).
+
+**Open follow-ups**: "Replace original" action that promotes a kept pivot's revised card onto the parent's RecipeOverride; family-scope pivots if the workflow demands shared cook-rescues.
+
+## Cron jobs
+
+Vercel Cron is the scheduler. **Convention** (established by the pivot sweep, the first cron):
+- Route lives at `app/api/cron/<name>/route.ts`, `runtime = "nodejs"`, exports both `GET` (Vercel's scheduler issues a GET) and `POST` (manual rerun) wired to one shared handler.
+- First line of the handler: `checkCronAuth(req)` from `app/lib/cron/auth.ts`, which compares `Authorization: Bearer <CRON_SECRET>`. Missing/blank `CRON_SECRET` → 503 (fail closed); mismatch → 401. The helper is Prisma-free and unit-tested (`auth.test.ts`).
+- Register the schedule in `vercel.json` under `crons` (`{ path, schedule }`, cron expression in UTC).
+- Set `CRON_SECRET` in the Vercel project env. Vercel injects the matching Bearer header automatically on scheduled invocations.
+- Pair each cron with an `npm run <name>` script that runs the same shared predicate against Prisma directly, dry-run by default (mirrors `scripts/pivot-sweep.ts`).
 
 ## Sprites
 
