@@ -82,3 +82,7 @@ The chair is ephemeral on purpose — judging continuity lives in the five stand
 1. Are `judge-caretaker … judge-architect` alive? If yes, skip.
 2. If not, spawn all five as background agents, each rehydrating from persona + memo.
 3. Confirm all five reply "ready" before sending the first feature.
+
+## Async signaling (the agent bus)
+
+Live verdicts come back via `SendMessage`, but a judge can also leave **durable, async** notes on the agent bus (`AGENT-BUS.md`) — e.g. a cross-feature concern the loop should act on three iterations from now ("the last two winners both grew the grocery schema; watch for drift"). A judge writes to `.agents/bus/loop.inbox.md` (or a `topics/` stream); the loop reads its unread `[ ]` each iteration. Use the bus when the signal outlives the current feature; use `SendMessage` for the in-the-moment judging exchange.

@@ -46,3 +46,6 @@ next-env.d.ts
 
 # local backups / downloads (e.g. sprite originals before blob deletion)
 /.local/
+
+# agent bus — runtime inter-session messages (see docs/roadmap-2026/AGENT-BUS.md)
+/.agents/bus/

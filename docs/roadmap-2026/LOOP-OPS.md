@@ -65,6 +65,10 @@ Every lens scores each candidate on:
 
 Each lens also brings its own concern (sharing-network checks family/scope semantics, etc.). The panel surfaces the tradeoffs; the chair resolves them.
 
+## Coordination — the agent bus
+
+The team shares work as it goes over a cheap flat-file message bus (see `AGENT-BUS.md`): each agent has an inbox at `.agents/bus/<name>.inbox.md` and reads *its* unread `[ ]` lines, flipping them `[x]`. The loop uses it to drop a feature's context for the judges, leave the chair a pointer to the candidate payloads, and pick up async cross-feature notes the judges leave; the judges use it to flag concerns the loop should act on later. It complements `SendMessage` (live hand-offs) with durable, async, cross-session signaling — and stays cheap because inbox lines are short and big bodies live in `payloads/`.
+
 ## Channel binding
 
 **Convention: the Slack channel name matches the repo directory name.** This repo is `recipe-guide`, so its channel is **#recipe-guide** (`C0ATWTGC28J`) in the Ace's Up Labs workspace. The loop should re-resolve this each run via `slack_search_channels` on the repo name rather than trusting a stale ID — channels get recreated.
