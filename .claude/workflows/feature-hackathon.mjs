@@ -1,7 +1,7 @@
 export const meta = {
   name: 'feature-hackathon',
   description: 'Run N lens-builders in parallel worktrees on one feature; return blind candidates A–E for the standing judge panel',
-  whenToUse: 'The BUILD step of the autonomous /loop runner (see docs/roadmap-2026/LOOP-OPS.md). Builders only — judging is done by the persistent panel via SendMessage.',
+  whenToUse: 'The BUILD step of the autonomous /loop runner (see docs/agent-loop/LOOP-OPS.md). Builders only — judging is done by the persistent panel via SendMessage.',
   phases: [
     { title: 'Build', detail: 'one lens-builder per persona, isolated git worktrees' },
     { title: 'Assemble', detail: 'collect diffs, anonymize to salt-rotated A–E' },

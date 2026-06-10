@@ -25,14 +25,14 @@ A minimal Slack-webhook appender is just one shell line, e.g.:
 
 ```bash
 printf '\n- [ ] %s · slack#%s · %s — %s\n' "$DATE" "$CHANNEL" "$USER" "$TEXT" \
-  >> docs/roadmap-2026/inbound-feedback.md
+  >> docs/agent-loop/inbound-feedback.md
 ```
 
 (Wiring the actual webhook is out of scope here — the file works today with manual paste.)
 
 ## How the loop handles each unseen item
 
-1. **Small, unambiguous bug/tweak** → add a `[ ]` item to the Task Queue in `EXECUTION-PLAN.md`.
+1. **Small, unambiguous bug/tweak** → add a `[ ]` item to the Task Queue in `QUEUE.md`.
 2. **Recurring theme / direction change** → append to the roadmap backlog for the agent team. The loop does **not** act on a large pivot unilaterally.
 3. **FYI / praise** → no action.
 

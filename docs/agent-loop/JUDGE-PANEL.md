@@ -20,7 +20,7 @@ See `LOOP-OPS.md` for how they slot into the loop; this file is the protocol.
 
 **Spawn once** (first loop run, or after a restart): start each as a **named background agent**. On spawn, the judge must **rehydrate**:
 
-1. Read its persona file (`positions/0X-*.md`) and embody it.
+1. Read its persona file (`docs/roadmap-2026/positions/0X-*.md`) and embody it.
 2. Read its section of `judges-evolution-memo.md` — the durable record of what it has learned about how this app should evolve.
 3. Reply "ready" and wait for features.
 
