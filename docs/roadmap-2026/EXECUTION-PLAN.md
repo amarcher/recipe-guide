@@ -102,6 +102,8 @@ PlannedMealStatus enum value `COOKED_FROM_LEFTOVERS` and PlannedMeal.cookLogId).
 
 Voice intake, calendar grid, multi-week planning, friends graph, recipe comments, "Just the gist" Alicia render mode, real-time collaborative intake chat, smart auto-substitution, profile editor UI v1, library carousel, motion-language audit. Rationales in `round2/00-convergence.md` "What I cut and why."
 
+- **family-scope-pivots** (cut 2026-06-10 by Andrew) — sharing a mid-cook pivot back to the family contradicts the deliberate "pivots are always personal-scope" invariant (private mid-cook decisions, not auto-published). Don't re-propose without evidence of real demand for shared cook-rescues.
+
 ## Cross-cutting primitives — when you build one, design for the others
 
 - **`<MealFace />` (1.8)** is used by 1.9 candidate tiles, 1.10 Tonight surface, 2.17 Hosted Menu rendering. Build once.

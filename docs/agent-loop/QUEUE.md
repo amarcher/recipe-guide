@@ -24,10 +24,6 @@ Each entry is a **feature**, not a micro-task and not an epic — a coherent uni
 <!-- loop pulls the topmost [ ] feature; planning layer appends new features below this comment -->
 <!-- Increment 1, populated 2026-06-10 from the 4-scout planning fan-out (see .agents/bus payloads).
      Ordered: safe foundations first, then high-leverage product. -->
-- [review: #41] cron-pivot-sweep — First scheduled cron + abandoned-pivot sweeper · slug:chore/cron-pivot-sweep
-      outcome: Stale in-progress pivot forks (pivotKept=false, older than 48h) are auto-discarded via the project's first scheduled cron, establishing a reusable cron convention.
-      done-when: npx tsc --noEmit && npx eslint app && npm test -- app/lib/pivot/sweep.test.ts; a backdated pivot row is swept and a fresh one survives.
-      constraints: add vercel cron config + a CRON_SECRET-guarded POST /api/cron/pivot-sweep (deleteMany on stale rows; cascades MiseCheck/CookLog); sweep predicate in a Prisma-free app/lib/pivot/sweep.ts; npm run pivot-sweep for manual runs. Make the cron scaffolding reusable.
 - [ ] rel-schema-guard — CI guardrail failing the build on banned LLM-schema Zod calls (roadmap 1.6) · slug:chore/rel-schema-guard
       outcome: CI fails the build when an LLM schema uses a banned construct (minItems>1, maxItems, number bounds, .int(), .positive()).
       done-when: scripts/validate-llm-schemas.ts flags a deliberately-bad schema in its test; the CI workflow runs it; npx tsc --noEmit green.
@@ -52,11 +48,12 @@ Each entry is a **feature**, not a micro-task and not an epic — a coherent uni
       outcome: A read-only per-eater panel surfaces ProfilePreference (RELIABLE / EXPERIMENTING / HARD_NO) and wires MealOutcomePrompt's existing "same as last time" affordance, closing the visible end of the planner's learning loop.
       done-when: verify-ui on the eater panel && npx tsc --noEmit && npx eslint app.
       constraints: READ-ONLY — must NOT become the cut "profile editor UI v1"; surface existing ProfilePreference data only.
+- [ ] prod-migration-verify — Verify the Phase-2 production migration is live + write the deploy runbook · slug:chore/prod-migration-verify
+      outcome: A read-only script reports whether the 20260429002752_phase2 migration is applied in prod (each Phase-2 table/enum/column present), and a runbook documents the one-command deploy; if not applied, the script clearly flags that Andrew must run `prisma migrate deploy`.
+      done-when: npx tsc --noEmit; `npm run verify:prod-migration` prints a per-object applied/not-applied report; the runbook is committed.
+      constraints: READ-ONLY against prod (introspect only, NEVER migrate) — the actual `prisma migrate deploy` is Andrew's manual step and must not be automated; follow the documented forward-only migration workflow; keep the check Prisma-free where testable.
 
 ### Blocked (needs evidence or a decision — the loop skips these)
-- [blocked: contradicts the documented "pivots are always personal-scope" invariant — needs Andrew's sign-off] family-scope-pivots — Allow family-scope mid-cook pivots
-- [blocked: tail requires Andrew to run `migrate deploy` against prod Neon] roadmap-prod-enablement — Verify + enable the Phase-2 production migration
-- [blocked: L-size + new migration — split into a first slice before queuing] menu-rsvp — Anonymous token-scoped voting on hosted menus
 - [blocked: needs 3+ months of MealOutcome history] 3.3 — Smart re-ordering
 - [blocked: no second family yet] 3.4 — Cross-family RecipeShelf
 - [blocked: defer until 2.20 friction observed] 3.5 — Cross-family RecipeGift with lineage
@@ -74,7 +71,9 @@ From the 2026-06-10 planning fan-out; full briefs in the bus payloads. Promote w
 - planevent-history-fixture (M) — Phase-3.3 groundwork: history seed + Prisma-free reorder-core
 - resolver-snapshot-fallback (M) — **(panel insight, 2026-06-10)** make card-resolver read a canonical field when the override/snapshot lacks it, so new ParsedRecipe fields stop silently shadowing on frozen RecipeOverride / pivotMeta.revisedCard / MealCandidate.composedCardDraft / MenuItem.snapshotCardJson — retires the need for per-field one-shot backfills
 - cron-sweep-hardening (S) — **(panel follow-ups, feature 2)** fold the runner-up's shared `runPivotSweep` factoring (route+script one deletion path); add an active-cook-session guard before any future sweeper deletes execution-adjacent rows; add a defensive `familyId: null` scope clause + a tombstone once recipe sharing/gifting lands
+- menu-rsvp (L, deferred 2026-06-10 by Andrew) — anonymous token-scoped voting on hosted /menu/[slug]; needs a new model+migration and must be split into a first slice (schema + single up/down vote) before queuing; brushes the cut "recipe comments" line — revisit only with real demand
 
 ### Done (most recent first; trimmed periodically)
 <!-- the loop appends [done: #NN] lines here as PRs merge -->
+- [done: #41] cron-pivot-sweep — first scheduled cron + abandoned-pivot sweeper (panel 5–0)
 - [done: #39] dish-image-override-backfill — backfill generated dish-image URLs into pre-backfill overrides (panel 5–0)
