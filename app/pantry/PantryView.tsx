@@ -295,8 +295,9 @@ export function PantryView({
             Pantry
           </h1>
           <p className="mt-1 max-w-md text-sm text-stone-600">
-            What&apos;s on hand at home. Items checked off a family grocery list
-            land here on their own.
+            What&apos;s on hand at home. Pantry items pre-check your mise en
+            place and drop off grocery lists; items checked off a family
+            grocery list land here on their own.
           </p>
         </div>
         {families.length > 1 && (

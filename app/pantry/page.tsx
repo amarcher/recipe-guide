@@ -65,7 +65,7 @@ export default async function PantryPage() {
   const items = await prisma.pantryItem.findMany({
     where: { familyId },
     include: { addedBy: { select: { name: true } } },
-    orderBy: { addedAt: "desc" },
+    orderBy: [{ mustUseBy: { sort: "asc", nulls: "last" } }, { addedAt: "desc" }],
   });
 
   return (
