@@ -43,3 +43,6 @@ next-env.d.ts
 .env*.local
 
 /app/generated/prisma
+
+# local backups / downloads (e.g. sprite originals before blob deletion)
+/.local/
