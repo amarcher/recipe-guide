@@ -24,10 +24,6 @@ Each entry is a **feature**, not a micro-task and not an epic — a coherent uni
 <!-- loop pulls the topmost [ ] feature; planning layer appends new features below this comment -->
 <!-- Increment 1, populated 2026-06-10 from the 4-scout planning fan-out (see .agents/bus payloads).
      Ordered: safe foundations first, then high-leverage product. -->
-- [ ] rel-aggregate-tests — Unit-cover app/lib/aggregate.ts (mise/grocery dedupe) · slug:chore/rel-aggregate-tests
-      outcome: The load-bearing aggregation module (keying by (slug||item, unit), scaling, pantry merge) has meaningful unit coverage.
-      done-when: npm test -- app/lib/aggregate.test.ts green, covering keying, scaling, and pantry merge.
-      constraints: pure-function tests only — no Prisma import.
 - [ ] rel-sprites-core-tests — Unit-cover app/lib/sprites-core.ts against the committed manifest · slug:chore/rel-sprites-core-tests
       outcome: The sprite resolver (findSprite / aisleForName / scoring) is unit-tested against sprites/manifest.json.
       done-when: npm test -- app/lib/sprites-core.test.ts green.
@@ -71,6 +67,7 @@ From the 2026-06-10 planning fan-out; full briefs in the bus payloads. Promote w
 
 ### Done (most recent first; trimmed periodically)
 <!-- the loop appends [done: #NN] lines here as PRs merge -->
+- [done: #47] rel-aggregate-tests — unit-cover app/lib/aggregate.ts mise/grocery dedupe · 5-judge panel, 1 builder disqualified for an empty branch (architect caught it), 4-way split → D (honest vitest config + worktree-exclude + smallest diff); grafted real Prisma-in-vitest enforcement + WANT-spec tripwires for 2 found grocery bugs (range under-count, clove/cloves desync)
 - [done: #45] rel-schema-guard — CI guardrail failing the build on banned LLM-schema Zod constructs (roadmap 1.6) · panel 5–0 no veto, 2–2 D/E tie → E (compiled-z.toJSONSchema + in-runner self-test + pivot coverage), grafted D's single-report .int()
 - [done: #41] cron-pivot-sweep — first scheduled cron + abandoned-pivot sweeper (panel 5–0)
 - [done: #39] dish-image-override-backfill — backfill generated dish-image URLs into pre-backfill overrides (panel 5–0)
