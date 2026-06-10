@@ -143,7 +143,7 @@ Each entry is a **feature**, not a micro-task and not an epic — a coherent uni
 <!-- loop pulls the topmost [ ] feature; planning layer appends new features below this comment -->
 <!-- Increment 1, populated 2026-06-10 from the 4-scout planning fan-out (see .agents/bus payloads).
      Ordered: safe foundations first, then high-leverage product. -->
-- [ ] dish-image-override-backfill — Backfill generated dish-image URLs into pre-backfill RecipeOverride rows · slug:chore/dish-image-override-backfill
+- [review: #39] dish-image-override-backfill — Backfill generated dish-image URLs into pre-backfill RecipeOverride rows · slug:chore/dish-image-override-backfill
       outcome: Users whose RecipeOverride predates the dish-photo backfill see the canonical AI dish image instead of the vignette/swatch fallback.
       done-when: npx tsc --noEmit && the merge-helper *.test.ts green; dry-run prints a count, --apply on one override → /recipe/[id] renders the generated image with the ✨ badge.
       constraints: one-shot scripts/backfill-override-dish-photos.ts (dry-run default + --apply/--limit); shallow-merge generated_dish_image_url from the parent ParsedRecipe.cardJson ONLY where the override lacks it (never clobber other fields); merge logic in a Prisma-free helper for vitest.
@@ -195,6 +195,7 @@ From the 2026-06-10 planning fan-out; full briefs in the bus payloads. Promote w
 - tts-elevenlabs-provider (M) — swap the prototype Translate TTS for ElevenLabs (needs ELEVENLABS_API_KEY)
 - recipegift-token-groundwork (M) — Phase-3.5 groundwork: gift token + lineage snapshot, single-recipient
 - planevent-history-fixture (M) — Phase-3.3 groundwork: history seed + Prisma-free reorder-core
+- resolver-snapshot-fallback (M) — **(panel insight, 2026-06-10)** make card-resolver read a canonical field when the override/snapshot lacks it, so new ParsedRecipe fields stop silently shadowing on frozen RecipeOverride / pivotMeta.revisedCard / MealCandidate.composedCardDraft / MenuItem.snapshotCardJson — retires the need for per-field one-shot backfills
 
 ### Done (most recent first; trimmed periodically)
 <!-- the loop appends [done: #NN] lines here as PRs merge -->
