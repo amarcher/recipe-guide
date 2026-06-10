@@ -4,7 +4,7 @@ How `/loop` turns the roadmap into PRs — **one feature per iteration**, each b
 
 ## Mental model
 
-Each loop iteration is a **fresh context window**. Nothing survives in the conversation between iterations — durable state lives only in **git**, the **Task Queue** in `EXECUTION-PLAN.md`, and the **judges' evolution memo**. The exception is the judge panel itself, which is *persistent* (see below).
+Each loop iteration is a **fresh context window**. Nothing survives in the conversation between iterations — durable state lives only in **git**, the **Task Queue** (`QUEUE.md`), and the **judges' evolution memo**. The exception is the judge panel itself, which is *persistent* (see below).
 
 Every iteration:
 
@@ -46,10 +46,10 @@ Judging is **not** in this workflow — it routes to the standing panel below.
 
 Five **standing** judges — one per lens — that receive a *stream* of features and judge them in sequence, **retaining everything they've judged before**. ~5 builders per feature, but only 5 judges across *all* features. Continuity is the point: a judge that remembers the last 40 features evaluates #41 for *coherent evolution*, not in isolation.
 
-See **`docs/roadmap-2026/JUDGE-PANEL.md`** for the full protocol. In brief:
+See **`docs/agent-loop/JUDGE-PANEL.md`** for the full protocol. In brief:
 
 - **Spawned once** as named background agents (`judge-caretaker`, `judge-execution`, `judge-visual`, `judge-sharing`, `judge-architect`); **continued via SendMessage** each feature.
-- On spawn / respawn they **rehydrate** from `docs/roadmap-2026/judges-evolution-memo.md` (their durable memory — a standing session eventually compacts or restarts, so in-session memory alone is not enough).
+- On spawn / respawn they **rehydrate** from `docs/agent-loop/judges-evolution-memo.md` (their durable memory — a standing session eventually compacts or restarts, so in-session memory alone is not enough).
 - They score blind candidates `A–E` on the **rubric** (below) and **append to their memo** after each feature.
 - A per-feature **chair** (ephemeral) reads the five verdicts + the evolution memos, picks the winner, and writes a **graft list** (best ideas from the runners-up) applied onto the winner's branch.
 
@@ -76,7 +76,7 @@ The team shares work as it goes over a cheap flat-file message bus (see `AGENT-B
 ## Feedback sources
 
 1. **Slack #recipe-guide — WIRED.** The loop searches this channel for messages from Andrew since the last iteration. Anything he posts (a redirect, a veto, "change X", a 👍) outranks the queue.
-2. **`docs/roadmap-2026/inbound-feedback.md` — WIRED (file inbox).** A single append-only file the loop reads every iteration. No connectors — a cheap local read. Items are **pushed** in (a Slack webhook, a manual paste, a cron) by appending one line; the loop never reaches out. Each line is `[ ]` (unseen) or `[x]` (processed).
+2. **`docs/agent-loop/inbound-feedback.md` — WIRED (file inbox).** A single append-only file the loop reads every iteration. No connectors — a cheap local read. Items are **pushed** in (a Slack webhook, a manual paste, a cron) by appending one line; the loop never reaches out. Each line is `[ ]` (unseen) or `[x]` (processed).
 
    **Handling rule** (both sources): a small, unambiguous bug/tweak → the loop adds a Task Queue `[ ]` feature directly. A recurring theme or a direction change → *appended to the roadmap backlog for the planning layer*; the loop does **not** act on a large pivot unilaterally. An FYI/praise → no action.
 
@@ -86,8 +86,7 @@ Run with `/loop` (self-paced — omit the interval so each iteration starts when
 
 ```
 You are the runner executing our roadmap autonomously, ONE feature per iteration, as a
-hackathon judged by a standing panel. Read docs/roadmap-2026/LOOP-OPS.md, the "Task Queue"
-in docs/roadmap-2026/EXECUTION-PLAN.md, and docs/roadmap-2026/JUDGE-PANEL.md first — they
+hackathon judged by a standing panel. Read docs/agent-loop/LOOP-OPS.md, docs/agent-loop/QUEUE.md, and docs/agent-loop/JUDGE-PANEL.md first — they
 are the source of truth. Never assume memory of prior iterations; state lives in git, the
 queue, and the judges' evolution memo. Build one feature, hand off cleanly, then stop.
 
@@ -97,7 +96,7 @@ queue, and the judges' evolution memo. Build one feature, hand off cleanly, then
 2. ENSURE PANEL. Confirm the five persistent judges (judge-caretaker, judge-execution,
    judge-visual, judge-sharing, judge-architect) are alive. If not (first run or after a
    restart), spawn each as a background agent per JUDGE-PANEL.md — each loads its persona
-   (positions/0X-*.md) and its section of judges-evolution-memo.md before judging anything.
+   (docs/roadmap-2026/positions/0X-*.md) and its section of judges-evolution-memo.md before judging anything.
 
 3. FEEDBACK FIRST + ANDREW'S VETO (overrides everything):
    - slack_search_channels "recipe-guide" → #recipe-guide. Read messages since last iteration.
