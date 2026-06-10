@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Bell, CalendarRange, Library, Users } from "lucide-react";
+import { Bell, CalendarRange, Library, Refrigerator, Users } from "lucide-react";
 import { AvatarMenu } from "./AvatarMenu";
 import { InboxBadge } from "./InboxBadge";
 
@@ -21,6 +21,7 @@ export function Header() {
         </Link>
         <nav className="flex items-center gap-1">
           <HeaderTab href="/plan" label="Plan" Icon={CalendarRange} />
+          <HeaderTab href="/pantry" label="Pantry" Icon={Refrigerator} />
           <HeaderTab href="/library" label="Library" Icon={Library} />
           <HeaderTab href="/settings" label="Families" Icon={Users} />
           <Link

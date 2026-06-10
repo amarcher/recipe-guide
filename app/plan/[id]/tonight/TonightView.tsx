@@ -3,12 +3,21 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Baby, Clock, Flame, RefreshCw, Users } from "lucide-react";
+import { Baby, Clock, Flame, Leaf, RefreshCw, Users } from "lucide-react";
 import {
   MealFace,
   type MealFaceSubject,
 } from "@/app/components/MealFace";
+import { Sprite } from "@/app/components/Sprite";
 import { refreshSavedRecipes } from "@/app/lib/storage";
+
+export type TonightPantryItem = {
+  id: string;
+  display: string;
+  quantity: string | null;
+  label: string;
+  urgency: "expired" | "soon";
+};
 
 export type TonightMeal = {
   mealId: string;
@@ -22,6 +31,7 @@ export type TonightMeal = {
   approxCookMinutes: number;
   kidFitTag: "RELIABLE" | "STRETCH" | "NEW";
   moodTag: string | null;
+  usesExpiring: string[];
 };
 
 const SLOT_LABEL: Record<TonightMeal["slot"], string> = {
@@ -37,6 +47,13 @@ const SLOT_ORDER: Record<TonightMeal["slot"], number> = {
   DINNER: 2,
   SNACK: 3,
 };
+
+function formatList(names: string[]): string {
+  const lower = names.map((n) => n.toLowerCase());
+  if (lower.length === 1) return lower[0];
+  if (lower.length === 2) return `${lower[0]} and ${lower[1]}`;
+  return `${lower.slice(0, -1).join(", ")}, and ${lower[lower.length - 1]}`;
+}
 
 function eaterKey(eaters: TonightMeal["eaters"]): string {
   return [...eaters].sort().join("+");
@@ -85,8 +102,18 @@ function organize(meals: TonightMeal[]): SlotRow[] {
       if (e[0] === "ADULTS") return 1;
       return 2;
     };
+    // Within a track, meals that rescue near-expiry pantry items float to
+    // the top — "what should I cook tonight?" favors the one that saves the
+    // cilantro. Stable sort keeps the original order otherwise.
     const tracks = [...byEater.values()]
-      .map((meals) => ({ eaters: meals[0].eaters, meals }))
+      .map((meals) => ({
+        eaters: meals[0].eaters,
+        meals: [...meals].sort(
+          (a, b) =>
+            (b.usesExpiring.length > 0 ? 1 : 0) -
+            (a.usesExpiring.length > 0 ? 1 : 0),
+        ),
+      }))
       .sort((a, b) => trackOrder(a.eaters) - trackOrder(b.eaters));
     rows.push({ slot, tracks });
   }
@@ -96,22 +123,78 @@ function organize(meals: TonightMeal[]): SlotRow[] {
 export function TonightView({
   planId,
   meals,
+  useSoon = [],
 }: {
   planId: string;
   meals: TonightMeal[];
+  useSoon?: TonightPantryItem[];
 }) {
   if (meals.length === 0) {
-    return <EmptyState planId={planId} />;
+    return (
+      <div className="space-y-6">
+        <UseItUpStrip items={useSoon} />
+        <EmptyState planId={planId} />
+      </div>
+    );
   }
 
   const rows = organize(meals);
 
   return (
     <div className="space-y-8">
+      <UseItUpStrip items={useSoon} />
       {rows.map((row) => (
         <SlotRowView key={row.slot} planId={planId} row={row} />
       ))}
     </div>
+  );
+}
+
+function UseItUpStrip({ items }: { items: TonightPantryItem[] }) {
+  if (items.length === 0) return null;
+  return (
+    <section
+      aria-label="Pantry items to use soon"
+      className="rounded-2xl border border-amber-200 bg-amber-50/70 p-4"
+    >
+      <div className="flex items-baseline justify-between gap-3">
+        <h2 className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-amber-900">
+          <Leaf className="h-3.5 w-3.5" aria-hidden />
+          Use it up
+        </h2>
+        <Link
+          href="/pantry"
+          className="text-[12px] font-medium text-amber-900 underline-offset-2 hover:underline"
+        >
+          Pantry →
+        </Link>
+      </div>
+      <p className="mt-1 text-[13px] text-stone-700">
+        On hand and on the clock — meals below that use them are marked.
+      </p>
+      <ul className="mt-2.5 flex flex-wrap gap-2">
+        {items.map((it) => (
+          <li
+            key={it.id}
+            className={`flex items-center gap-2 rounded-full border bg-white py-1 pl-1.5 pr-2.5 shadow-sm ${
+              it.urgency === "expired" ? "border-rose-200" : "border-amber-200"
+            }`}
+          >
+            <Sprite name={it.display} size={24} />
+            <span className="text-[13px] font-medium text-stone-900">
+              {it.display}
+            </span>
+            <span
+              className={`text-[11px] font-medium ${
+                it.urgency === "expired" ? "text-rose-700" : "text-amber-800"
+              }`}
+            >
+              {it.label}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
@@ -227,6 +310,13 @@ function TonightTile({
   return (
     <article className="overflow-hidden rounded-2xl border border-stone-200 bg-stone-50 shadow-sm">
       <MealFace subject={subject} size="spread" className="rounded-none" />
+      {meal.usesExpiring.length > 0 && (
+        <p className="flex items-center gap-1.5 border-t border-amber-100 bg-amber-50/80 px-5 py-2 text-[12px] font-medium text-amber-900">
+          <Leaf className="h-3.5 w-3.5 flex-none" aria-hidden />
+          Uses your {formatList(meal.usesExpiring)} before{" "}
+          {meal.usesExpiring.length === 1 ? "it turns" : "they turn"}
+        </p>
+      )}
       <div className="flex items-center justify-between gap-3 border-t border-stone-100 px-5 py-3">
         <span className="inline-flex items-center gap-1.5 text-sm text-stone-600">
           <Clock className="h-3.5 w-3.5" />

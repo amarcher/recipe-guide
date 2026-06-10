@@ -3,7 +3,22 @@ import Link from "next/link";
 import { prisma } from "@/app/lib/prisma";
 import { requireUser } from "@/app/lib/server-auth";
 import { loadPlanIfOwned } from "@/app/lib/plan-auth";
-import { TonightView, type TonightMeal } from "./TonightView";
+import { findSprite } from "@/app/lib/sprites-core";
+import {
+  classifyFreshness,
+  freshnessLabel,
+  isNearExpiry,
+} from "@/app/lib/pantry/freshness";
+import {
+  cardIngredientNames,
+  matchMealToPantry,
+  pantryKey,
+} from "@/app/lib/pantry/match";
+import {
+  TonightView,
+  type TonightMeal,
+  type TonightPantryItem,
+} from "./TonightView";
 import type { CookCard } from "@/app/types";
 
 export const runtime = "nodejs";
@@ -54,6 +69,51 @@ export default async function TonightPage({
     where: { planId: plan.id, purchased: false },
   });
 
+  // Near-mustUseBy pantry items for family plans. Each queued meal is matched
+  // against them by ingredient slug so the view can badge "uses your cilantro
+  // before it turns" — same identity rule as the mise cascade.
+  let useSoon: TonightPantryItem[] = [];
+  const expiringByMeal = new Map<string, string[]>();
+  if (plan.familyId) {
+    const now = new Date();
+    const dated = await prisma.pantryItem.findMany({
+      where: { familyId: plan.familyId, mustUseBy: { not: null } },
+      orderBy: { mustUseBy: "asc" },
+    });
+    const soon = dated.filter((p) => isNearExpiry(p.mustUseBy, now));
+    useSoon = soon.map((p) => {
+      const f = classifyFreshness(p.mustUseBy, now);
+      return {
+        id: p.id,
+        display: p.display,
+        quantity: p.quantity,
+        label: freshnessLabel(p.mustUseBy, now) ?? "",
+        urgency: f === "expired" ? ("expired" as const) : ("soon" as const),
+      };
+    });
+    if (soon.length > 0) {
+      const keyToDisplay = new Map(
+        soon.map((p) => [pantryKey(p, findSprite), p.display]),
+      );
+      const keys = new Set(keyToDisplay.keys());
+      for (const m of queued) {
+        const card = m.candidate.composedCardDraft as CookCard | null;
+        const matched = new Set(
+          matchMealToPantry(cardIngredientNames(card), keys, findSprite),
+        );
+        for (const slug of m.candidate.heroIngredientSlugs) {
+          if (keys.has(slug)) matched.add(slug);
+        }
+        if (matched.size > 0) {
+          expiringByMeal.set(
+            m.id,
+            [...keys].filter((k) => matched.has(k)).map((k) => keyToDisplay.get(k)!),
+          );
+        }
+      }
+    }
+  }
+
   const meals: TonightMeal[] = queued.map((m) => {
     const c: CandidateSlice = {
       id: m.candidate.id,
@@ -79,6 +139,7 @@ export default async function TonightPage({
       approxCookMinutes: c.approxCookMinutes,
       kidFitTag: c.kidFitTag,
       moodTag: c.moodTags[0] ?? null,
+      usesExpiring: expiringByMeal.get(m.id) ?? [],
     };
   });
 
@@ -111,7 +172,7 @@ export default async function TonightPage({
           </div>
         </div>
 
-        <TonightView planId={plan.id} meals={meals} />
+        <TonightView planId={plan.id} meals={meals} useSoon={useSoon} />
 
         {groceryRemaining > 0 && (
           <div className="mt-8 rounded-xl border border-amber-200 bg-amber-50/60 px-4 py-3 text-sm text-stone-800">
