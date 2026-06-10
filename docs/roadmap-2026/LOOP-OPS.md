@@ -20,13 +20,9 @@ The Slack gate is the anti-drift mechanism. Removing it gives you "full autopilo
 ## Feedback sources
 
 1. **Slack #recipe-guide — WIRED.** The loop searches this channel for messages from Andrew since the last iteration. Anything he posts (a redirect, a veto, "change X", a 👍) outranks the queue.
-2. **App / user feedback — NOT YET WIRED (placeholder).** "Comments on blogs or other sources of input about our apps." Pick a concrete source and fill this in before relying on it. Candidate wirings:
-   - a `Feedback` table (or reuse `DASHBOARD_DATABASE_URL` metrics) queried for rows since the last iteration;
-   - an inbox/forwarding address the loop greps via the Gmail MCP;
-   - a file like `docs/roadmap-2026/inbound-feedback.md` that you (or a webhook) drop notes into.
-   Until one is wired, the loop treats this source as empty and says so in its Slack post.
+2. **`docs/roadmap-2026/inbound-feedback.md` — WIRED (file inbox).** A single append-only file the loop reads every iteration. No connectors, no API calls — just a cheap local read. Items are **pushed** in (a Slack webhook, a manual paste, a cron) by appending one line; the loop never reaches out. Each line is `[ ]` (unseen) or `[x]` (processed). The loop reads every `[ ]`, acts per the handling rule, and flips it to `[x]`. See that file's header for the exact line format.
 
-   **Handling rule:** recurring feedback themes get *appended to the roadmap backlog for the agent team* — the loop does **not** unilaterally act on a large pivot. Small, unambiguous bug reports it may turn into a queue task directly.
+   **Handling rule** (applies to both sources): a small, unambiguous bug/tweak → the loop turns it into a Task Queue `[ ]` item directly. A recurring theme or a direction change → *appended to the roadmap backlog for the agent team*; the loop does **not** act on a large pivot unilaterally. An FYI/praise → no action.
 
 ## The iteration prompt
 
@@ -47,9 +43,11 @@ Do exactly one task, hand off cleanly, then stop.
      Read messages since the last iteration. A redirect/veto/"change X" from
      Andrew supersedes the queue — handle that before picking a new task. Treat
      a 👍 / "approved" on a [review:#NN] task as the gate clearing (step 6).
-   - Check the app/user feedback source named in LOOP-OPS.md. If unwired, note
-     "no feedback source wired" and continue. Append recurring themes to the
-     roadmap backlog for the agent team; do NOT act on a large pivot yourself.
+   - Read docs/roadmap-2026/inbound-feedback.md. For each unchecked `[ ]` line:
+     a small unambiguous bug/tweak → add a Task Queue `[ ]` item; a recurring
+     theme or direction change → append to the roadmap backlog for the agent
+     team (do NOT act on a big pivot yourself); an FYI → no action. Flip each
+     handled line `[ ]` → `[x]` (never delete — `[x]` is the audit trail).
 
 3. PICK. Read the Task Queue. Choose the topmost `[ ]` item under "### Open"
    (skip `[blocked:…]`). Mark it `[wip]`. If it's larger than ~a half-day,
