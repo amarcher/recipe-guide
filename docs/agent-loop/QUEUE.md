@@ -23,12 +23,8 @@ Each entry is a **feature**, not a micro-task and not an epic — a coherent *pr
 ### Open
 <!-- loop pulls the topmost [ ] feature; planning layer appends new features below this comment -->
 <!-- Re-cut 2026-06-10 (Andrew-approved): merged Increment-1 small entries upward to pair-loop
-     feature altitude; chores batched out of the contest path. rel-sprites-core-tests is owned by
-     the in-flight FULL-loop iteration — other sessions must not pick it up. -->
-- [wip] rel-sprites-core-tests — Unit-cover app/lib/sprites-core.ts against the committed manifest · slug:chore/rel-sprites-core-tests
-      outcome: The sprite resolver (findSprite / aisleForName / scoring) is unit-tested against sprites/manifest.json.
-      done-when: npm test -- app/lib/sprites-core.test.ts green.
-      constraints: Prisma-free; assert against the committed manifest. (Pre-re-cut entry, mid-flight in the full loop — leave its token to that session.)
+     feature altitude; chores batched out of the contest path. The full-loop iteration on
+     rel-sprites-core-tests was ended unshipped 2026-06-10; the work moved into chores-batch-1. -->
 - [ ] pantry-end-to-end — Pantry as a first-class surface: /pantry CRUD + Tonight near-expiry · slug:feat/pantry-end-to-end
       outcome: Households can view/add/edit/clear their on-hand pantry items on a real /pantry surface, and Tonight surfaces near-mustUseBy pantry items + badges meals that use them — making the already-shipped mise auto-check and grocery dedupe trustworthy end to end. (Merges former pantry-manager + backlog leftover-tonight.)
       done-when: verify-ui on /pantry (add/edit/clear) and on Tonight's near-expiry surfacing && npx tsc --noEmit && npx eslint app && npm test; family-scoped CRUD works.
@@ -41,9 +37,9 @@ Each entry is a **feature**, not a micro-task and not an epic — a coherent *pr
       outcome: A read-only per-eater panel surfaces ProfilePreference (RELIABLE / EXPERIMENTING / HARD_NO) and wires MealOutcomePrompt's existing "same as last time" affordance, closing the visible end of the planner's learning loop.
       done-when: verify-ui on the eater panel && npx tsc --noEmit && npx eslint app.
       constraints: READ-ONLY — must NOT become the cut "profile editor UI v1"; surface existing ProfilePreference data only.
-- [ ] chores-batch-1 — Chore batch: prod-migration verify script + cron-sweep hardening · slug:chore/batch-1
-      outcome: (1) A read-only script (`npm run verify:prod-migration`) reports per-object whether the 20260429002752_phase2 migration is applied in prod, plus a committed one-command deploy runbook — if not applied it clearly flags that Andrew must run `prisma migrate deploy` himself. (2) Pivot-sweep hardening per panel follow-ups: shared runPivotSweep factoring (route+script share one deletion path), an active-cook-session guard before deleting execution-adjacent rows, a defensive familyId scope clause + tombstone note for future sharing/gifting.
-      done-when: npx tsc --noEmit && npx eslint app && npm test; verify:prod-migration prints the applied/not-applied report; the runbook is committed.
+- [ ] chores-batch-1 — Chore batch: prod-migration verify script + cron-sweep hardening + sprites-core tests · slug:chore/batch-1
+      outcome: (1) A read-only script (`npm run verify:prod-migration`) reports per-object whether the 20260429002752_phase2 migration is applied in prod, plus a committed one-command deploy runbook — if not applied it clearly flags that Andrew must run `prisma migrate deploy` himself. (2) Pivot-sweep hardening per panel follow-ups: shared runPivotSweep factoring (route+script share one deletion path), an active-cook-session guard before deleting execution-adjacent rows, a defensive familyId scope clause + tombstone note for future sharing/gifting. (3) The sprite resolver (findSprite / aisleForName / scoring) is unit-tested against the committed sprites/manifest.json (Prisma-free; folded from rel-sprites-core-tests after its full-loop iteration was ended unshipped).
+      done-when: npx tsc --noEmit && npx eslint app && npm test (including app/lib/sprites-core.test.ts); verify:prod-migration prints the applied/not-applied report; the runbook is committed.
       constraints: CHORE BATCH — the runner fixes this inline (single agent, no pair build, no panel); READ-ONLY against prod (introspect only, NEVER migrate — `prisma migrate deploy` is Andrew's manual step); keep checks Prisma-free where testable.
 
 ### Blocked (needs evidence or a decision — the loop skips these)
