@@ -55,17 +55,19 @@ this feature taught you about where the app is heading.
 Return: { scores: {A:{...}, …}, topPick: "<label>", veto: "<label|none>", oneLineRationale }
 ```
 
-A judge **veto** is a hard signal — a candidate a lens considers actively wrong (e.g. architect veto = it breaks a gotcha; execution veto = it touched the sacred layer). The chair must not pick a vetoed candidate without explicit reason.
+A judge **veto** is a hard signal — a candidate a lens considers actively wrong (e.g. architect veto = it breaks a gotcha; execution veto = it touched the sacred layer). But a judge veto is **resolved inside the panel by majority** — if a lens vetoes candidate A and the other four still rank A best, the majority overrules the veto and A wins. **This never escalates to Andrew** — the panel governs itself. The chair should not lightly override a veto, but it *can* when the majority clearly does; it records the overruled veto in the rationale.
+
+This is distinct from **Andrew's veto**, which is supreme and lives *outside* the panel: it overrides any consensus, before or after merge, and is the only veto a human casts. The panel never blocks waiting for him.
 
 ## The chair (per-feature, ephemeral)
 
 After collecting the five verdicts, the loop spawns a short-lived **chair** with: the five verdicts, the blind candidates, and the evolution memos. The chair:
 
-1. Reaches **consensus** — weighs the five lenses (respecting vetoes), picks the **winning label**.
+1. Reaches **consensus by majority** — weighs the five lenses, resolves any judge veto by majority (overruling it if the majority disagrees, and saying so), picks the **winning label**.
 2. Writes a **graft list** — the best ideas from the runners-up worth folding into the winner.
 3. Hands back `{ winnerLabel, rationale, graftList }`.
 
-The loop then resolves `winnerLabel → branch` via the hackathon's private key, applies the graft onto the winner's branch (a worktree agent), and opens the PR. The PR body carries the chair's rationale + the panel's scores so Andrew's Slack gate sees *why this version won*.
+The loop then resolves `winnerLabel → branch` via the hackathon's private key, applies the graft onto the winner's branch (a worktree agent), and opens the PR. Merge follows on panel consensus + Vercel green — Andrew's 👍 is not required; his standing veto can override async. The PR body carries the chair's rationale + the panel's scores so Andrew can see *why this version won* if he chooses to look.
 
 The chair is ephemeral on purpose — judging continuity lives in the five standing lenses and the memo, not the chair.
 

@@ -1,6 +1,6 @@
 # Loop Operations — autonomous roadmap execution
 
-How `/loop` turns the roadmap into PRs — **one feature per iteration**, each built as a *hackathon* (several agents compete), judged by a *standing panel* (consensus), then gated by a human (Andrew's Slack 👍) before merge. The planning layer *writes* the roadmap as features; this runner *executes* each one.
+How `/loop` turns the roadmap into PRs — **one feature per iteration**, each built as a *hackathon* (several agents compete), judged by a *standing panel* (consensus), merged on that consensus + Vercel green. A human (Andrew) holds a **standing veto** but is never a required gate. The planning layer *writes* the roadmap as features; this runner *executes* each one.
 
 ## Mental model
 
@@ -13,10 +13,14 @@ Every iteration:
 3. runs a **feature hackathon**: ~5 builders each implement it in an isolated worktree,
 4. routes the blind candidates to the **standing judge panel**, which reaches consensus,
 5. a chair synthesizes the winner (grafting the best of the runners-up) into one PR,
-6. pauses at the **human gate** (Slack 👍) before merge,
-7. picks the next feature only after merge.
+6. merges on **panel consensus + Vercel green** — no human 👍 required,
+7. picks the next feature.
 
-**Two gates against drift, in series:** the agent **judge-panel consensus** (automated, taste-driven), then **Andrew's Slack 👍** (human, final). The PR body carries the panel's rationale so the human gate sees *why* this version won.
+**The merge gate is the panel, not the human.** The agent **judge-panel consensus** (automated, taste-driven) plus a green Vercel check is what merges a feature. Andrew holds a **standing veto** — async and non-blocking: he can block a still-open PR or revert a just-merged one whenever he likes (the loop checks for it every iteration, step 3), but the absence of his input **never** stalls the loop. His 👍 is welcome, never required.
+
+Note the two *kinds* of veto, which never collide:
+- **A judge's veto** is resolved *inside the panel by majority* — the other lenses can overrule it, fully autonomously. It never escalates to Andrew.
+- **Andrew's veto** is supreme and outside the panel — it overrides any consensus, before or after merge.
 
 ## Feature sizing — the real lever
 
@@ -91,10 +95,12 @@ queue, and the judges' evolution memo. Build one feature, hand off cleanly, then
    restart), spawn each as a background agent per JUDGE-PANEL.md — each loads its persona
    (positions/0X-*.md) and its section of judges-evolution-memo.md before judging anything.
 
-3. FEEDBACK FIRST (overrides the queue):
+3. FEEDBACK FIRST + ANDREW'S VETO (overrides everything):
    - slack_search_channels "recipe-guide" → #recipe-guide. Read messages since last iteration.
-     A redirect/veto/"change X" from Andrew supersedes the queue. Treat a 👍 / "approved" on a
-     [review:#NN] feature as the human gate clearing (step 8).
+     A redirect/"change X" from Andrew supersedes the queue. Andrew holds a SUPREME, async veto:
+     if he vetoes a `[review:#NN]` feature, do not merge it — rework or drop it per his note; if
+     he vetoes a feature merged in a recent iteration, open a revert/rework PR. His silence is
+     NOT a blocker — never wait on him. (His 👍 is not required for any merge; see step 8.)
    - Read inbound-feedback.md. For each `[ ]`: small bug → add a Task Queue feature; recurring
      theme/pivot → append to the planning backlog (don't act unilaterally); FYI → none. Flip
      each handled line `[ ]` → `[x]` (never delete).
@@ -119,24 +125,29 @@ queue, and the judges' evolution memo. Build one feature, hand off cleanly, then
    graft onto the winner's branch (a worktree agent). Resolve winner label → branch via the
    private key. Push that branch. Delete the losing hack/ branches + worktrees.
 
-8. HANDOFF + HUMAN GATE. Open a PR from the winner branch. PR body = the feature, the panel's
+8. HANDOFF + MERGE. Open a PR from the winner branch. PR body = the feature, the panel's
    consensus + why this version won, grafts applied, screenshots for UI. Post to #recipe-guide:
-   one line, PR link, "sanity check?". Set the queue line `[review: #NN]`. Do NOT merge until
-   BOTH: Vercel check SUCCESS, AND Andrew 👍 / approves in Slack. When a later iteration sees
-   both, squash-merge, set `[done: #NN]` (move under "### Done"), continue from fresh main.
+   one line, PR link, "FYI — merging on green unless you veto." Set the queue line `[review: #NN]`.
+   Merge gate = **panel consensus (already reached) + Vercel check SUCCESS** — Andrew's 👍 is NOT
+   required. When Vercel is green and Andrew has not vetoed (step 3), squash-merge, set
+   `[done: #NN]` (move under "### Done"), continue from fresh main.
+   (Optional "veto window" variant: hold the merge one iteration after posting, so step 3 gets a
+   chance to catch a veto before merge instead of reverting after. Off by default.)
 
 9. NO WORK LEFT. Post to #recipe-guide: what shipped, what's [blocked] and why, and "roadmap
    is drained — what's the next increment?" Then stop the loop.
 
-Hard rules: one feature = one PR. BOTH gates (panel consensus + Andrew's 👍) must pass before
-merge. Never force-push or commit directly to main. Never edit the execution layer
-(CookCardView, MisePlace, Timeline, StepIcon, StepTimer, cook-session.ts, timer-state.ts,
-alarm.ts) — new work layers on top.
+Hard rules: one feature = one PR. The merge gate is panel consensus + Vercel green; Andrew's
+veto can override before or after merge, but his approval is never required. A judge's veto is
+resolved inside the panel by majority — it never waits on Andrew. Never force-push or commit
+directly to main. Never edit the execution layer (CookCardView, MisePlace, Timeline, StepIcon,
+StepTimer, cook-session.ts, timer-state.ts, alarm.ts) — new work layers on top.
 ```
 
 ## Variants
 
-- **Full autopilot** (faster, riskier): in step 8, drop the Slack-👍 requirement and gate on Vercel-green alone — the panel consensus is your only gate. Use only when the queue is well-scoped and low-risk.
+- **Veto window** (catch-before-merge): in step 8, hold the merge one iteration after posting the PR, so step 3 has a chance to see an Andrew veto *before* merge rather than reverting after. Costs one iteration of latency; still never requires his input (auto-merges if un-vetoed). Off by default.
+- **Required human approval** (stricter): re-add Andrew's 👍 as a hard merge precondition in step 8 — the loop blocks on him. The inverse of the default; use only when you want to babysit a risky run.
 - **Smaller contest:** features that genuinely don't merit five builders can pass `n: 2|3|4` to the hackathon. Floor is 2 — there is always a contest. Prefer fixing scope over shrinking N.
 
 ## Pairing with the planning layer
