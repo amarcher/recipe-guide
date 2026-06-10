@@ -257,6 +257,47 @@ describe("range quantities", () => {
     const c = card({ steps: [step([ing({ item: "garlic", quantity: "8-10", unit: "cloves" })])] });
     expect(find(buildMise(c, 2), "garlic|cloves").numericTotal).toBe(16);
   });
+
+  // Forward-looking tripwire: when range-summing is fixed (carry the high end,
+  // or at least stop silently under-counting), this flips green. Pairs with the
+  // current-behavior tests above so the fix is a deliberate, visible diff.
+  it.skip("WANT: a range quantity preserves its high end so the mise does not under-count", () => {
+    const c = card({ steps: [step([ing({ item: "garlic", quantity: "8-10", unit: "cloves" })])] });
+    expect(formatMiseQuantity(find(buildMise(c, 1), "garlic|cloves"))).toContain("10");
+  });
+});
+
+// ─── Singular/plural unit desync (documented bug, not blessed as intent) ──────
+describe("singular vs plural unit text", () => {
+  // The dedupe key includes the raw unit text (lowercased), so "clove" and
+  // "cloves" hash to different keys and produce TWO mise entries for what is one
+  // physical ingredient. On the shared grocery list this double-counts / desyncs
+  // quantities. Pinned as current behavior; the WANT below is the intended fix.
+  it("does NOT merge clove vs cloves into one entry (current behavior)", () => {
+    const c = card({
+      steps: [
+        step([ing({ item: "garlic", quantity: "1", unit: "clove" })]),
+        step([ing({ item: "garlic", quantity: "2", unit: "cloves" })]),
+      ],
+    });
+    const m = buildMise(c, 1);
+    const garlic = m.filter((e) => e.slug === "garlic");
+    expect(garlic).toHaveLength(2);
+    expect(garlic.map((e) => e.key).sort()).toEqual(["garlic|clove", "garlic|cloves"]);
+  });
+
+  it.skip("WANT: trivially-pluralized units merge into one entry (clove ≈ cloves)", () => {
+    const c = card({
+      steps: [
+        step([ing({ item: "garlic", quantity: "1", unit: "clove" })]),
+        step([ing({ item: "garlic", quantity: "2", unit: "cloves" })]),
+      ],
+    });
+    const m = buildMise(c, 1);
+    const garlic = m.filter((e) => e.slug === "garlic");
+    expect(garlic).toHaveLength(1);
+    expect(garlic[0].numericTotal).toBe(3);
+  });
 });
 
 // ─── Prep-kind aggregation / promotion ───────────────────────────────────────
