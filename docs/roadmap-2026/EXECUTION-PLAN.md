@@ -119,22 +119,33 @@ Voice intake, calendar grid, multi-week planning, friends graph, recipe comments
 
 ## Task Queue (loop cursor)
 
-The `/loop` execution runner (see `LOOP-OPS.md`) reads and writes **this section** — it is the single source of truth for "what's next." The agent-team planning layer appends new tasks to the bottom of `### Open`; the loop pulls from the top. One task = one PR = one iteration.
+The `/loop` runner (see `LOOP-OPS.md`) reads and writes **this section** — the single source of truth for "what's next." The planning layer appends **features** to the bottom of `### Open`; the loop pulls from the top. **One feature = one hackathon = one PR = one iteration.**
 
-**Status tokens** (exactly one per line; the loop rewrites them in place):
+Each entry is a **feature**, not a micro-task and not an epic — a coherent unit ~5 lens-builders can each fully implement and the standing panel can meaningfully compare (see "Feature sizing" in `LOOP-OPS.md`). Consistent altitude is what keeps a ~5-way hackathon the right shape; if a builder can't finish it coherently, split it.
+
+**Status tokens** (exactly one per entry, on the `- [token]` line; the loop rewrites them in place):
 - `[ ]` — open, not started
 - `[wip]` — an iteration is mid-flight (rare; cleared on handoff or crash recovery)
-- `[review: #NN]` — built, PR open, waiting on Vercel-green **and** Andrew's 👍 in Slack
+- `[review: #NN]` — won the hackathon, PR open, waiting on Vercel-green **and** Andrew's 👍 in Slack
 - `[done: #NN]` — merged
 - `[blocked: <reason>]` — needs a decision or an unmet dependency; the loop skips these
 
-**Line format:** `- [status] <id> — <one-line task> · branch:<slug> · check:<how to verify>`
+**Entry format** — the token line carries the state; indented lines give the builders their brief:
+```
+- [ ] <id> — <feature title> · slug:<branch-slug>
+      outcome: <1–2 sentences: what's true once shipped>
+      done-when: <how the panel/loop verifies done>
+      [constraints: <gotchas / scope notes>]   (optional)
+      [n: <2–5>]                                 (optional; default 5, floor 2 — usually omit, scope to ~5)
+```
 
 ### Open
-<!-- loop pulls the topmost [ ] item; planning layer appends new tasks below this comment -->
+<!-- loop pulls the topmost [ ] feature; planning layer appends new features below this comment -->
 <!-- Roadmap is currently drained — Phase 1 & 2 shipped, Phase 3 parked (see Blocked).
-     Replace the example line with real tasks, or let the agent team populate it. -->
-- [ ] EXAMPLE — delete me; real tasks look like this · branch:example-slug · check:npx tsc --noEmit && the relevant *.test.ts
+     Replace the example with real features, or let the planning layer populate it. -->
+- [ ] example-feature — delete me; real features look like this · slug:example-feature
+      outcome: a one-or-two-sentence statement of what the user/system can now do.
+      done-when: npx tsc --noEmit && npx eslint app && the relevant *.test.ts green; outcome demonstrably met.
 
 ### Blocked (needs evidence or a decision — the loop skips these)
 - [blocked: needs 3+ months of MealOutcome history] 3.3 — Smart re-ordering
