@@ -117,6 +117,34 @@ Voice intake, calendar grid, multi-week planning, friends graph, recipe comments
 - Type-check: `npx tsc --noEmit`. Lint: `npx eslint app`. Tests: `npm test`.
 - PR workflow per memory: after PR opens, squash-merge as soon as the Vercel check goes SUCCESS.
 
+## Task Queue (loop cursor)
+
+The `/loop` execution runner (see `LOOP-OPS.md`) reads and writes **this section** — it is the single source of truth for "what's next." The agent-team planning layer appends new tasks to the bottom of `### Open`; the loop pulls from the top. One task = one PR = one iteration.
+
+**Status tokens** (exactly one per line; the loop rewrites them in place):
+- `[ ]` — open, not started
+- `[wip]` — an iteration is mid-flight (rare; cleared on handoff or crash recovery)
+- `[review: #NN]` — built, PR open, waiting on Vercel-green **and** Andrew's 👍 in Slack
+- `[done: #NN]` — merged
+- `[blocked: <reason>]` — needs a decision or an unmet dependency; the loop skips these
+
+**Line format:** `- [status] <id> — <one-line task> · branch:<slug> · check:<how to verify>`
+
+### Open
+<!-- loop pulls the topmost [ ] item; planning layer appends new tasks below this comment -->
+<!-- Roadmap is currently drained — Phase 1 & 2 shipped, Phase 3 parked (see Blocked).
+     Replace the example line with real tasks, or let the agent team populate it. -->
+- [ ] EXAMPLE — delete me; real tasks look like this · branch:example-slug · check:npx tsc --noEmit && the relevant *.test.ts
+
+### Blocked (needs evidence or a decision — the loop skips these)
+- [blocked: needs 3+ months of MealOutcome history] 3.3 — Smart re-ordering
+- [blocked: no second family yet] 3.4 — Cross-family RecipeShelf
+- [blocked: defer until 2.20 friction observed] 3.5 — Cross-family RecipeGift with lineage
+- [blocked: zero documented friends] 3.6 — Friends graph + activity feed
+
+### Done (most recent first; trimmed periodically)
+<!-- the loop appends [done: #NN] lines here as PRs merge -->
+
 ## When in doubt
 
 The convergence doc adjudicated 8 disagreements with rationales. If you're proposing something the roadmap rejected, re-read `round2/00-convergence.md` first — odds are the team already debated it. If the situation has genuinely changed, document the change before deviating.
