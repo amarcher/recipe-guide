@@ -28,6 +28,9 @@ jobs:
       - name: Type check
         run: npx tsc --noEmit
 
+      - name: Validate LLM schemas (Anthropic structured-output guard)
+        run: npm run validate:llm-schemas
+
       - name: Lint
         run: npx eslint app
 

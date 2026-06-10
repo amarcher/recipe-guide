@@ -9,6 +9,7 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
+    "validate:llm-schemas": "node --import tsx scripts/validate-llm-schemas.ts",
     "sprites": "node --env-file=.env.local scripts/generate-sprites.mjs",
     "sprites:download-originals": "node --env-file=.env.local --import tsx scripts/download-sprite-originals.ts",
     "sprites:delete-originals": "node --env-file=.env.local --import tsx scripts/delete-sprite-originals.ts",
