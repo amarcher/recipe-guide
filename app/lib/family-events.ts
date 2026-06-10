@@ -42,6 +42,11 @@ export const FAMILY_EVENT_KINDS = [
   // Recipe share token lifecycle (item 2.20).
   "recipe.share.created",
   "recipe.share.revoked",
+  // Pantry surface.
+  "pantry.added",
+  "pantry.updated",
+  "pantry.removed",
+  "pantry.cleared",
 ] as const;
 
 export type FamilyEventKind = (typeof FAMILY_EVENT_KINDS)[number];
