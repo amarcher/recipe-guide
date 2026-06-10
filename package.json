@@ -17,6 +17,7 @@
     "backfill:taglines": "node --env-file=.env.local --import tsx scripts/backfill-taglines.ts",
     "dish-photos": "node --env-file=.env.local --import tsx scripts/generate-dish-photos.ts",
     "candidate-dish-photos": "node --env-file=.env.local --import tsx scripts/generate-candidate-dish-photos.ts",
+    "pivot-sweep": "node --env-file=.env.local --import tsx scripts/pivot-sweep.ts",
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
