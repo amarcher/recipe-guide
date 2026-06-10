@@ -48,12 +48,13 @@ As the <lens> judge, score EACH candidate on the rubric (1–5 each, with one-li
   3. Product feel (right for this household)
   4. Code health (tsc/eslint/tests green; sound structure)
   5. Smallest clean diff
-Then add your lens-specific concern, name your top pick + your veto (if any), and
-APPEND a dated one-line note to your section of judges-evolution-memo.md capturing what
-this feature taught you about where the app is heading.
+Then add your lens-specific concern, name your top pick + your veto (if any), and a
+dated one-line `memoNote` capturing what this feature taught you about where the app is heading.
 
-Return: { scores: {A:{...}, …}, topPick: "<label>", veto: "<label|none>", oneLineRationale }
+Return: { scores: {A:{...}, …}, topPick: "<label>", veto: "<label|none>", oneLineRationale, memoNote }
 ```
+
+**Memo writes are serialized by the loop, not the judges.** Judges *return* `memoNote`; the loop (or chair) appends all five to `judges-evolution-memo.md` in one pass. Do NOT have five judges write the same file concurrently — they race and clobber. (Surfaced on the first live panel run, 2026-06-10.)
 
 A judge **veto** is a hard signal — a candidate a lens considers actively wrong (e.g. architect veto = it breaks a gotcha; execution veto = it touched the sacred layer). But a judge veto is **resolved inside the panel by majority** — if a lens vetoes candidate A and the other four still rank A best, the majority overrules the veto and A wins. **This never escalates to Andrew** — the panel governs itself. The chair should not lightly override a veto, but it *can* when the majority clearly does; it records the overruled veto in the rationale.
 
