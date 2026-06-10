@@ -1,0 +1,82 @@
+# Pair Loop — Recipe Guide
+
+The lightweight autonomous loop: **one feature per iteration**, built by a **pair** of builders taking complementary approaches, judged blind by a small **standing panel**, shipped as one PR. Durable state is **git + `QUEUE.md` + `judges-memo.md`** — nothing else. Andrew holds a **standing veto** (async, non-blocking); his approval is never required and his silence never stalls the loop.
+
+This is the streamlined sibling of the full loop (`LOOP-OPS.md`). Both runners share `QUEUE.md` as the single cursor — never run both at the same time — but the panels are separate: this loop's 3 judges live in `judges-memo.md`, the full loop's 5 in `judges-evolution-memo.md`.
+
+## Mental model
+
+Each iteration is a fresh context window, except the **judge panel, which persists**. The `pair-build` workflow builds two candidates in isolated worktrees (one **minimalist** — smallest clean diff; one **product** — polish and edge-case care) and returns them blind (A/B, salt-flipped) plus a loop-private label→branch key. The loop sends the blind pair to the standing judges, tallies the majority vote, and ships the winner.
+
+## The panel (persistent — this is the loop's continuity of taste)
+
+Three standing judges, fixed lenses:
+
+| Judge | Lens | Core concern |
+|---|---|---|
+| `judge-correctness` | code health & safety | checks green, sound structure, execution layer untouched, gotchas respected |
+| `judge-product` | product feel | is this the version a family cook actually wants to live with on a busy weeknight |
+| `judge-simplicity` | smallest clean diff | full outcome, least new surface area, no scope creep |
+
+**Spawn once** as named background agents; on spawn each rehydrates from its section of `judges-memo.md`, replies "ready", and waits. **Continue per feature** by resuming the SAME agents via `SendMessage(agentId)` — never re-spawn a live judge; that discards its continuity *and* re-pays the rehydration cost.
+
+> **Economics.** Rehydration is the expensive part (persona + memo per judge); a warm judge answering the next feature via SendMessage is nearly free by comparison. So while the panel is warm, prefer running the *next* iteration in the same session over stopping — batching 2–3 features per session amortizes the spawn cost. Surface this to Andrew at handoff ("panel is warm; next feature is cheap") rather than silently auto-continuing.
+
+**Per-feature protocol.** Each judge receives the blind candidates and returns:
+`{ pick: 'A'|'B', rationale, concerns, steal: ['trivial: …' | 'follow-up: …'], memoNote }`
+scored against the rubric: 1. delivers the outcome 2. layers cleanly (execution layer untouched, gotchas respected) 3. product feel 4. code health 5. smallest clean diff — weighted through its lens. No abstaining; a 2-1 split is a normal verdict. **Judges return their memoNote; the loop appends all of them to `judges-memo.md` in one pass** — never have judges write the file concurrently.
+
+## Feature sizing — the real lever
+
+A queue entry is a **feature**: a coherent product unit each builder can fully implement in one sitting and the judges can meaningfully compare — a surface, a flow, a capability. Not a chore (tests, scripts, backfills — a pair build on one is waste: fix it inline or batch chores into a single `chore batch` entry the runner executes directly), not an epic (candidates diverge too much to compare). If a builder can't finish coherently, split it.
+
+## The iteration prompt
+
+Run with `/loop` (self-paced):
+
+```
+You are the runner executing Recipe Guide's backlog autonomously, ONE feature per iteration.
+Read docs/agent-loop/PAIR-LOOP.md and QUEUE.md first. Build one feature, hand off cleanly, stop.
+
+1. SYNC. `git checkout main && git pull`. Clean tree or STOP. Check for Andrew's veto: a
+   comment/revert on a recent [review]/[done] PR supersedes the queue — handle it first.
+
+2. ENSURE PANEL. Resume the three standing judges via SendMessage (warm = cheap). On a cold start,
+   spawn each per "The panel" above; each rehydrates from judges-memo.md before judging.
+
+3. PICK. Topmost `[ ]` feature under QUEUE.md "### Open" (skip [blocked:…] and any [wip] owned by
+   another session). Mark `[wip]`. Too big to finish coherently → split it, take the first piece.
+   A chore-batch entry → fix inline yourself (no pair build, no panel), then PR as usual. Empty →
+   step 7.
+
+4. BUILD. Run the `pair-build` workflow with { feature: <the brief>, salt: <iteration number> }.
+   It returns blind candidates A/B + a PRIVATE label→branch key. Judges must never see the key.
+
+5. JUDGE. SendMessage the blind candidates to each judge; collect { pick, rationale, concerns,
+   steal, memoNote }. Majority wins (2-1 is normal). Append all memoNotes to judges-memo.md
+   serially, plus one shipped-ledger line. Resolve winner→branch via the key.
+
+6. SHIP + MERGE. Push the winner's branch. Apply "trivial" steal items as one commit on it (skip
+   any that feel risky); list "follow-up" steals + judge concerns in the PR body. Open ONE PR
+   (body = brief + tally + rationales). Set the queue line [review: #NN]; delete the loser branch.
+   Merge gate = panel verdict (reached) + Vercel green; Andrew's 👍 NOT required, his veto supreme.
+   On green and un-vetoed: squash-merge, set [done: #NN], continue from fresh main.
+
+7. HANDOFF. Report what shipped. If the panel is warm, say so explicitly — the next feature skips
+   rehydration and is meaningfully cheaper — and let Andrew (or the /loop cadence) decide whether
+   to continue. Queue empty → propose 3-5 next features at the right altitude instead.
+
+Hard rules: one feature = one PR. Never force-push or commit directly to main. Never edit the
+execution layer (CookCardView, MisePlace, Timeline, StepIcon, StepTimer, cook-session.ts,
+timer-state.ts, alarm.ts) — new work layers on top. Never re-spawn a live judge; never let judges
+write judges-memo.md themselves.
+```
+
+## Knobs (all off by default)
+- **Veto window:** hold each merge one iteration so Andrew can veto before merge.
+- **Required approval:** make Andrew's 👍 a hard merge gate (for risky runs).
+- **Custom stances:** a feature can override the pair via `approaches:` in its queue entry — two `{ name, essence }` stances tuned to that feature.
+
+## Refilling the queue
+
+When the queue drains, step 7 proposes the next increment rather than inventing one unilaterally — read the repo's TODOs/roadmap, `### Backlog`, *and* `judges-memo.md` (the panel's view of where the app is heading; the full loop's `judges-evolution-memo.md` is useful history too), draft feature-altitude candidates, and let Andrew approve the list into `### Open`.
