@@ -25,10 +25,6 @@ Each entry is a **feature**, not a micro-task and not an epic — a coherent *pr
 <!-- Re-cut 2026-06-10 (Andrew-approved): merged Increment-1 small entries upward to pair-loop
      feature altitude; chores batched out of the contest path. The full-loop iteration on
      rel-sprites-core-tests was ended unshipped 2026-06-10; the work moved into chores-batch-1. -->
-- [ ] pantry-end-to-end — Pantry as a first-class surface: /pantry CRUD + Tonight near-expiry · slug:feat/pantry-end-to-end
-      outcome: Households can view/add/edit/clear their on-hand pantry items on a real /pantry surface, and Tonight surfaces near-mustUseBy pantry items + badges meals that use them — making the already-shipped mise auto-check and grocery dedupe trustworthy end to end. (Merges former pantry-manager + backlog leftover-tonight.)
-      done-when: verify-ui on /pantry (add/edit/clear) and on Tonight's near-expiry surfacing && npx tsc --noEmit && npx eslint app && npm test; family-scoped CRUD works.
-      constraints: PantryItem is already written + read but has NO API/UI — add both; hand-rolled NULL-distinct upsert; never touch the execution layer.
 - [ ] card-canonical-integrity — Promote kept pivots to canonical + resolver snapshot fallback · slug:feat/card-canonical-integrity
       outcome: After keeping a pivot, the cook can promote its revised card onto the parent recipe's RecipeOverride (parent scope), making the fix canonical instead of a separate pivot tile; and the card-resolver reads the canonical field when an override/snapshot lacks it, so new ParsedRecipe fields stop silently shadowing on frozen RecipeOverride / pivotMeta.revisedCard / MealCandidate.composedCardDraft / MenuItem.snapshotCardJson — retiring per-field one-shot backfills. (Merges former pivot-replace-original + backlog resolver-snapshot-fallback, panel insight 2026-06-10.)
       done-when: npx tsc --noEmit && npx eslint app && npm test; verify-ui on /recipe/[id] for a kept pivot → "Replace original" makes the parent show the revised card and the pivot tile is gone; a unit test proves resolver fallback for a field missing from a frozen snapshot.
@@ -61,6 +57,7 @@ From the 2026-06-10 planning fan-out; full briefs in the bus payloads. Promote w
 
 ### Done (most recent first; trimmed periodically)
 <!-- the loop appends [done: #NN] lines here as PRs merge -->
+- [done: #51] pantry-end-to-end — Pantry as a first-class surface: /pantry CRUD + Tonight near-expiry · pair-loop iteration 1, 3-judge panel: product won 2-1 over minimalist (safer merge-on-re-add semantics + actionable warmth; simplicity dissented on unrequested surface); grafted B's value-prop subtitle + urgency-ordered first paint; follow-up steals in PR body
 - [done: #47] rel-aggregate-tests — unit-cover app/lib/aggregate.ts mise/grocery dedupe · 5-judge panel, 1 builder disqualified for an empty branch (architect caught it), 4-way split → D (honest vitest config + worktree-exclude + smallest diff); grafted real Prisma-in-vitest enforcement + WANT-spec tripwires for 2 found grocery bugs (range under-count, clove/cloves desync)
 - [done: #45] rel-schema-guard — CI guardrail failing the build on banned LLM-schema Zod constructs (roadmap 1.6) · panel 5–0 no veto, 2–2 D/E tie → E (compiled-z.toJSONSchema + in-runner self-test + pivot coverage), grafted D's single-report .int()
 - [done: #41] cron-pivot-sweep — first scheduled cron + abandoned-pivot sweeper (panel 5–0)
