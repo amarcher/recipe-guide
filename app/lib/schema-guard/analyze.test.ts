@@ -54,6 +54,12 @@ describe("analyzeJsonSchema — deliberately-bad fixture", () => {
     expect(violations.some((v) => v.rule === "integer-type")).toBe(true);
   });
 
+  it("reports a bare .int() exactly once (skips Zod's synthetic safe-integer min/max)", () => {
+    const servings = violations.filter((v) => v.path.includes("servings"));
+    expect(servings).toHaveLength(1);
+    expect(servings[0].rule).toBe("integer-type");
+  });
+
   it("catches .positive() (exclusiveMinimum)", () => {
     expect(violations.some((v) => v.rule === "number-exclusiveMinimum")).toBe(true);
   });

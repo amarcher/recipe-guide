@@ -32,8 +32,22 @@ export interface Violation {
 
 const STRING_LENGTH_KEYWORDS = new Set(["minLength", "maxLength"]);
 
+const SAFE_INTEGER = 9007199254740991;
+
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+// Zod 4's `.int()` emits synthetic safe-integer `minimum`/`maximum` bounds
+// (±Number.MAX_SAFE_INTEGER) rather than a dedicated marker. The `integer-type`
+// rule already flags the `.int()`; its synthetic bounds are noise, so we skip
+// them here to avoid triple-reporting a single `.int()` as integer + min + max.
+function isZodIntBounds(node: Record<string, unknown>): boolean {
+  return (
+    node.type === "integer" &&
+    node.minimum === -SAFE_INTEGER &&
+    node.maximum === SAFE_INTEGER
+  );
 }
 
 function typeAllows(node: Record<string, unknown>, want: string): boolean {
@@ -84,7 +98,7 @@ export function analyzeJsonSchema(schemaName: string, root: unknown): Violation[
 
     // --- number bounds (apply only when the node can be numeric) ---
     const numeric = typeAllows(node, "number") || typeAllows(node, "integer");
-    if (numeric) {
+    if (numeric && !isZodIntBounds(node)) {
       const numericBoundRules: Array<[string, BannedRuleId]> = [
         ["minimum", "number-minimum"],
         ["maximum", "number-maximum"],
