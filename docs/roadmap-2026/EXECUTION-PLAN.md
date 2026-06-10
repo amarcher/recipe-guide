@@ -143,11 +143,7 @@ Each entry is a **feature**, not a micro-task and not an epic — a coherent uni
 <!-- loop pulls the topmost [ ] feature; planning layer appends new features below this comment -->
 <!-- Increment 1, populated 2026-06-10 from the 4-scout planning fan-out (see .agents/bus payloads).
      Ordered: safe foundations first, then high-leverage product. -->
-- [review: #39] dish-image-override-backfill — Backfill generated dish-image URLs into pre-backfill RecipeOverride rows · slug:chore/dish-image-override-backfill
-      outcome: Users whose RecipeOverride predates the dish-photo backfill see the canonical AI dish image instead of the vignette/swatch fallback.
-      done-when: npx tsc --noEmit && the merge-helper *.test.ts green; dry-run prints a count, --apply on one override → /recipe/[id] renders the generated image with the ✨ badge.
-      constraints: one-shot scripts/backfill-override-dish-photos.ts (dry-run default + --apply/--limit); shallow-merge generated_dish_image_url from the parent ParsedRecipe.cardJson ONLY where the override lacks it (never clobber other fields); merge logic in a Prisma-free helper for vitest.
-- [ ] cron-pivot-sweep — First scheduled cron + abandoned-pivot sweeper · slug:chore/cron-pivot-sweep
+- [review: #41] cron-pivot-sweep — First scheduled cron + abandoned-pivot sweeper · slug:chore/cron-pivot-sweep
       outcome: Stale in-progress pivot forks (pivotKept=false, older than 48h) are auto-discarded via the project's first scheduled cron, establishing a reusable cron convention.
       done-when: npx tsc --noEmit && npx eslint app && npm test -- app/lib/pivot/sweep.test.ts; a backdated pivot row is swept and a fresh one survives.
       constraints: add vercel cron config + a CRON_SECRET-guarded POST /api/cron/pivot-sweep (deleteMany on stale rows; cascades MiseCheck/CookLog); sweep predicate in a Prisma-free app/lib/pivot/sweep.ts; npm run pivot-sweep for manual runs. Make the cron scaffolding reusable.
@@ -196,9 +192,11 @@ From the 2026-06-10 planning fan-out; full briefs in the bus payloads. Promote w
 - recipegift-token-groundwork (M) — Phase-3.5 groundwork: gift token + lineage snapshot, single-recipient
 - planevent-history-fixture (M) — Phase-3.3 groundwork: history seed + Prisma-free reorder-core
 - resolver-snapshot-fallback (M) — **(panel insight, 2026-06-10)** make card-resolver read a canonical field when the override/snapshot lacks it, so new ParsedRecipe fields stop silently shadowing on frozen RecipeOverride / pivotMeta.revisedCard / MealCandidate.composedCardDraft / MenuItem.snapshotCardJson — retires the need for per-field one-shot backfills
+- cron-sweep-hardening (S) — **(panel follow-ups, feature 2)** fold the runner-up's shared `runPivotSweep` factoring (route+script one deletion path); add an active-cook-session guard before any future sweeper deletes execution-adjacent rows; add a defensive `familyId: null` scope clause + a tombstone once recipe sharing/gifting lands
 
 ### Done (most recent first; trimmed periodically)
 <!-- the loop appends [done: #NN] lines here as PRs merge -->
+- [done: #39] dish-image-override-backfill — backfill generated dish-image URLs into pre-backfill overrides (panel 5–0)
 
 ## When in doubt
 
