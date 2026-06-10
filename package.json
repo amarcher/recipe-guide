@@ -13,6 +13,7 @@
     "sprites:promote": "node --env-file=.env.local scripts/promote-static-to-blob.mjs",
     "seed:demo-plan": "node --env-file=.env.local --import tsx scripts/seed-demo-plan.ts",
     "backfill:taglines": "node --env-file=.env.local --import tsx scripts/backfill-taglines.ts",
+    "backfill:override-dish-photos": "node --env-file=.env.local --import tsx scripts/backfill-override-dish-photos.ts",
     "dish-photos": "node --env-file=.env.local --import tsx scripts/generate-dish-photos.ts",
     "candidate-dish-photos": "node --env-file=.env.local --import tsx scripts/generate-candidate-dish-photos.ts",
     "db:migrate": "prisma migrate dev",
