@@ -537,6 +537,34 @@ export async function decidePivot(
   return true;
 }
 
+// "Replace original." Folds a pivot fork back onto its parent: the revised
+// card becomes the parent's override (at the parent's scope), cook history
+// moves over, and the pivot row is deleted. Returns the parent id so the
+// caller can navigate there, or an error message for the banner to show.
+export async function promotePivot(
+  id: string
+): Promise<{ parentId: string; scope: "personal" | "family" } | { error: string }> {
+  if (!isSignedInClient()) return { error: "not signed in" };
+  const res = await fetch(`/api/recipes/${id}/pivot/promote`, { method: "POST" });
+  const body = (await res.json().catch(() => ({}))) as {
+    parentSavedRecipeId?: string;
+    scope?: "personal" | "family";
+    error?: string;
+  };
+  if (!res.ok || !body.parentSavedRecipeId) {
+    return { error: body.error ?? `${res.status}` };
+  }
+  if (remoteMirror?.[id]) {
+    const { [id]: _removed, ...rest } = remoteMirror;
+    void _removed;
+    remoteMirror = rest;
+    notifyRemote();
+  }
+  attemptedSingleFetch.delete(body.parentSavedRecipeId);
+  await fetchOneIntoMirror(body.parentSavedRecipeId);
+  return { parentId: body.parentSavedRecipeId, scope: body.scope ?? "personal" };
+}
+
 // Drop the scope's override row, reverting to the canonical parsed card.
 export async function resetRecipeOverride(id: string): Promise<boolean> {
   if (!isSignedInClient()) return false;

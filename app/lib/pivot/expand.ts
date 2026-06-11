@@ -14,8 +14,10 @@ export function expandPivotedCard(
   return {
     title: draft.title,
     source_url: original.source_url, // never mutate — canonical key into ParsedRecipe
-    tagline: original.tagline ?? null,
-    generated_dish_image_url: original.generated_dish_image_url ?? null,
+    // Don't materialize absent enrichment keys as null — keeps pivot
+    // snapshots honest about which fields they have actually seen.
+    tagline: original.tagline,
+    generated_dish_image_url: original.generated_dish_image_url,
     provenance: original.provenance,
     servings: draft.servings ?? original.servings ?? null,
     total_time: draft.total_time ?? original.total_time ?? null,

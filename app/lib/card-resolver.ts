@@ -16,6 +16,7 @@
 // app/lib/planner/canonical-only.test.ts.
 import type { Prisma } from "@/app/generated/prisma/client";
 import { prisma } from "@/app/lib/prisma";
+import { applyCanonicalFallback } from "@/app/lib/card-fallback";
 import type { CookCard } from "@/app/types";
 
 // Minimal shape the resolver needs. Permits both `include: { parsedRecipe: true }`
@@ -52,9 +53,14 @@ function pivotCard(saved: SavedWithParsed): CookCard | null {
 // Personal-scope saves resolve against (parsedRecipeId, userId, familyId=null).
 // Family-scope saves resolve against (parsedRecipeId, userId=null, familyId).
 export async function resolveCard(saved: SavedWithParsed): Promise<ResolvedCard> {
+  const canonical = saved.parsedRecipe.cardJson as unknown as CookCard;
   const pivot = pivotCard(saved);
   if (pivot) {
-    return { card: pivot, overrideUpdatedAt: null, overrideUpdatedById: null };
+    return {
+      card: applyCanonicalFallback(pivot, canonical),
+      overrideUpdatedAt: null,
+      overrideUpdatedById: null,
+    };
   }
   const override = await prisma.recipeOverride.findFirst({
     where: {
@@ -64,7 +70,9 @@ export async function resolveCard(saved: SavedWithParsed): Promise<ResolvedCard>
     },
   });
   return {
-    card: (override?.cardJson ?? saved.parsedRecipe.cardJson) as unknown as CookCard,
+    card: override
+      ? applyCanonicalFallback(override.cardJson as unknown as CookCard, canonical)
+      : canonical,
     overrideUpdatedAt: override?.updatedAt ?? null,
     overrideUpdatedById: override?.updatedById ?? null,
   };
@@ -82,7 +90,14 @@ export async function resolveCardsForSavedRecipes(
   for (const r of rows) {
     const pivot = pivotCard(r);
     if (pivot) {
-      result.set(r.id, { card: pivot, overrideUpdatedAt: null, overrideUpdatedById: null });
+      result.set(r.id, {
+        card: applyCanonicalFallback(
+          pivot,
+          r.parsedRecipe.cardJson as unknown as CookCard
+        ),
+        overrideUpdatedAt: null,
+        overrideUpdatedById: null,
+      });
     } else {
       nonPivotRows.push(r);
     }
@@ -111,8 +126,11 @@ export async function resolveCardsForSavedRecipes(
         ? keyOf(r.parsedRecipeId, r.userId, null)
         : keyOf(r.parsedRecipeId, null, r.familyId);
     const o = overrideByKey.get(k);
+    const canonical = r.parsedRecipe.cardJson as unknown as CookCard;
     result.set(r.id, {
-      card: (o?.cardJson ?? r.parsedRecipe.cardJson) as unknown as CookCard,
+      card: o
+        ? applyCanonicalFallback(o.cardJson as unknown as CookCard, canonical)
+        : canonical,
       overrideUpdatedAt: o?.updatedAt ?? null,
       overrideUpdatedById: o?.updatedById ?? null,
     });
