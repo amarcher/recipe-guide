@@ -25,10 +25,6 @@ Each entry is a **feature**, not a micro-task and not an epic — a coherent *pr
 <!-- Re-cut 2026-06-10 (Andrew-approved): merged Increment-1 small entries upward to pair-loop
      feature altitude; chores batched out of the contest path. The full-loop iteration on
      rel-sprites-core-tests was ended unshipped 2026-06-10; the work moved into chores-batch-1. -->
-- [ ] eater-taste-profiles — Read-only per-eater taste panel surfacing ProfilePreference · slug:feat/eater-taste-profiles
-      outcome: A read-only per-eater panel surfaces ProfilePreference (RELIABLE / EXPERIMENTING / HARD_NO) and wires MealOutcomePrompt's existing "same as last time" affordance, closing the visible end of the planner's learning loop.
-      done-when: verify-ui on the eater panel && npx tsc --noEmit && npx eslint app.
-      constraints: READ-ONLY — must NOT become the cut "profile editor UI v1"; surface existing ProfilePreference data only.
 - [ ] chores-batch-1 — Chore batch: prod-migration verify script + cron-sweep hardening + sprites-core tests · slug:chore/batch-1
       outcome: (1) A read-only script (`npm run verify:prod-migration`) reports per-object whether the 20260429002752_phase2 migration is applied in prod, plus a committed one-command deploy runbook — if not applied it clearly flags that Andrew must run `prisma migrate deploy` himself. (2) Pivot-sweep hardening per panel follow-ups: shared runPivotSweep factoring (route+script share one deletion path), an active-cook-session guard before deleting execution-adjacent rows, a defensive familyId scope clause + tombstone note for future sharing/gifting. (3) The sprite resolver (findSprite / aisleForName / scoring) is unit-tested against the committed sprites/manifest.json (Prisma-free; folded from rel-sprites-core-tests after its full-loop iteration was ended unshipped).
       done-when: npx tsc --noEmit && npx eslint app && npm test (including app/lib/sprites-core.test.ts); verify:prod-migration prints the applied/not-applied report; the runbook is committed.
@@ -53,6 +49,7 @@ From the 2026-06-10 planning fan-out; full briefs in the bus payloads. Promote w
 
 ### Done (most recent first; trimmed periodically)
 <!-- the loop appends [done: #NN] lines here as PRs merge -->
+- [done: #55] eater-taste-profiles — Read-only per-eater taste panel + same-as-last-time outcome shortcut · pair-loop iteration 3, 3-judge panel: product won 3-0 over minimalist (loser's one-tap replayed verdicts from ANY meal — affordance semantics beat a 2x smaller diff); grafted B's demo-seed extension; follow-up: dish identity beyond title equality
 - [done: #53] card-canonical-integrity — Promote kept pivots to canonical + resolver snapshot fallback · pair-loop iteration 2, 3-judge panel: product won 3-0 over minimalist (promote migrates cook history vs cascade-delete; fallback semantics fit the null-frozen data that exists); grafted A's expandPivotedCard cleanup; backfill retirement deferred to post-soak (see #53 body)
 - [done: #51] pantry-end-to-end — Pantry as a first-class surface: /pantry CRUD + Tonight near-expiry · pair-loop iteration 1, 3-judge panel: product won 2-1 over minimalist (safer merge-on-re-add semantics + actionable warmth; simplicity dissented on unrequested surface); grafted B's value-prop subtitle + urgency-ordered first paint; follow-up steals in PR body
 - [done: #47] rel-aggregate-tests — unit-cover app/lib/aggregate.ts mise/grocery dedupe · 5-judge panel, 1 builder disqualified for an empty branch (architect caught it), 4-way split → D (honest vitest config + worktree-exclude + smallest diff); grafted real Prisma-in-vitest enforcement + WANT-spec tripwires for 2 found grocery bugs (range under-count, clove/cloves desync)
