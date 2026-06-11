@@ -110,6 +110,70 @@ async function main() {
     console.log(`Deleted ${demoIds.length} prior demo plan(s).`);
   }
 
+  const familyName = "Demo Family (seed)";
+  let family = await prisma.family.findFirst({ where: { name: familyName } });
+  if (!family) {
+    family = await prisma.family.create({ data: { name: familyName } });
+  }
+  for (const email of [TARGET_EMAIL, "dev@recipe-guide.local"]) {
+    const member = await prisma.user.findUnique({ where: { email } });
+    if (!member) continue;
+    const existing = await prisma.familyMember.findFirst({
+      where: { userId: member.id, familyId: family.id },
+    });
+    if (!existing) {
+      await prisma.familyMember.create({
+        data: { userId: member.id, familyId: family.id, role: "OWNER" },
+      });
+    }
+  }
+
+  const profileIds = {} as Record<"ADULT" | "KID", string>;
+  for (const kind of ["ADULT", "KID"] as const) {
+    let profile = await prisma.profile.findFirst({
+      where: { familyId: family.id, kind },
+    });
+    if (!profile) {
+      profile = await prisma.profile.create({
+        data: {
+          familyId: family.id,
+          kind,
+          name: kind === "ADULT" ? "Adults" : "Kids",
+        },
+      });
+    }
+    profileIds[kind] = profile.id;
+  }
+
+  const demoPrefs = [
+    { profile: "ADULT", kind: "RELIABLE_HIT", display: "turkey rice bowls", slug: "ground-turkey", evidenceCount: 3 },
+    { profile: "ADULT", kind: "EXPERIMENTING", display: "shakshuka", slug: null, evidenceCount: 1 },
+    { profile: "ADULT", kind: "HARD_NO", display: "mushrooms", slug: "mushroom", evidenceCount: 2 },
+    { profile: "KID", kind: "RELIABLE_HIT", display: "pasta", slug: "pasta", evidenceCount: 4 },
+    { profile: "KID", kind: "RELIABLE_HIT", display: "quesadillas", slug: null, evidenceCount: 2 },
+    { profile: "KID", kind: "EXPERIMENTING", display: "bell pepper", slug: "bell-pepper", evidenceCount: 1 },
+    { profile: "KID", kind: "HARD_NO", display: "mushrooms", slug: "mushroom", evidenceCount: 3 },
+    { profile: "KID", kind: "HARD_NO", display: "fish", slug: null, evidenceCount: 1 },
+  ] as const;
+  for (const p of demoPrefs) {
+    const profileId = profileIds[p.profile];
+    const existing = await prisma.profilePreference.findFirst({
+      where: { profileId, kind: p.kind, display: p.display },
+    });
+    if (!existing) {
+      await prisma.profilePreference.create({
+        data: {
+          profileId,
+          kind: p.kind,
+          display: p.display,
+          slug: p.slug,
+          evidenceCount: p.evidenceCount,
+          source: "intake",
+        },
+      });
+    }
+  }
+
   const nextMonday = mondayOf(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000));
 
   const intake = {
@@ -179,6 +243,7 @@ async function main() {
   const plan = await prisma.weeklyPlan.create({
     data: {
       createdById: user.id,
+      familyId: family.id,
       weekOf: nextMonday,
       status: "CANDIDATES_READY",
       intake,
@@ -436,8 +501,9 @@ async function main() {
     },
   ];
 
+  const createdCandidates = [];
   for (const c of candidates) {
-    await prisma.mealCandidate.create({
+    const row = await prisma.mealCandidate.create({
       data: {
         planId: plan.id,
         slot: c.slot,
@@ -455,11 +521,55 @@ async function main() {
         rankedAt: new Date(),
       },
     });
+    createdCandidates.push(row);
   }
+
+  const queuedFrom =
+    createdCandidates.find((c) => c.slot === "DINNER" && c.eaters.length === 2) ??
+    createdCandidates[0];
+  const cookedFrom =
+    createdCandidates.find((c) => c.slot === "DINNER" && c.id !== queuedFrom.id) ??
+    createdCandidates[1];
+  const queuedMeal = await prisma.plannedMeal.create({
+    data: {
+      planId: plan.id,
+      chosenCandidateId: queuedFrom.id,
+      slot: queuedFrom.slot,
+      eaters: queuedFrom.eaters,
+    },
+  });
+  const cookedMeal = await prisma.plannedMeal.create({
+    data: {
+      planId: plan.id,
+      chosenCandidateId: cookedFrom.id,
+      slot: cookedFrom.slot,
+      eaters: cookedFrom.eaters,
+      status: "COOKED",
+      cookedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+    },
+  });
+  await prisma.mealOutcome.create({
+    data: {
+      plannedMealId: cookedMeal.id,
+      profileId: profileIds.ADULT,
+      eaterRole: "ADULT",
+      verdict: "ATE",
+    },
+  });
+  await prisma.mealOutcome.create({
+    data: {
+      plannedMealId: cookedMeal.id,
+      profileId: profileIds.KID,
+      eaterRole: "KID",
+      verdict: "PICKED",
+    },
+  });
 
   console.log(`Seeded plan ${plan.id} with ${candidates.length} candidates.`);
   console.log(`Week of: ${nextMonday.toISOString().slice(0, 10)}`);
   console.log(`View at: /plan/${plan.id}`);
+  console.log(`Queued meal (outcome prompt target): ${queuedMeal.id}`);
+  console.log(`Cooked meal with prior outcomes: ${cookedMeal.id}`);
 }
 
 main()

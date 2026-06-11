@@ -6,6 +6,7 @@ import { recordPlanEvent } from "@/app/lib/planner/events";
 import { recordFamilyEventForPlan } from "@/app/lib/family-events";
 import { findSprite } from "@/app/lib/sprites-core";
 import { decideLearningOutcome } from "@/app/lib/planner/outcome-learning";
+import { latestVerdictsByRole } from "@/app/lib/planner/taste-panel";
 import type {
   EaterRole,
   MealVerdict,
@@ -43,6 +44,74 @@ function isVerdict(v: unknown): v is MealVerdict {
 }
 function isRole(v: unknown): v is EaterRole {
   return v === "ADULT" || v === "KID";
+}
+
+// GET powers the prompt's prefill: `recorded` is this meal's own verdicts
+// (so a reload doesn't nag twice), `previous` is the most recent per-role
+// verdict from any earlier cook of the same dish (title match within the
+// plan's scope) — the "same as last time" one-tap.
+export async function GET(
+  _req: NextRequest,
+  ctx: { params: Promise<{ id: string; mealId: string }> },
+) {
+  const user = await requireUser();
+  if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const { id: planId, mealId } = await ctx.params;
+
+  const plan = await loadPlanIfOwned(user.userId, planId);
+  if (!plan) return NextResponse.json({ error: "not found" }, { status: 404 });
+
+  const meal = await prisma.plannedMeal.findFirst({
+    where: { id: mealId, planId },
+    include: { candidate: { select: { title: true } } },
+  });
+  if (!meal) return NextResponse.json({ error: "meal not found" }, { status: 404 });
+
+  const scope = plan.familyId
+    ? { familyId: plan.familyId }
+    : { familyId: null, createdById: plan.createdById };
+
+  const [ownRows, priorRows] = await Promise.all([
+    prisma.mealOutcome.findMany({
+      where: { plannedMealId: mealId },
+      orderBy: { createdAt: "desc" },
+      take: 8,
+      select: { eaterRole: true, verdict: true, createdAt: true },
+    }),
+    prisma.mealOutcome.findMany({
+      where: {
+        plannedMealId: { not: mealId },
+        plannedMeal: {
+          plan: scope,
+          candidate: {
+            title: { equals: meal.candidate.title.trim(), mode: "insensitive" },
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 24,
+      select: { eaterRole: true, verdict: true, createdAt: true },
+    }),
+  ]);
+
+  const toSnapshot = (r: {
+    eaterRole: EaterRole;
+    verdict: MealVerdict;
+    createdAt: Date;
+  }) => ({
+    eaterRole: r.eaterRole,
+    verdict: r.verdict,
+    createdAt: r.createdAt.getTime(),
+  });
+
+  return NextResponse.json({
+    recorded: ownRows.length
+      ? latestVerdictsByRole(ownRows.map(toSnapshot))
+      : null,
+    previous: priorRows.length
+      ? latestVerdictsByRole(priorRows.map(toSnapshot))
+      : null,
+  });
 }
 
 export async function POST(

@@ -78,7 +78,6 @@ export default function RecipePage({
               planId={fromPlan}
               mealId={fromPlanMeal}
               onDismiss={() => setOutcomeDismissed(true)}
-              onComplete={() => setOutcomeDismissed(true)}
             />
           )}
           {signedIn && (
