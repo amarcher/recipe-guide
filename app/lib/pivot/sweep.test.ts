@@ -5,6 +5,7 @@ import {
   pivotSweepCutoff,
   isAbandonedPivot,
   abandonedPivotScalarWhere,
+  pivotActivityGuardWhere,
   type SweepCandidate,
 } from "./sweep";
 
@@ -20,8 +21,14 @@ function row(
     pivotKept: false,
     pivotMeta: { problemText: "added too much paste", createdAt: 0 },
     savedAt: new Date(NOW.getTime() - agoHours * HOUR),
+    familyId: null,
+    lastActivityAt: null,
     ...overrides,
   };
+}
+
+function hoursBeforeNow(agoHours: number): Date {
+  return new Date(NOW.getTime() - agoHours * HOUR);
 }
 
 describe("window constants", () => {
@@ -74,6 +81,30 @@ describe("isAbandonedPivot", () => {
     );
   });
 
+  it("never sweeps a family-scope row, however stale (tombstone guard)", () => {
+    expect(isAbandonedPivot(row(1000, { familyId: "fam_1" }), NOW)).toBe(
+      false
+    );
+  });
+
+  it("spares an old pivot with recent execution activity", () => {
+    expect(
+      isAbandonedPivot(row(72, { lastActivityAt: hoursBeforeNow(2) }), NOW)
+    ).toBe(false);
+  });
+
+  it("spares activity at exactly the cutoff (gte)", () => {
+    expect(
+      isAbandonedPivot(row(72, { lastActivityAt: pivotSweepCutoff(NOW) }), NOW)
+    ).toBe(false);
+  });
+
+  it("sweeps an old pivot whose only activity predates the window", () => {
+    expect(
+      isAbandonedPivot(row(200, { lastActivityAt: hoursBeforeNow(100) }), NOW)
+    ).toBe(true);
+  });
+
   it("defaults `now` to the current time when omitted", () => {
     const ancient = row(1_000_000);
     expect(isAbandonedPivot(ancient)).toBe(true);
@@ -81,32 +112,54 @@ describe("isAbandonedPivot", () => {
 });
 
 describe("abandonedPivotScalarWhere", () => {
-  it("encodes the scalar conditions for deleteMany", () => {
+  it("encodes the scalar conditions for the sweep filter", () => {
     const where = abandonedPivotScalarWhere(NOW);
     expect(where.pivotKept).toBe(false);
+    expect(where.familyId).toBeNull();
     expect(where.savedAt.lt.toISOString()).toBe(
       pivotSweepCutoff(NOW).toISOString()
     );
   });
+});
 
+describe("pivotActivityGuardWhere", () => {
+  it("excludes rows with a CookLog or MiseCheck inside the window", () => {
+    const where = pivotActivityGuardWhere(NOW);
+    const cutoff = pivotSweepCutoff(NOW).toISOString();
+    expect(where.cookLogs.none.cookedAt.gte.toISOString()).toBe(cutoff);
+    expect(where.miseChecks.none.checkedAt.gte.toISOString()).toBe(cutoff);
+  });
+});
+
+describe("DB filter / predicate agreement", () => {
   it("agrees with isAbandonedPivot on every classified row", () => {
     // Cross-check: the deleteMany filter and the pure predicate must never
     // disagree, or the cron would delete rows the predicate considers safe.
-    // The route layers `pivotMeta != null` on top of these scalar conditions
-    // via Prisma.DbNull, so we model that here as `c.pivotMeta != null`.
+    // The runner layers `pivotMeta != null` on top of these conditions via
+    // Prisma.DbNull, so we model that here as `c.pivotMeta != null`; the
+    // relation `none` guards are modeled via `lastActivityAt`.
     const cases: SweepCandidate[] = [
       row(72),
       row(1),
       row(48),
       row(1000, { pivotKept: true }),
       row(1000, { pivotMeta: null }),
+      row(1000, { familyId: "fam_1" }),
+      row(72, { lastActivityAt: hoursBeforeNow(2) }),
+      row(72, { lastActivityAt: pivotSweepCutoff(NOW) }),
+      row(200, { lastActivityAt: hoursBeforeNow(100) }),
     ];
-    const where = abandonedPivotScalarWhere(NOW);
+    const scalar = abandonedPivotScalarWhere(NOW);
+    const guard = pivotActivityGuardWhere(NOW);
     for (const c of cases) {
       const matchesWhere =
-        c.pivotKept === where.pivotKept &&
+        c.pivotKept === scalar.pivotKept &&
+        c.familyId === scalar.familyId &&
         c.pivotMeta != null &&
-        c.savedAt.getTime() < where.savedAt.lt.getTime();
+        c.savedAt.getTime() < scalar.savedAt.lt.getTime() &&
+        (c.lastActivityAt == null ||
+          c.lastActivityAt.getTime() <
+            guard.cookLogs.none.cookedAt.gte.getTime());
       expect(matchesWhere).toBe(isAbandonedPivot(c, NOW));
     }
   });
