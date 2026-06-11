@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/app/lib/prisma";
+import { applyCanonicalFallback } from "@/app/lib/card-fallback";
 import type { Metadata } from "next";
 import type { CookCard } from "@/app/types";
 import { MealFace, type MealFaceSubject } from "@/app/components/MealFace";
@@ -50,7 +51,14 @@ export default async function HostedMenuPage({
     where: { publishedSlug: slug },
     include: {
       family: { select: { name: true } },
-      menuItems: { orderBy: { position: "asc" } },
+      menuItems: {
+        orderBy: { position: "asc" },
+        include: {
+          plannedMeal: {
+            select: { candidate: { select: { composedCardDraft: true } } },
+          },
+        },
+      },
     },
   });
   if (!plan || !plan.publishedSlug) notFound();
@@ -86,7 +94,15 @@ export default async function HostedMenuPage({
 
         <ul className="mt-12 space-y-10">
           {plan.menuItems.map((item) => {
-            const card = item.snapshotCardJson as unknown as CookCard;
+            // Snapshots freeze at publish; fall back to the live candidate
+            // draft for enrichment added later (e.g. a dish photo that
+            // finished generating after the host hit publish).
+            const card = applyCanonicalFallback(
+              item.snapshotCardJson as unknown as CookCard,
+              item.plannedMeal?.candidate.composedCardDraft as unknown as
+                | CookCard
+                | undefined
+            );
             const subject: MealFaceSubject = {
               id: item.id,
               title: card.title,

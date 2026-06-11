@@ -64,10 +64,12 @@ export default function RecipePage({
         />
       ) : (
         <div className="mx-auto w-full max-w-3xl space-y-4">
-          {recipe.pivotMeta && !recipe.pivotKept && (
+          {recipe.pivotMeta && (
             <PivotInProgressBanner
               savedRecipeId={recipe.id}
               pivotMeta={recipe.pivotMeta}
+              pivotKept={recipe.pivotKept ?? false}
+              parentRecipeId={recipe.pivotedFromSavedRecipeId ?? null}
             />
           )}
           <SaveBar card={recipe.card} variant="detail" />

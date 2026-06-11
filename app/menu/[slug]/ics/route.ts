@@ -1,4 +1,5 @@
 import { prisma } from "@/app/lib/prisma";
+import { applyCanonicalFallback } from "@/app/lib/card-fallback";
 import type { NextRequest } from "next/server";
 import type { CookCard } from "@/app/types";
 
@@ -24,7 +25,14 @@ export async function GET(
     where: { publishedSlug: slug },
     include: {
       family: { select: { name: true } },
-      menuItems: { orderBy: { position: "asc" } },
+      menuItems: {
+        orderBy: { position: "asc" },
+        include: {
+          plannedMeal: {
+            select: { candidate: { select: { composedCardDraft: true } } },
+          },
+        },
+      },
     },
   });
   if (!plan || !plan.publishedSlug) {
@@ -48,7 +56,12 @@ export async function GET(
   ];
 
   plan.menuItems.forEach((item, idx) => {
-    const card = item.snapshotCardJson as unknown as CookCard;
+    const card = applyCanonicalFallback(
+      item.snapshotCardJson as unknown as CookCard,
+      item.plannedMeal?.candidate.composedCardDraft as unknown as
+        | CookCard
+        | undefined
+    );
     const day = new Date(weekStart);
     day.setDate(weekStart.getDate() + (idx % 7));
     const dt = formatIcsDate(day);

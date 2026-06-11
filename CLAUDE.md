@@ -97,6 +97,7 @@ A second surface layered on top of the recipe-execution app. Answers "what are w
 - `resolveCardsForSavedRecipes(rows)` — batched for the library list endpoint; one Prisma query for all relevant overrides.
 - `loadCanonicalCard(parsedRecipe)` — bypasses overrides. Use this from planner/scoring/aggregation code that should reason about the recipe-as-parsed (`app/lib/planner/history.ts`, etc.).
 - `overrideScopeFor(saved)` — pure helper, lives in `app/lib/card-scope.ts` so it stays unit-testable without pulling Prisma into vitest's import graph.
+- `applyCanonicalFallback(snapshot, canonical)` — Prisma-free, in `app/lib/card-fallback.ts` (unit-tested). Read-time fallback for frozen card snapshots: enrichment fields the snapshot is missing (absent / null / blank) fall through to the canonical `ParsedRecipe.cardJson`, so new card fields stop silently shadowing on RecipeOverride / `pivotMeta.revisedCard` / `MenuItem.snapshotCardJson` — retiring per-field one-shot backfills. Snapshot-owned structure (title, steps, ingredients, equipment, servings, times, source_url) is NEVER resurrected. Wired into both resolvers and the hosted-menu page/ICS (snapshot ← candidate draft).
 
 **Endpoints**:
 - `GET /api/recipes/[id]` — auth required, but **does not 404 for non-members**. Returns `viewerAccess: "owner" | "family" | "guest"`. Guests get a read-only, override-applied card with `cookHistory: []`, `cookCount: 0`, and `lastCookedAt: null` (scope-private fields are stripped). The `/recipe/[id]` page renders a "Save a copy" CTA for guests.
@@ -134,7 +135,8 @@ Pivot rows are **always personal-scope**, even when forked from a family-scope o
 
 **Endpoints**:
 - `POST /api/recipes/[id]/pivot` — auth + viewer-access check (owner/family member only, no guests), runs both LLM passes, creates the personal-scope fork with `pivotMeta` set, migrates `MiseCheck` rows for the new entry keys, returns `{ newSavedRecipeId, aiNotes, changes, newDoneSteps }`. The sheet stashes `newDoneSteps` in sessionStorage keyed by the new id; `CookCardView`'s `useState` lazy initializer picks it up on mount and seeds the doneSteps Set so the cook resumes at the right place.
-- `POST /api/recipes/[id]/pivot/decision` with `{ action: "keep" | "discard" }` — `keep` flips `pivotKept = true`; `discard` deletes the SavedRecipe (cascades MiseCheck and CookLog). 404 if the row isn't a pivot, 403 if the caller isn't the saver. Surfaced via `app/components/PivotInProgressBanner.tsx` on `/recipe/[id]` whenever `pivotMeta && !pivotKept`.
+- `POST /api/recipes/[id]/pivot/decision` with `{ action: "keep" | "discard" }` — `keep` flips `pivotKept = true`; `discard` deletes the SavedRecipe (cascades MiseCheck and CookLog). 404 if the row isn't a pivot, 403 if the caller isn't the saver. Surfaced via `app/components/PivotInProgressBanner.tsx` on `/recipe/[id]` whenever `pivotMeta` is set (in-progress AND kept states).
+- `POST /api/recipes/[id]/pivot/promote` — **Replace original** (shipped). Writes the pivot's `revisedCard` onto the PARENT's RecipeOverride at the parent's scope (hand-rolled NULL-distinct upsert; `validateCardPayload` keeps `source_url` immutable; `applyCanonicalFallback` fills enrichment the frozen card predates), moves CookLog rows + cookCount/lastCookedAt onto the parent, copies MiseChecks (skipDuplicates), and deletes the pivot row — library goes back to one tile. Caller must own the pivot AND have edit rights on the parent (saver / family member). 409 when the parent is gone. Undo = "Reset to original" on the parent. UI: third button on the in-progress banner + a quiet emerald kept-pivot panel; `promotePivot(id)` in `storage.ts` updates the mirror and returns the parent id for navigation.
 
 **Library + SaveBar interactions**:
 - `useSavesForCard` filters out pivot rows (WeakMap-cached for snapshot stability) so SaveBar's scope chips don't double-count.
@@ -148,7 +150,7 @@ Pivot rows are **always personal-scope**, even when forked from a family-scope o
 
 **Abandoned-pivot sweep** (shipped): stale in-progress pivot forks (`pivotMeta != null` AND `pivotKept = false` AND `savedAt` older than 48h) are auto-discarded so the library doesn't accumulate forgotten "Pivot in progress" rows. The sweep predicate lives Prisma-free in `app/lib/pivot/sweep.ts` (`isAbandonedPivot`, `pivotSweepCutoff`, `abandonedPivotScalarWhere`) so vitest covers it (`sweep.test.ts`). `deleteMany` cascades MiseCheck/CookLog. Triggered by the project's first scheduled cron (see Cron jobs below) or manually via `npm run pivot-sweep` (dry-run; `--apply` to delete).
 
-**Open follow-ups**: "Replace original" action that promotes a kept pivot's revised card onto the parent's RecipeOverride; family-scope pivots if the workflow demands shared cook-rescues.
+**Open follow-ups**: family-scope pivots if the workflow demands shared cook-rescues.
 
 ## Cron jobs
 
@@ -177,7 +179,7 @@ Distinct from sprites (which are per-ingredient stills) and from `CookLog.photoU
 - **Generated by**: `scripts/generate-dish-photos.ts` (Node + Prisma + tsx). Calls a local FLUX-based image-gen server (default `http://127.0.0.1:8000`, see `~/Programs/image-gen`), uploads the JPEG to Vercel Blob at `dishes/{parsedRecipeId}.jpg` (deterministic key, `allowOverwrite: true`), and shallow-merges the URL into `ParsedRecipe.cardJson` (does not touch any other fields). Pattern mirrors `scripts/backfill-taglines.ts`.
 - **Run it**: `npm run dish-photos` is dry-run by default and prints what it would do. Pass `--apply` to actually generate, upload, and write. Common flags: `--limit N`, `--force` (regenerate even if a URL is already present), or pass specific `ParsedRecipe` IDs as positional args. Local image-gen server must be running; the script health-checks and exits with a clear error if it isn't.
 - **Storage cost**: 1024×768 JPEG ≈ 180 KB. ~70 recipes today ≈ 13 MB Blob.
-- **Override backfill**: `RecipeOverride` rows created BEFORE the dish-photo backfill don't carry the URL (overrides are full-card replacements at fork/edit time), so those users see the canonical-or-vignette fallback via `card-resolver`. `scripts/backfill-override-dish-photos.ts` (`npm run backfill:override-dish-photos`, dry-run default, `--apply`/`--limit`) shallow-merges the parent `ParsedRecipe.cardJson` `generated_dish_image_url` into overrides that lack one, never clobbering other edited fields; merge logic lives in the Prisma-free `app/lib/dish-image-merge.ts`, unit-tested.
+- **Override backfill**: superseded at read time by `applyCanonicalFallback` in `card-resolver` — overrides/pivots missing the URL now inherit it from the parent `ParsedRecipe.cardJson` on every read, no data migration. The write-time script (`npm run backfill:override-dish-photos`, merge logic in `app/lib/dish-image-merge.ts`) still exists for permanently materializing the URL but is no longer required for correctness.
 
 ### Planner candidate dish photos
 
