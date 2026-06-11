@@ -6,16 +6,14 @@
 // This mirrors the dry-run-first convention of the other data scripts
 // (backfill-taglines, generate-dish-photos).
 //
-// Predicate is shared with the cron route via app/lib/pivot/sweep.ts — there
-// is exactly one definition of "abandoned", so the script and the scheduled
-// job can never drift apart.
+// The filter AND the deletion are shared with the cron route via
+// `app/lib/pivot/sweep-run.ts:runPivotSweep` — there is exactly one
+// definition of "abandoned" and one deletion path, so the script and the
+// scheduled job can never drift apart.
 
-import { Prisma } from "@/app/generated/prisma/client";
 import { prisma } from "@/app/lib/prisma";
-import {
-  abandonedPivotScalarWhere,
-  PIVOT_SWEEP_WINDOW_HOURS,
-} from "@/app/lib/pivot/sweep";
+import { PIVOT_SWEEP_WINDOW_HOURS } from "@/app/lib/pivot/sweep";
+import { runPivotSweep } from "@/app/lib/pivot/sweep-run";
 
 type PivotMetaish = { problemText?: unknown } | null;
 
@@ -34,22 +32,8 @@ function hoursAgo(d: Date, now: Date): number {
 async function main() {
   const apply = process.argv.includes("--apply");
   const now = new Date();
-  const where: Prisma.SavedRecipeWhereInput = {
-    ...abandonedPivotScalarWhere(now),
-    pivotMeta: { not: Prisma.DbNull },
-  };
 
-  const stale = await prisma.savedRecipe.findMany({
-    where,
-    select: {
-      id: true,
-      userId: true,
-      savedAt: true,
-      pivotMeta: true,
-      pivotedFromSavedRecipeId: true,
-    },
-    orderBy: { savedAt: "asc" },
-  });
+  const { stale, swept } = await runPivotSweep({ apply, now });
 
   console.log(
     `Abandoned-pivot sweep — window ${PIVOT_SWEEP_WINDOW_HOURS}h, ${
@@ -68,20 +52,13 @@ async function main() {
 
   if (!stale.length) {
     console.log("\nNothing to sweep. The library is tidy.");
-    await prisma.$disconnect();
-    return;
-  }
-
-  if (!apply) {
+  } else if (!apply) {
     console.log(
       `\nDry run — nothing deleted. Re-run with --apply to remove these ${stale.length} fork(s).`
     );
-    await prisma.$disconnect();
-    return;
+  } else {
+    console.log(`\nSwept ${swept} abandoned pivot fork(s).`);
   }
-
-  const { count } = await prisma.savedRecipe.deleteMany({ where });
-  console.log(`\nSwept ${count} abandoned pivot fork(s).`);
   await prisma.$disconnect();
 }
 
