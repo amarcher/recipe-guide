@@ -1,6 +1,6 @@
 # Pair Loop — Recipe Guide
 
-The lightweight autonomous loop: **one feature per iteration**, built by a **pair** of builders taking complementary approaches, judged blind by a small **standing panel**, shipped as one PR. Durable state is **git + `QUEUE.md` + `judges-memo.md`** — nothing else. Andrew holds a **standing veto** (async, non-blocking); his approval is never required and his silence never stalls the loop.
+The lightweight autonomous loop: **one feature per iteration**, built by a **pair** of builders taking complementary approaches, judged blind by a small **standing panel**, shipped as one PR. Durable state is **git + `QUEUE.md` + `judges-memo.md` + open wait records** (`.agents/waits/`, see `WAITS.md`) — nothing else. Andrew holds a **standing veto** (async, non-blocking); his approval is never required and his silence never stalls the loop.
 
 This is the streamlined sibling of the full loop (`LOOP-OPS.md`). Both runners share `QUEUE.md` as the single cursor — never run both at the same time — but the panels are separate: this loop's 3 judges live in `judges-memo.md`, the full loop's 5 in `judges-evolution-memo.md`.
 
@@ -26,6 +26,14 @@ Three standing judges, fixed lenses:
 `{ pick: 'A'|'B', rationale, concerns, steal: ['trivial: …' | 'follow-up: …'], memoNote }`
 scored against the rubric: 1. delivers the outcome 2. layers cleanly (execution layer untouched, gotchas respected) 3. product feel 4. code health 5. smallest clean diff — weighted through its lens. No abstaining; a 2-1 split is a normal verdict. **Judges return their memoNote; the loop appends all of them to `judges-memo.md` in one pass** — never have judges write the file concurrently.
 
+## Channel binding
+
+- **Slack #recipe-guide** (`C0ATWTGC28J`) — convention: channel name == repo dir. The loop posts **one line per shipped feature** (PR link, "merging on green unless you veto") and reads the channel at SYNC for Andrew's veto, redirects, or grants. This is the cheap human surface — and the rendezvous a Slack-summoned cloud agent can act on. If no Slack MCP is connected, the PR thread plays this role instead.
+
+## Blocking on external state — the wait protocol
+
+When an iteration blocks on something outside the session's control (a permission-gated merge, a human step, a slow remote process), **never improvise a private wait**. File a wait record per `WAITS.md`: a deterministic `check` command + `satisfied-when` predicate + `unblock-how`, written to `.agents/waits/<id>.md`, announced to #recipe-guide (and the PR thread) with the same fields, and tripwired with a Monitor + ScheduleWakeup fallback. The file — not the tripwire — is the source of truth: every iteration re-runs the `check` of all open waits at SYNC, so the loop resumes deterministically even if the waiting session died. Pick check state that remote agents and Andrew can both flip (PR state, a label, a reaction) — cloud agents can't write local files.
+
 ## Feature sizing — the real lever
 
 A queue entry is a **feature**: a coherent product unit each builder can fully implement in one sitting and the judges can meaningfully compare — a surface, a flow, a capability. Not a chore (tests, scripts, backfills — a pair build on one is waste: fix it inline or batch chores into a single `chore batch` entry the runner executes directly), not an epic (candidates diverge too much to compare). If a builder can't finish coherently, split it.
@@ -38,8 +46,11 @@ Run with `/loop` (self-paced):
 You are the runner executing Recipe Guide's backlog autonomously, ONE feature per iteration.
 Read docs/agent-loop/PAIR-LOOP.md and QUEUE.md first. Build one feature, hand off cleanly, stop.
 
-1. SYNC. `git checkout main && git pull`. Clean tree or STOP. Check for Andrew's veto: a
-   comment/revert on a recent [review]/[done] PR supersedes the queue — handle it first.
+1. SYNC. `git checkout main && git pull`. Clean tree or STOP. Re-evaluate open waits: for each
+   `.agents/waits/*.md` with `status: open`, run its `check`; satisfied → sign it and execute
+   its `on-wake` first (see WAITS.md). Then check for Andrew's veto: read #recipe-guide since
+   last iteration; a comment/revert on a recent [review]/[done] PR or a channel redirect
+   supersedes the queue — handle it first.
 
 2. ENSURE PANEL. Resume the three standing judges via SendMessage (warm = cheap). On a cold start,
    spawn each per "The panel" above; each rehydrates from judges-memo.md before judging.
@@ -58,9 +69,13 @@ Read docs/agent-loop/PAIR-LOOP.md and QUEUE.md first. Build one feature, hand of
 
 6. SHIP + MERGE. Push the winner's branch. Apply "trivial" steal items as one commit on it (skip
    any that feel risky); list "follow-up" steals + judge concerns in the PR body. Open ONE PR
-   (body = brief + tally + rationales). Set the queue line [review: #NN]; delete the loser branch.
+   (body = brief + tally + rationales). Post one line to #recipe-guide (PR link, "merging on
+   green unless you veto"). Set the queue line [review: #NN]; delete the loser branch.
    Merge gate = panel verdict (reached) + Vercel green; Andrew's 👍 NOT required, his veto supreme.
    On green and un-vetoed: squash-merge, set [done: #NN], continue from fresh main.
+   If the merge (or any step) is blocked by state outside this session's control, do NOT
+   improvise: file a wait per WAITS.md (deterministic check + unblock-how + tripwire), announce
+   it, mark the queue line [blocked:wait:<id>], and sleep. SYNC resumes it next iteration.
 
 7. HANDOFF. Report what shipped. If the panel is warm, say so explicitly — the next feature skips
    rehydration and is meaningfully cheaper — and let Andrew (or the /loop cadence) decide whether

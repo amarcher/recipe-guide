@@ -48,4 +48,4 @@ next-env.d.ts
 /.local/
 
 # agent bus — runtime inter-session messages (see docs/roadmap-2026/AGENT-BUS.md)
-/.agents/bus/
+/.agents/
