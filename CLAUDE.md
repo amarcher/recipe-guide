@@ -51,6 +51,8 @@ A second surface layered on top of the recipe-execution app. Answers "what are w
 - Skeleton rationale in an amber narrative panel.
 - `QueueView` at the top when meals are committed — each row has a **Cook** button that materializes → navigates to `/recipe/[id]`.
 - `MenuView` grouped by `(slot, eaters)`. Kid-only sections are wrapped in a warm amber panel for visual separation. Each section header has its own "Tune this section" button + per-section guidance input. Each card shows hero-ingredient sprites in an overlapping cluster.
+- `EaterTastePanel` — read-only `<details>` panel on family-scoped plans (between skeleton rationale and `MenuView`) surfacing each family `Profile`'s `ProfilePreference` rows as per-eater bucket chips (reliable hits / experimenting / hard nos / aspirations) with sprites, evidence counts, and source+recency tooltips. Strictly read-only — preferences accumulate from intake + outcomes only, no editor. Grouping/recency/summary helpers live Prisma-free in `app/lib/planner/taste-panel.ts` (vitest-covered).
+- Post-cook learning loop close: `GET /api/plans/[id]/meals/[mealId]/outcomes` returns `{ recorded, previous }` (latest per-role verdicts for this meal / for the most recent earlier cook of the same dish title within plan scope). `MealOutcomePrompt` uses it to (a) collapse to an "Already noted" line on reload instead of nagging twice and (b) render the one-tap "Same as last time" affordance that submits both roles' previous verdicts.
 
 **Design documents**:
 - `design-slot-split.html` — the decision deck for the two-row-per-split-slot schema (adults + kids).

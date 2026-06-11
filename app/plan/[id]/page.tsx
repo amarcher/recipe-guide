@@ -6,6 +6,7 @@ import { requireUser } from "@/app/lib/server-auth";
 import { loadPlanIfOwned } from "@/app/lib/plan-auth";
 import { backfillCandidateDishPhotos } from "@/app/lib/planner/candidate-dish-photo";
 import { MenuView } from "./MenuView";
+import { EaterTastePanel, type EaterProfile } from "./EaterTastePanel";
 import { GroceryList } from "./GroceryList";
 import { PipelineControls } from "./PipelineControls";
 import { PublishControls } from "./PublishControls";
@@ -39,7 +40,7 @@ export default async function PlanPage({
   const plan = await loadPlanIfOwned(user.userId, id);
   if (!plan) notFound();
 
-  const [candidates, meals, grocery] = await Promise.all([
+  const [candidates, meals, grocery, profiles] = await Promise.all([
     prisma.mealCandidate.findMany({
       where: { planId: plan.id, discardedAt: null, filteredOutReason: null },
       orderBy: [{ slot: "asc" }, { rank: "asc" }, { createdAt: "asc" }],
@@ -51,7 +52,31 @@ export default async function PlanPage({
       where: { planId: plan.id },
       orderBy: [{ purchased: "asc" }, { display: "asc" }],
     }),
+    plan.familyId
+      ? prisma.profile.findMany({
+          where: { familyId: plan.familyId },
+          orderBy: [{ kind: "asc" }, { name: "asc" }],
+          include: {
+            preferences: { orderBy: { lastConfirmedAt: "desc" } },
+          },
+        })
+      : Promise.resolve([]),
   ]);
+
+  const eaterProfiles: EaterProfile[] = profiles.map((p) => ({
+    id: p.id,
+    name: p.name,
+    kind: p.kind,
+    preferences: p.preferences.map((pref) => ({
+      id: pref.id,
+      kind: pref.kind,
+      slug: pref.slug,
+      display: pref.display,
+      source: pref.source,
+      lastConfirmedAt: pref.lastConfirmedAt.getTime(),
+      evidenceCount: pref.evidenceCount,
+    })),
+  }));
 
   const committedCandidateIds = new Set(meals.map((m) => m.chosenCandidateId));
   const mealByCandidateId = new Map(meals.map((m) => [m.chosenCandidateId, m.id]));
@@ -140,6 +165,8 @@ export default async function PlanPage({
             )}
           </section>
         )}
+
+        {plan.familyId && <EaterTastePanel profiles={eaterProfiles} />}
 
         <MenuView
           planId={plan.id}
