@@ -5,6 +5,7 @@ import { prisma } from "@/app/lib/prisma";
 import { requireUser } from "@/app/lib/server-auth";
 import { loadPlanIfOwned } from "@/app/lib/plan-auth";
 import { backfillCandidateDishPhotos } from "@/app/lib/planner/candidate-dish-photo";
+import { planDateLabel, planTitle } from "@/app/lib/planner/scope";
 import { MenuView } from "./MenuView";
 import { EaterTastePanel, type EaterProfile } from "./EaterTastePanel";
 import { GroceryList } from "./GroceryList";
@@ -105,23 +106,21 @@ export default async function PlanPage({
         <div className="mb-6 flex items-baseline justify-between gap-4">
           <div>
             <p className="text-[11px] uppercase tracking-wider text-stone-400">
-              Week of{" "}
-              {plan.weekOf.toLocaleDateString(undefined, {
-                month: "short",
-                day: "numeric",
-              })}
+              {planDateLabel(plan.scope, plan.weekOf.getTime())}
             </p>
             <h1 className="mt-1 text-2xl font-semibold tracking-tight text-stone-900">
-              Menu
+              {planTitle(plan.scope)}
             </h1>
           </div>
           <div className="flex items-center gap-4">
-            <Link
-              href={`/plan/${plan.id}/tonight`}
-              className="text-sm font-medium text-stone-700 hover:text-stone-900"
-            >
-              Tonight →
-            </Link>
+            {plan.scope === "WEEK" && (
+              <Link
+                href={`/plan/${plan.id}/tonight`}
+                className="text-sm font-medium text-stone-700 hover:text-stone-900"
+              >
+                Tonight →
+              </Link>
+            )}
             <Link
               href="/library"
               className="text-sm font-medium text-stone-700 hover:text-stone-900"

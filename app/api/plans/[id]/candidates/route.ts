@@ -11,7 +11,7 @@ import {
   type Eater,
   type MealSlotType,
 } from "@/app/lib/planner/schemas";
-import { SLOT_CANDIDATE_SYSTEM_PROMPT } from "@/app/lib/planner/prompts";
+import { slotCandidateSystemPrompt } from "@/app/lib/planner/prompts";
 import { loadRecentRecipes } from "@/app/lib/planner/history";
 import { scoreAndRankPlan } from "@/app/lib/planner/scoring";
 import { expandDraft } from "@/app/lib/planner/card-expand";
@@ -173,7 +173,7 @@ export async function POST(
       const result = await generateObject({
         model: plannerModel,
         schema: CandidatesForSlot,
-        system: SLOT_CANDIDATE_SYSTEM_PROMPT,
+        system: slotCandidateSystemPrompt(plan.scope),
         prompt: sections.join("\n"),
       });
 

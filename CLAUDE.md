@@ -28,6 +28,8 @@ A Next.js 16 app that turns any recipe URL into a one-screen "recipe guide": a m
 
 A second surface layered on top of the recipe-execution app. Answers "what are we eating this week and what do we need to buy?" rather than "how do I cook this recipe right now?" Critically: it does not replace or dilute the execution UI — committed meals hand off to the existing `CookCardView` via materialization.
 
+**Plan scope — WEEK vs TONIGHT**: `WeeklyPlan.scope` (`PlanScope` enum, default `WEEK`). A TONIGHT plan is "what are we cooking tonight with what's on hand?" — same pipeline, same schema, but: `weekOf` = today (not next Monday), every stage swaps in a tonight-tuned prompt via the `*SystemPrompt(scope)` selectors in `app/lib/planner/prompts.ts` (short 3–5-turn intake that never suggests dishes in chat, locked-in `mustUse` ingredients, DINNER-only slots, whole-plate candidate cards that fold sides into one cooking timeline), and the UI relabels via `app/lib/planner/scope.ts` (`planDateLabel` / `planTitle` / `intakeTitle`, vitest-covered). The NewPlanButton picker forks "Just tonight" vs the three weekly modes; `POST /api/plans` accepts `{ scope }`. Tonight plans hide the `/plan/[id]/tonight` link (the plan page *is* tonight). Commit/grocery/cook are shared code, unchanged.
+
 **Pipeline stages** (each is an LLM call, each can be re-run):
 
 1. **Intake chat** — `/plan/[id]/intake` → `POST /api/plans/[id]/intake/chat` streams a conversation via AI SDK v6 `useChat` + Claude Sonnet 4.6 (`intakeChatModel`). A hardcoded opener is seeded client-side so the first bubble doesn't wait on a round-trip. Each user/assistant turn is persisted as an `IntakeMessage` row. The agent calls the `signal_intake_complete` tool when it's heard enough.
