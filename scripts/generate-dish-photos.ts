@@ -25,7 +25,7 @@
 //   BLOB_READ_WRITE_TOKEN  required if --apply (pull via `vercel env pull .env.local`)
 //   DATABASE_URL_UNPOOLED  production Neon (already in .env.local)
 
-import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { put } from "@vercel/blob";
 import { prisma } from "@/app/lib/prisma";
@@ -203,13 +203,14 @@ async function main(): Promise<void> {
 
       // Reuse cached bytes when present — preserves whatever the user
       // reviewed locally. Caller can pass --force to regenerate from scratch.
-      let jpeg: Buffer;
-      let cached = false;
-      try {
-        await stat(localPath);
-        jpeg = await readFile(localPath);
-        cached = true;
-      } catch {
+      let jpeg: Buffer | undefined;
+      if (!args.force) {
+        try {
+          jpeg = await readFile(localPath);
+        } catch {}
+      }
+      const cached = jpeg !== undefined;
+      if (!jpeg) {
         jpeg = await generateDishJpeg(card.title, heroes);
         await writeFile(localPath, jpeg);
       }
