@@ -5,7 +5,7 @@ import { requireUser } from "@/app/lib/server-auth";
 import { loadPlanIfOwned } from "@/app/lib/plan-auth";
 import { plannerModel } from "@/app/lib/planner/model";
 import { MenuSkeleton, PlanIntake } from "@/app/lib/planner/schemas";
-import { SKELETON_SYSTEM_PROMPT } from "@/app/lib/planner/prompts";
+import { skeletonSystemPrompt } from "@/app/lib/planner/prompts";
 import { loadRecentRecipes } from "@/app/lib/planner/history";
 import { recordPlanEvent } from "@/app/lib/planner/events";
 
@@ -86,7 +86,7 @@ export async function POST(
   const result = await generateObject({
     model: plannerModel,
     schema: MenuSkeleton,
-    system: SKELETON_SYSTEM_PROMPT,
+    system: skeletonSystemPrompt(plan.scope),
     prompt: userMessage,
   });
 

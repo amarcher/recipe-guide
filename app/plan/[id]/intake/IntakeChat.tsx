@@ -37,15 +37,21 @@ const MODE_OPENERS: Record<SeedMode, string> = {
 const DEFAULT_OPENER =
   "Hey — let's figure out this week. Before we get specific, what's the vibe? Heavy use-up week because the fridge is stacked, trying something new, or just surviving until Friday?";
 
+const TONIGHT_OPENER =
+  "Alright — dinner tonight. What have you got to work with? Name what's in the fridge or on the counter, and tell me if anything absolutely has to get used.";
+
 export function IntakeChat({
   planId,
   initialMessages,
   seedMode = null,
+  scope = "WEEK",
 }: {
   planId: string;
   initialMessages: UIMessage[];
   seedMode?: SeedMode | null;
+  scope?: "WEEK" | "TONIGHT";
 }) {
+  const tonight = scope === "TONIGHT";
   const router = useRouter();
   const [input, setInput] = useState("");
   const [pipelineStep, setPipelineStep] = useState<null | "extract" | "skeleton" | "candidates">(null);
@@ -64,7 +70,11 @@ export function IntakeChat({
             parts: [
               {
                 type: "text",
-                text: seedMode ? MODE_OPENERS[seedMode] : DEFAULT_OPENER,
+                text: tonight
+                  ? TONIGHT_OPENER
+                  : seedMode
+                  ? MODE_OPENERS[seedMode]
+                  : DEFAULT_OPENER,
               },
             ],
           },
@@ -140,8 +150,8 @@ export function IntakeChat({
 
   const stageLabel: Record<NonNullable<typeof pipelineStep>, string> = {
     extract: "Saving your answers…",
-    skeleton: "Drafting the week's thesis…",
-    candidates: "Proposing meals for each slot…",
+    skeleton: tonight ? "Drafting tonight's game plan…" : "Drafting the week's thesis…",
+    candidates: tonight ? "Cooking up dishes to pick from…" : "Proposing meals for each slot…",
   };
 
   return (
@@ -178,6 +188,8 @@ export function IntakeChat({
             <span>
               {pipelineStep
                 ? stageLabel[pipelineStep]
+                : tonight
+                ? "I've got enough. Ready to see tonight's options?"
                 : "I've got enough. Ready to build the menu?"}
             </span>
           </div>
@@ -189,7 +201,7 @@ export function IntakeChat({
               className="inline-flex items-center gap-1.5 rounded-md bg-amber-900 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-amber-800 disabled:opacity-60"
             >
               {extracting && <RefreshCw className="h-3 w-3 animate-spin" />}
-              {extracting ? "Building…" : "Build my menu"}
+              {extracting ? "Building…" : tonight ? "Show me options" : "Build my menu"}
             </button>
             {!extracting && (
               <button

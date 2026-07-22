@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Trash2 } from "lucide-react";
 import { useConfirm } from "@/app/components/ConfirmDialog";
+import { planDateLabel } from "@/app/lib/planner/scope";
 
 const STATUS_LABEL: Record<string, string> = {
   DRAFT: "Draft",
@@ -19,6 +20,7 @@ const STATUS_LABEL: Record<string, string> = {
 export type PlanTileData = {
   id: string;
   weekOfMs: number;
+  scope: "WEEK" | "TONIGHT";
   status: string;
   family: { id: string; name: string } | null;
   candidateCount: number;
@@ -62,12 +64,8 @@ export function PlanTile({ plan }: { plan: PlanTileData }) {
         className="flex flex-col rounded-xl border border-stone-200 bg-white p-4 shadow-sm transition hover:border-stone-300"
       >
         <div className="flex items-center justify-between gap-2 text-[11px] uppercase tracking-wider text-stone-400">
-          <span>
-            Week of{" "}
-            {new Date(plan.weekOfMs).toLocaleDateString(undefined, {
-              month: "short",
-              day: "numeric",
-            })}
+          <span className={plan.scope === "TONIGHT" ? "text-amber-700" : undefined}>
+            {planDateLabel(plan.scope, plan.weekOfMs)}
           </span>
           {plan.family ? (
             <span className="rounded-full bg-stone-100 px-2 py-0.5 text-stone-600">

@@ -27,7 +27,11 @@ const KidListEntry = z.object({
 });
 
 export const PlanIntake = z.object({
-  weekOf: z.string().describe("ISO date for the Monday of the target week"),
+  weekOf: z
+    .string()
+    .describe(
+      "ISO date the plan starts — the Monday of the target week, or tonight's date for a single-night plan"
+    ),
   slots: z.array(
     z.object({
       day: DayOfWeek.optional(),

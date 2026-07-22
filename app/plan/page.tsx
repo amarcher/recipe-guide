@@ -39,10 +39,10 @@ export default async function PlansIndex() {
         <div className="mb-6 flex items-baseline justify-between gap-4">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight text-stone-900">
-              Weekly plans
+              Meal plans
             </h1>
             <p className="mt-1 text-sm text-stone-600">
-              Plan a week of meals, then cook from the menu night-of.
+              Plan a week of meals — or just tonight — then cook from the menu.
             </p>
           </div>
           <NewPlanButton variant="compact" />
@@ -66,6 +66,7 @@ export default async function PlansIndex() {
                   plan={{
                     id: p.id,
                     weekOfMs: p.weekOf.getTime(),
+                    scope: p.scope,
                     status: p.status,
                     family: p.family,
                     candidateCount: p._count.candidates,

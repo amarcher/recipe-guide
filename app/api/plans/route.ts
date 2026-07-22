@@ -14,6 +14,12 @@ function nextMonday(): Date {
   return d;
 }
 
+function today(): Date {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
 export async function POST(req: NextRequest) {
   const user = await requireUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
@@ -23,6 +29,7 @@ export async function POST(req: NextRequest) {
   // sends no body today, so the JSON parse yields {} and we auto-attach.
   let familyId: string | null = null;
   let familyIdProvided = false;
+  let scope: "WEEK" | "TONIGHT" = "WEEK";
   try {
     const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
     if (body && typeof body === "object" && "familyId" in body) {
@@ -30,6 +37,7 @@ export async function POST(req: NextRequest) {
       const v = body.familyId;
       familyId = typeof v === "string" ? v : null;
     }
+    if (body?.scope === "TONIGHT") scope = "TONIGHT";
   } catch {
     familyIdProvided = false;
   }
@@ -61,7 +69,8 @@ export async function POST(req: NextRequest) {
     data: {
       createdById: user.userId,
       familyId,
-      weekOf: nextMonday(),
+      weekOf: scope === "TONIGHT" ? today() : nextMonday(),
+      scope,
       status: "DRAFT",
     },
   });
@@ -69,7 +78,7 @@ export async function POST(req: NextRequest) {
   await recordPlanEvent(
     plan.id,
     "plan.created",
-    { familyId, weekOf: plan.weekOf.toISOString() },
+    { familyId, weekOf: plan.weekOf.toISOString(), scope },
     user.userId,
   );
 

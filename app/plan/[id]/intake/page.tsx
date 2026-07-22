@@ -3,6 +3,7 @@ import Link from "next/link";
 import { requireUser } from "@/app/lib/server-auth";
 import { loadPlanIfOwned } from "@/app/lib/plan-auth";
 import { prisma } from "@/app/lib/prisma";
+import { intakeTitle, planDateLabel } from "@/app/lib/planner/scope";
 import { IntakeChat } from "./IntakeChat";
 
 export const runtime = "nodejs";
@@ -42,14 +43,10 @@ export default async function IntakePage({
         <div className="mb-6 flex items-baseline justify-between gap-4">
           <div>
             <p className="text-[11px] uppercase tracking-wider text-stone-400">
-              Week of{" "}
-              {plan.weekOf.toLocaleDateString(undefined, {
-                month: "short",
-                day: "numeric",
-              })}
+              {planDateLabel(plan.scope, plan.weekOf.getTime())}
             </p>
             <h1 className="mt-1 text-2xl font-semibold tracking-tight text-stone-900">
-              Let&apos;s plan the week
+              {intakeTitle(plan.scope)}
             </h1>
           </div>
           <Link
@@ -63,6 +60,7 @@ export default async function IntakePage({
         <IntakeChat
           planId={id}
           seedMode={seedMode}
+          scope={plan.scope}
           initialMessages={priorMessages.map((m) => ({
             id: m.id,
             role: m.role === "USER" ? ("user" as const) : ("assistant" as const),

@@ -5,12 +5,19 @@ import { requireUser } from "@/app/lib/server-auth";
 import { loadPlanIfOwned } from "@/app/lib/plan-auth";
 import { plannerModel } from "@/app/lib/planner/model";
 import { PlanIntake } from "@/app/lib/planner/schemas";
-import { INTAKE_EXTRACT_SYSTEM_PROMPT } from "@/app/lib/planner/prompts";
+import { intakeExtractSystemPrompt } from "@/app/lib/planner/prompts";
 import { recordPlanEvent } from "@/app/lib/planner/events";
 import { upsertProfilesFromIntake } from "@/app/lib/planner/profile-backfill";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
+
+function localISO(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
 
 function nextMondayISO(): string {
   const d = new Date();
@@ -18,7 +25,17 @@ function nextMondayISO(): string {
   const day = d.getDay();
   const offset = day === 0 ? 1 : 8 - day;
   d.setDate(d.getDate() + offset);
-  return d.toISOString().slice(0, 10);
+  return localISO(d);
+}
+
+// Parse a YYYY-MM-DD as LOCAL midnight. `new Date("2026-07-21")` is UTC
+// midnight, which renders as the previous day in western timezones — glaring
+// on a TONIGHT plan whose header would read yesterday's date.
+function localDateFromISO(iso: string): Date | null {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso);
+  if (!m) return null;
+  const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  return isNaN(d.getTime()) ? null : d;
 }
 
 export async function POST(
@@ -47,24 +64,24 @@ export async function POST(
     .map((m) => `${m.role === "USER" ? "USER" : "ASSISTANT"}: ${m.content}`)
     .join("\n\n");
 
-  const prompt = [
-    `Today is ${new Date().toISOString().slice(0, 10)}. The upcoming Monday is ${nextMondayISO()}.`,
-    "",
-    "TRANSCRIPT",
-    transcript,
-  ].join("\n");
+  const todayISO = localISO(new Date());
+  const dateLine =
+    plan.scope === "TONIGHT"
+      ? `Today is ${todayISO}. This plan is for TONIGHT'S dinner (${todayISO}).`
+      : `Today is ${todayISO}. The upcoming Monday is ${nextMondayISO()}.`;
+
+  const prompt = [dateLine, "", "TRANSCRIPT", transcript].join("\n");
 
   const result = await generateObject({
     model: plannerModel,
     schema: PlanIntake,
-    system: INTAKE_EXTRACT_SYSTEM_PROMPT,
+    system: intakeExtractSystemPrompt(plan.scope),
     prompt,
   });
 
-  const weekOfDate = new Date(result.object.weekOf);
-  const weekOf = isNaN(weekOfDate.getTime())
-    ? new Date(nextMondayISO())
-    : weekOfDate;
+  const fallbackISO = plan.scope === "TONIGHT" ? todayISO : nextMondayISO();
+  const weekOf =
+    localDateFromISO(result.object.weekOf) ?? localDateFromISO(fallbackISO)!;
 
   await prisma.weeklyPlan.update({
     where: { id: planId },

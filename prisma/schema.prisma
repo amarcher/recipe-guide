@@ -318,11 +318,20 @@ enum IntakeRole {
   ASSISTANT
 }
 
+// A plan's horizon. WEEK is the original weekly menu; TONIGHT is a
+// single-night plan ("what are we cooking tonight with what's on hand?")
+// that reuses the same pipeline with tonight-tuned prompts and weekOf = today.
+enum PlanScope {
+  WEEK
+  TONIGHT
+}
+
 model WeeklyPlan {
   id             String     @id @default(cuid())
   familyId       String?
   createdById    String
   weekOf         DateTime
+  scope          PlanScope  @default(WEEK)
   status         PlanStatus @default(DRAFT)
   intake         Json?
   skeleton       Json?
