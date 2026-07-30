@@ -4,6 +4,7 @@ import { prisma } from "@/app/lib/prisma";
 import { requireUser } from "@/app/lib/server-auth";
 import { loadPlanIfOwned } from "@/app/lib/plan-auth";
 import { plannerModel } from "@/app/lib/planner/model";
+import { logPlannerUsage } from "@/app/lib/planner/usageLog";
 import { PlanIntake } from "@/app/lib/planner/schemas";
 import { INTAKE_EXTRACT_SYSTEM_PROMPT } from "@/app/lib/planner/prompts";
 import { recordPlanEvent } from "@/app/lib/planner/events";
@@ -60,6 +61,7 @@ export async function POST(
     system: INTAKE_EXTRACT_SYSTEM_PROMPT,
     prompt,
   });
+  logPlannerUsage("planner-intake-extract", plannerModel, result.usage, { planId });
 
   const weekOfDate = new Date(result.object.weekOf);
   const weekOf = isNaN(weekOfDate.getTime())

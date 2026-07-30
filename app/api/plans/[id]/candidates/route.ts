@@ -4,6 +4,7 @@ import { prisma } from "@/app/lib/prisma";
 import { requireUser } from "@/app/lib/server-auth";
 import { loadPlanIfOwned } from "@/app/lib/plan-auth";
 import { plannerModel } from "@/app/lib/planner/model";
+import { logPlannerUsage } from "@/app/lib/planner/usageLog";
 import {
   CandidatesForSlot,
   PlanIntake,
@@ -176,6 +177,7 @@ export async function POST(
         system: SLOT_CANDIDATE_SYSTEM_PROMPT,
         prompt: sections.join("\n"),
       });
+      logPlannerUsage("planner-candidates", plannerModel, result.usage, { planId });
 
       return { combo, candidates: result.object.candidates };
     })
