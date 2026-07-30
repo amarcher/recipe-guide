@@ -11,6 +11,7 @@ import { requireUser } from "@/app/lib/server-auth";
 import { loadPlanIfOwned } from "@/app/lib/plan-auth";
 import { intakeChatModel } from "@/app/lib/planner/model";
 import { intakeChatSystemPrompt } from "@/app/lib/planner/prompts";
+import { logPlannerUsage } from "@/app/lib/planner/usageLog";
 import { loadRecentRecipes } from "@/app/lib/planner/history";
 
 export const runtime = "nodejs";
@@ -89,7 +90,8 @@ export async function POST(
         },
       }),
     },
-    onFinish: async ({ text }) => {
+    onFinish: async ({ text, usage }) => {
+      logPlannerUsage("planner-intake-chat", intakeChatModel, usage, { planId });
       if (text) {
         await prisma.intakeMessage.create({
           data: { planId, role: "ASSISTANT", content: text },
