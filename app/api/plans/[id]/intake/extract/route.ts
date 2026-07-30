@@ -4,6 +4,7 @@ import { prisma } from "@/app/lib/prisma";
 import { requireUser } from "@/app/lib/server-auth";
 import { loadPlanIfOwned } from "@/app/lib/plan-auth";
 import { plannerModel } from "@/app/lib/planner/model";
+import { logPlannerUsage } from "@/app/lib/planner/usageLog";
 import { PlanIntake } from "@/app/lib/planner/schemas";
 import { intakeExtractSystemPrompt } from "@/app/lib/planner/prompts";
 import { recordPlanEvent } from "@/app/lib/planner/events";
@@ -78,6 +79,7 @@ export async function POST(
     system: intakeExtractSystemPrompt(plan.scope),
     prompt,
   });
+  logPlannerUsage("planner-intake-extract", plannerModel, result.usage, { planId });
 
   const fallbackISO = plan.scope === "TONIGHT" ? todayISO : nextMondayISO();
   const weekOf =

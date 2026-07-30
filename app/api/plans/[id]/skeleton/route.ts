@@ -4,6 +4,7 @@ import { prisma } from "@/app/lib/prisma";
 import { requireUser } from "@/app/lib/server-auth";
 import { loadPlanIfOwned } from "@/app/lib/plan-auth";
 import { plannerModel } from "@/app/lib/planner/model";
+import { logPlannerUsage } from "@/app/lib/planner/usageLog";
 import { MenuSkeleton, PlanIntake } from "@/app/lib/planner/schemas";
 import { skeletonSystemPrompt } from "@/app/lib/planner/prompts";
 import { loadRecentRecipes } from "@/app/lib/planner/history";
@@ -89,6 +90,7 @@ export async function POST(
     system: skeletonSystemPrompt(plan.scope),
     prompt: userMessage,
   });
+  logPlannerUsage("planner-skeleton", plannerModel, result.usage, { planId: plan.id });
 
   await prisma.weeklyPlan.update({
     where: { id: plan.id },

@@ -1,6 +1,7 @@
 import { generateObject } from "ai";
 import type { CookCard } from "@/app/types";
 import { plannerModel } from "@/app/lib/planner/model";
+import { logPlannerUsage } from "@/app/lib/planner/usageLog";
 import {
   PivotedCard,
   PivotProgressMapping,
@@ -43,6 +44,7 @@ export async function runPivot(input: PivotInput): Promise<PivotOutput> {
     system: REVISE_SYSTEM_PROMPT,
     prompt: reviseUser,
   });
+  logPlannerUsage("pivot-revise", plannerModel, reviseResult.usage);
 
   const revisedCard = expandPivotedCard(reviseResult.object, input.originalCard);
 
@@ -72,6 +74,7 @@ export async function runPivot(input: PivotInput): Promise<PivotOutput> {
     system: RESTATE_SYSTEM_PROMPT,
     prompt: restateUser,
   });
+  logPlannerUsage("pivot-restate", plannerModel, restateResult.usage);
 
   return { revisedCard, mapping: restateResult.object };
 }
